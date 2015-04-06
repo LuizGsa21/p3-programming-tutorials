@@ -18,6 +18,7 @@ class Category(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
+    articles = db.relationship('Article', backref='category', lazy='dynamic')
 
 
 class Article(db.Model):
@@ -30,7 +31,6 @@ class Article(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
-    category = db.relationship('Category')
     comments = db.relationship('Comment', backref='article', lazy='dynamic')
 
 
