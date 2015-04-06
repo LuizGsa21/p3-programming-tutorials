@@ -21,7 +21,7 @@ def create_app(app_name=None, blueprints=None, config=None):
     if config is None:
         config = DevelopmentConfig
 
-    app = Flask(app_name, template_folder=DevelopmentConfig.PROJECT_TEMPLATES)
+    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES)
     app.config.from_object(config)
     configure_hook(app)
     configure_extensions(app)
