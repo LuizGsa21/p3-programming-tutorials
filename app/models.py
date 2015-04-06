@@ -10,6 +10,8 @@ class User(db.Model):
     pwdhash = db.Column(db.String)
     date_joined = db.Column(db.DateTime, default=datetime.utcnow)
 
+    articles = db.relationship('Article', backref='author', lazy='dynamic')
+
 
 class Category(db.Model):
     __tablename__ = 'categories'
@@ -27,6 +29,9 @@ class Article(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+    category = db.relationship('Category')
+    comments = db.relationship('Comment', backref='article', lazy='dynamic')
 
 
 class Comment(db.Model):
