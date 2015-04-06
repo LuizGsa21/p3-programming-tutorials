@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template
 from config import DevelopmentConfig
 from extensions import db, csrf, login_manager, oid
-
+import models
 from admin import admin
 from api import api
 from frontend import frontend
@@ -40,6 +40,7 @@ def configure_hook(app):
 def configure_extensions(app):
 
     db.init_app(app)
+    db.create_all(app=app)
     csrf.init_app(app)
     login_manager.init_app(app)
     oid.init_app(app)
