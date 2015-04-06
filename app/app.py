@@ -2,6 +2,7 @@ from flask import Flask, request, render_template
 from config import DevelopmentConfig
 from extensions import db, csrf, login_manager, oid
 import models
+
 from admin import admin
 from api import api
 from frontend import frontend
@@ -27,6 +28,11 @@ def create_app(app_name=None, blueprints=None, config=None):
     configure_extensions(app)
     configure_blueprints(app, blueprints)
     configure_error_handlers(app)
+
+    if config.DEBUG:
+        from tests import reset_database
+        with app.app_context():
+            reset_database()
 
     return app
 
