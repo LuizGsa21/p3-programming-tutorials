@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
-from schemas import ArticleSchema
-from app.models import Article, Comment, User
+from schemas import ArticleSchema, CategorySchema
+from app.models import Article, Comment, User, Category
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -11,3 +11,11 @@ def articles_to_json():
     serializer = ArticleSchema(many=True)
     result, error = serializer.dump(articles)
     return jsonify(articles=result)
+
+
+@api.route('/categories/')
+def categories_to_json():
+    categories = Category.query.all()
+    serializer = CategorySchema(many=True)
+    result, error = serializer.dump(categories)
+    return jsonify(categories=result)
