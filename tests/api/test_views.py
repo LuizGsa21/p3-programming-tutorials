@@ -11,9 +11,9 @@ class APITestCase(BaseTestCase):
 
         data = json.loads(r.get_data())
 
-        fixture_path = os.path.join(BASEDIR, 'api', 'verified-articles.json')
-        with open(fixture_path, 'r') as fixture_file:
-            expected = json.loads(fixture_file.read())
+        path = os.path.join(BASEDIR, 'api', 'verified-articles.json')
+        with open(path, 'r') as myfile:
+            expected = json.loads(myfile.read())
 
         # compare the response against the verified json
         self.assertDictEqual(expected, data, "json doesn't match")
@@ -27,6 +27,24 @@ class APITestCase(BaseTestCase):
         r = self.client.get('/api/categories/')
 
         data = json.loads(r.get_data())
+
+        self.maxDiff = None
         self.assertDictEqual(expected, data)
 
-        self.assertEqual(r.status_code, 200, 'status code failed')
+        self.assertEqual(r.status_code, 200)
+
+    def test_article_to_json(self):
+
+        # request for the first article
+        r = self.client.get('/api/articles/1/')
+        self.assertEqual(r.status_code, 200)
+
+        path = os.path.join(BASEDIR, 'api', 'verified-articles.json')
+        # get the first article from the verified articles
+        with open(path, 'r') as myfile:
+            article = json.loads(myfile.read())['articles'][0]
+            expected = dict(article=article)
+
+        data = json.loads(r.get_data())
+        self.maxDiff = None
+        self.assertDictEqual(expected, data)

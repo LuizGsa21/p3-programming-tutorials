@@ -15,7 +15,6 @@ class BaseTestCase(unittest.TestCase):
         self.ctx = self.app.test_request_context()
         self.ctx.push()
 
-        self.maxDiff = None
         reset_database()
 
     def tearDown(self):
