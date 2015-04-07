@@ -41,4 +41,5 @@ class Comment(db.Model):
     body = db.Column(db.String)
     article_id = db.Column(db.Integer, db.ForeignKey('articles.id'))
     parent_comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
