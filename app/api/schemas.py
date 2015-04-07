@@ -23,3 +23,6 @@ class ArticleSchema(Schema):
 
     class Meta:
         fields = ('id', 'title', 'body', 'date_created', 'category', 'author', 'comments')
+
+article_serializer = ArticleSchema()
+articles_serializer = ArticleSchema(many=True)
