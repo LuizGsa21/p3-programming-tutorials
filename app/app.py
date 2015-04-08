@@ -1,6 +1,6 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, g
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, oid
+from extensions import db, csrf, login_manager, oid, current_user
 import models
 
 from admin import admin
@@ -33,14 +33,14 @@ def create_app(app_name=None, blueprints=None, config=None):
         from tests import reset_database
         with app.app_context():
             reset_database()
-
     return app
 
 
 def configure_hook(app):
     @app.before_request
     def before_request():
-        pass
+        # Get current user
+        g.user = current_user
 
 
 def configure_extensions(app):

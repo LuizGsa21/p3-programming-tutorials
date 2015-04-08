@@ -1,8 +1,35 @@
 from extensions import db
+from flask_login import UserMixin
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.ext.hybrid import Comparator, hybrid_property
+from sqlalchemy.sql import func
 
 
-class User(db.Model):
+class CaseInsensitiveWord(Comparator):
+    """Hybrid value representing a lower case representation of a word."""
+
+    def __init__(self, word):
+        if isinstance(word, basestring):
+            self.word = word.lower()
+        elif isinstance(word, CaseInsensitiveWord):
+            self.word = word.word
+        else:
+            self.word = func.lower(word)
+
+    def operate(self, op, other):
+        if not isinstance(other, CaseInsensitiveWord):
+            other = CaseInsensitiveWord(other)
+        return op(self.word, other.word)
+
+    def __clause_element__(self):
+        return self.word
+
+    def __str__(self):
+        return self.word
+
+
+class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -11,6 +38,17 @@ class User(db.Model):
     date_joined = db.Column(db.DateTime, default=datetime.utcnow)
 
     articles = db.relationship('Article', backref='author', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self.pwdhash = generate_password_hash(self.pwdhash)
+
+    def check_password(self, password):
+        return check_password_hash(self.pwdhash, password)
+
+    @hybrid_property
+    def username_insensitive(self):
+        return CaseInsensitiveWord(self.username)
 
 
 class Category(db.Model):

@@ -10,6 +10,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     SQLALCHEMY_ECHO = False
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
+    LOGIN_DISABLED = False
 
 
 class DevelopmentConfig(Config):
@@ -22,3 +23,5 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     SECRET_KEY = 'how-to-tutorials-development'
     TESTING = True
+    WTF_CSRF_ENABLED = False
+    # SQLALCHEMY_ECHO = True
