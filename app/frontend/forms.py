@@ -15,3 +15,7 @@ class RegistrationForm(Form):
 class LoginForm(Form):
     username = StringField('Username', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
+
+
+class OpenIDForm(Form):
+    openid = StringField('OpenID', validators=[InputRequired()])

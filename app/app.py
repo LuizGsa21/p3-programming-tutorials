@@ -31,6 +31,7 @@ def create_app(app_name=None, blueprints=None, config=None):
 
     if config.DEBUG:
         from tests import reset_database
+
         with app.app_context():
             reset_database()
     return app
@@ -39,16 +40,18 @@ def create_app(app_name=None, blueprints=None, config=None):
 def configure_hook(app):
     @app.before_request
     def before_request():
-        # Get current user
         g.user = current_user
 
 
 def configure_extensions(app):
-
     db.init_app(app)
     db.create_all(app=app)
+
     csrf.init_app(app)
+
     login_manager.init_app(app)
+
+    oid.fs_store_path = 'openid-store'
     oid.init_app(app)
 
 

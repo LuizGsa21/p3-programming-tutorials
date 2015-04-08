@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
-from app.extensions import db, login_manager, current_user, login_user, logout_user, login_required
-from forms import LoginForm, RegistrationForm
+from app.extensions import db, login_manager, current_user, login_user, logout_user, login_required, oid
+from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 
 frontend = Blueprint('frontend', __name__)
@@ -14,12 +14,22 @@ def index():
 
 
 @frontend.route('/login/', methods=['GET', 'POST'])
+@oid.loginhandler
 def login():
     if not g.user and current_user.is_authenticated():
         flash('You are already logged in.', 'warning')
         return redirect(url_for('frontend.index'))
     form = LoginForm(request.form)
-    if form.validate_on_submit():
+    openid_form = OpenIDForm()
+
+    if openid_form.validate_on_submit():
+        if openid_form.errors:
+            flash(openid_form.errors, 'danger')
+            return render_template('frontend/login.html', form=form, openid_form=openid_form)
+        openid = request.form.get('openid')
+        return oid.try_login(openid, ask_for=['email'])
+
+    elif form.validate_on_submit():
         username = form.username.data
         password = form.password.data
         user = User.query.filter(User.username_insensitive == username).first()
@@ -30,7 +40,7 @@ def login():
             flash('You have successfully logged in.', 'success')
             return redirect(url_for('frontend.index'))
 
-    return render_template('frontend/login.html', form=form)
+    return render_template('frontend/login.html', form=form, openid_form=openid_form)
 
 
 @frontend.route('/register/', methods=['GET', 'POST'])
@@ -43,6 +53,24 @@ def register():
         flash('You have successfully registered.', 'success')
         return redirect(url_for('frontend.index'))
     return render_template('frontend/register.html', form=form)
+
+@oid.after_login
+def after_login(response):
+    username = response.email
+    if not username:
+        flash('Invalid login. Please try again.', 'danger')
+        return redirect(url_for('frontend.login'))
+
+    user = User.query.filter_by(username=username).first()
+    # create a new user if username isn't registered
+    if not user:
+        user = User(username=username, pwdhash='')
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+    flash('Welcome %s you have successfully logged in.' % username, 'success')
+    return redirect(url_for('frontend.index'))
 
 
 @frontend.route('/logout/')

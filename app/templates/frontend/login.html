@@ -1,9 +1,20 @@
 {% extends 'layout.html' %}
+{% import 'macros.html' as m %}
 
 {% block body %}
     {% for message in get_flashed_messages() %}
         {{ message }}
     {% endfor %}
-    <form action="{{ url_for('frontend.login') }}" method="post">
-    </form>
+    <div class="tab-content">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#simple-form" data-toggle="tab">Login</a></li>
+            <li><a href="#openid-form" data-toggle="tab">OpenID</a></li>
+        </ul>
+        <div class="tab-pane active" id="simple-form">
+            {{ m.render_form(form, action_url=url_for('frontend.login')) }}
+        </div>
+        <div class="tab-pane" id="openid-form">
+            {{ m.render_form(openid_form, action_url=url_for('frontend.login')) }}
+        </div>
+    </div>
 {% endblock %}
