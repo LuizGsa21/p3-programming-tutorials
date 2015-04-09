@@ -1,6 +1,8 @@
 {% extends 'layout.html' %}
 {% import 'macros.html' as m %}
 
+{% block header %}
+{% endblock %}
 {% block body %}
     {% for message in get_flashed_messages() %}
         {{ message }}
@@ -16,5 +18,17 @@
         <div class="tab-pane" id="openid-form">
             {{ m.render_form(openid_form, action_url=url_for('frontend.login')) }}
         </div>
+    </div>
+    <div id="signInButton">
+          <span class="g-signin"
+                data-scope="openid email"
+{#                data-clientid="{{ client_id }}"#}
+                data-clientid="434873850694-754ltcoj26ircq9s6ruj77to181pb090.apps.googleusercontent.com"
+                data-redirecturi="postmessage"
+                data-accesstype="offline"
+                data-cookiepolicy="single_host_origin"
+                data-callback="signInCallback"
+                data-approvalprompt="force">
+          </span>
     </div>
 {% endblock %}

@@ -2,11 +2,11 @@ from flask import Blueprint, jsonify
 from schemas import ArticleSchema, CategorySchema, article_serializer, articles_serializer
 from app.models import Article, Comment, User, Category
 
-api = Blueprint('api', __name__, url_prefix='/api')
+api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
-@api.route('/articles/')
-@api.route('/articles/all/')
+@api_bp.route('/articles/')
+@api_bp.route('/articles/all/')
 def articles_to_json():
     articles = Article.query.all()
     if articles is None:
@@ -16,7 +16,7 @@ def articles_to_json():
     return jsonify(articles=result)
 
 
-@api.route('/articles/<int:id>/')
+@api_bp.route('/articles/<int:id>/')
 def article_to_json(id):
     article = Article.query.get(id)
     if article is None:
@@ -26,7 +26,7 @@ def article_to_json(id):
     return jsonify(article=result)
 
 
-@api.route('/categories/')
+@api_bp.route('/categories/')
 def categories_to_json():
     categories = Category.query.all()
     serializer = CategorySchema(many=True)

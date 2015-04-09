@@ -1,13 +1,13 @@
 from flask import Blueprint
 
-user = Blueprint('user', __name__, url_prefix='/user')
+user_bp = Blueprint('user', __name__, url_prefix='/user')
 
 
-@user.route('/profile/')
+@user_bp.route('/profile/')
 def profile():
     return 'profile'
 
 
-@user.route('/settings/')
+@user_bp.route('/settings/')
 def settings():
     return 'settings'

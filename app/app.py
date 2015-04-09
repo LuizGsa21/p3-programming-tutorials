@@ -3,12 +3,13 @@ from config import DevelopmentConfig
 from extensions import db, csrf, login_manager, oid, current_user
 import models
 
-from admin import admin
-from api import api
-from frontend import frontend
-from user import user
+from .admin import admin_bp
+from .api import api_bp
+from .frontend import frontend_bp
+from .user import user_bp
+from .oauth import oauth_bp
 
-DEFAULT_BLUEPRINTS = (admin, api, frontend, user)
+DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
 
 
 def create_app(app_name=None, blueprints=None, config=None):

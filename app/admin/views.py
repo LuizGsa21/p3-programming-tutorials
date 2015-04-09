@@ -1,8 +1,8 @@
 from flask import Blueprint
 
-admin = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 
-@admin.route('/')
+@admin_bp.route('/')
 def dashboard():
     return 'dashboard'

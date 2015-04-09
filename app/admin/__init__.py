@@ -1,1 +1,1 @@
-from views import admin
+from views import admin_bp

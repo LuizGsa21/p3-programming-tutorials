@@ -4,24 +4,25 @@ from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
 
-frontend = Blueprint('frontend', __name__)
+frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
 
 
-@frontend.route('/')
+@frontend_bp.route('/')
 def index():
     return render_template('frontend/index.html')
 
 
-@frontend.route('/login/', methods=['GET', 'POST'])
+@frontend_bp.route('/login/', methods=['GET', 'POST'])
 @oid.loginhandler
 def login():
-    if not g.user and current_user.is_authenticated():
+    if g.user and current_user.is_authenticated():
         flash('You are already logged in.', 'warning')
         return redirect(url_for('frontend.index'))
     form = LoginForm(request.form)
     openid_form = OpenIDForm()
+    print current_user.is_authenticated()
 
     if openid_form.validate_on_submit():
         if openid_form.errors:
@@ -44,7 +45,7 @@ def login():
     return render_template('frontend/login.html', form=form, openid_form=openid_form)
 
 
-@frontend.route('/register/', methods=['GET', 'POST'])
+@frontend_bp.route('/register/', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm(request.form)
     if form.validate_on_submit():
@@ -75,7 +76,7 @@ def after_login(response):
     return redirect(url_for('frontend.index'))
 
 
-@frontend.route('/logout/')
+@frontend_bp.route('/logout/')
 @login_required
 def logout():
     logout_user()

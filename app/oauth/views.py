@@ -1,10 +1,10 @@
 from flask import Blueprint, request, redirect, url_for, flash, session, g
-from app.extensions import db, login_user, oauth
+from app.extensions import db, login_user, oauth, current_user
 from app.models import User
 import requests
 import os
 
-oauth_blueprint = Blueprint('oauth', __name__)
+oauth_bp = Blueprint('oauth', __name__)
 
 google = oauth.remote_app('google',
                           base_url='https://www.google.com/accounts/',
@@ -17,13 +17,13 @@ google = oauth.remote_app('google',
                           access_token_url='https://accounts.google.com/o/oauth2/token',
                           access_token_method='POST',
                           access_token_params={'grant_type': 'authorization_code'},
-                          consumer_key='GOOGLE_CLIENT_ID',
-                          consumer_secret='GOOGLE_CLIENT_SECRET')
+                          consumer_key=os.environ['GOOGLE_CLIENT_ID'],
+                          consumer_secret=os.environ['GOOGLE_CLIENT_SECRET'])
 
-GOOGLE_OAUTH2_USERINFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
+GOOGLE_OAUTH2_USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
 
-@oauth_blueprint.route('/oauth2callback')
+@oauth_bp.route('/oauth2callback')
 @google.authorized_handler
 def google_authorized(resp):
     if resp is None:
@@ -38,7 +38,7 @@ def google_authorized(resp):
 
     user = User.query.filter_by(username=userinfo['email']).first()
     if not user:
-        user = User(userinfo['email'], '')
+        user = User(username=userinfo['email'], pwdhash='')
         db.session.add(user)
         db.session.commit()
 
@@ -50,10 +50,13 @@ def google_authorized(resp):
     return redirect(url_for('frontend.index'))
 
 
-@oauth_blueprint.route('/google-login')
+@oauth_bp.route('/google-login')
 def google_login():
+    if g.user and current_user.is_authenticated():
+        flash('You are already logged in.', 'warning')
+        return redirect(url_for('frontend.index'))
     return google.authorize(
-        callback=url_for('frontend.google_authorized', _external=True))
+        callback=url_for('oauth.google_authorized', _external=True))
 
 
 @google.tokengetter
@@ -70,7 +73,7 @@ twitter = oauth.remote_app('twitter',
                            consumer_key='Twitter API Key',
                            consumer_secret='Twitter API Secret')
 
-@oauth_blueprint.route('/twitter-login')
+@oauth_bp.route('/twitter-login')
 def twitter_login():
     return twitter.authorize(
         callback=url_for(
@@ -80,7 +83,7 @@ def twitter_login():
         ))
 
 
-@oauth_blueprint.route('/twitter-login/authorized')
+@oauth_bp.route('/twitter-login/authorized')
 @twitter.authorized_handler
 def twitter_authorized(resp):
     if resp is None:
@@ -117,7 +120,7 @@ facebook = oauth.remote_app('facebook',
                             consumer_secret='FACEBOOK_APP_SECRET',
                             request_token_params={'scope': 'email'})
 
-@oauth_blueprint.route('/facebook-login')
+@oauth_bp.route('/facebook-login')
 def facebook_login():
     return facebook.authorize(
         callback=url_for(
@@ -127,7 +130,7 @@ def facebook_login():
         ))
 
 
-@oauth_blueprint.route('/facebook-login/authorized')
+@oauth_bp.route('/facebook-login/authorized')
 @facebook.authorized_handler
 def facebook_authorized(resp):
     if resp is None:
