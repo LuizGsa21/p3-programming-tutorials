@@ -10,3 +10,5 @@ login_manager = LoginManager()
 from flask_openid import OpenID
 oid = OpenID()
 
+from flask_oauth import OAuth
+oauth = OAuth()

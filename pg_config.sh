@@ -6,6 +6,7 @@ apt-get -qqy install python-pip
 pip install bleach
 pip install oauth2client
 pip install requests
+pip install Flask-OAuth
 pip install httplib2
 pip install Flask-WTF
 pip install Flask-SQLAlchemy

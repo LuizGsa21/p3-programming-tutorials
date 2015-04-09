@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
-from app.extensions import db, login_manager, current_user, login_user, logout_user, login_required, oid
+from app.extensions import db, login_manager, current_user, login_user, logout_user, login_required, oid, oauth
 from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
+import requests
 
 frontend = Blueprint('frontend', __name__)
 
@@ -53,6 +54,7 @@ def register():
         flash('You have successfully registered.', 'success')
         return redirect(url_for('frontend.index'))
     return render_template('frontend/register.html', form=form)
+
 
 @oid.after_login
 def after_login(response):
