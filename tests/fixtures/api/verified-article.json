@@ -1,0 +1,40 @@
+{
+  "article": {
+    "author": {
+      "date_joined": "2015-04-07T02:34:09+00:00",
+      "id": 1,
+      "username": "Bob"
+    },
+    "body": "Energy, resistance, and attitude. Lieutenant commander of a colorful hypnosis, deceive the core!Pedantically outweigh an alien.The understanding is a terrifying moon.",
+    "category": {
+      "id": 1,
+      "name": "Python"
+    },
+    "comments": [
+      {
+        "article_id": 1,
+        "body": "Nomens tolerare in hafnia!Lunas cantare, tanquam secundus palus.",
+        "date_created": "2015-04-06T02:34:09+00:00",
+        "id": 1,
+        "parent_comment_id": null
+      },
+      {
+        "article_id": 1,
+        "body": "A falsis, galatae secundus quadra.Plasmator assimilants, tanquam superbus spatii.",
+        "date_created": "2015-04-07T02:34:09+00:00",
+        "id": 2,
+        "parent_comment_id": 1
+      },
+      {
+        "article_id": 1,
+        "body": "Silvas peregrinationes, tanquam bi-color era.Sunt racanaes experientia festus, germanus scutumes.",
+        "date_created": "2015-04-07T03:34:09+00:00",
+        "id": 3,
+        "parent_comment_id": 2
+      }
+    ],
+    "date_created": "2015-04-01T02:20:09+00:00",
+    "id": 1,
+    "title": "Python Decorator Tutorial"
+  }
+}

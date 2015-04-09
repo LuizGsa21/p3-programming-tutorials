@@ -1,9 +1,11 @@
 import unittest
+import os
+
 from app import create_app
 from app.config import TestingConfig
-from app.models import Article, Comment, User, db, Category
-from database_fixture import get_database_fixtures
-import os
+from app.models import db
+from tests.fixtures.database_fixture import get_database_fixtures
+
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,16 +20,11 @@ class BaseTestCase(unittest.TestCase):
         reset_database()
 
     def tearDown(self):
+        db.drop_all()
         self.ctx.pop()
 
 
 def reset_database():
-    Comment.query.delete()
-    Article.query.delete()
-    User.query.delete()
-    Category.query.delete()
-    db.session.commit()
-
     fixtures = get_database_fixtures()
     import app.models as models
 

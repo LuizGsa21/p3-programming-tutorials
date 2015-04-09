@@ -1,0 +1,28 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Python"
+    },
+    {
+      "id": 2,
+      "name": "PHP"
+    },
+    {
+      "id": 3,
+      "name": "Java"
+    },
+    {
+      "id": 4,
+      "name": "HTML"
+    },
+    {
+      "id": 5,
+      "name": "CSS"
+    },
+    {
+      "id": 6,
+      "name": "JavaScript"
+    }
+  ]
+}

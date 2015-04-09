@@ -4,47 +4,41 @@ import os
 
 
 class APITestCase(BaseTestCase):
+
     def test_articles_to_json(self):
-        r = self.client.get('/api/articles/')
+        response = self.client.get('/api/articles/')
 
-        self.assertEqual(r.status_code, 200, 'status code failed')
-
-        data = json.loads(r.get_data())
-
-        path = os.path.join(BASEDIR, 'api', 'verified-articles.json')
-        with open(path, 'r') as myfile:
-            expected = json.loads(myfile.read())
-
-        # compare the response against the verified json
-        self.assertDictEqual(expected, data, "json doesn't match")
+        self.run_api(response, 'verified-articles.json')
 
     def test_categories_to_json(self):
+        response = self.client.get('/api/categories/')
 
-        from tests.database_fixture import _categories
-
-        expected = dict(categories=_categories)
-
-        r = self.client.get('/api/categories/')
-
-        data = json.loads(r.get_data())
-
-        self.maxDiff = None
-        self.assertDictEqual(expected, data)
-
-        self.assertEqual(r.status_code, 200)
+        self.run_api(response, 'verified-categories.json')
 
     def test_article_to_json(self):
-
         # request for the first article
-        r = self.client.get('/api/articles/1/')
-        self.assertEqual(r.status_code, 200)
+        response = self.client.get('/api/articles/1/')
 
-        path = os.path.join(BASEDIR, 'api', 'verified-articles.json')
-        # get the first article from the verified articles
+        self.run_api(response, 'verified-article.json')
+
+    def get_verified_json(self, filename):
+        """ Returns a dictionary from the given filename.
+            NOTE: json file must be located in API fixture namespace `/tests/fixtures/api/`
+        """
+        path = os.path.join(BASEDIR, 'fixtures', 'api', filename)
         with open(path, 'r') as myfile:
-            article = json.loads(myfile.read())['articles'][0]
-            expected = dict(article=article)
+            return json.loads(myfile.read())
 
-        data = json.loads(r.get_data())
+    def run_api(self, resp, filename):
+        self.assertEqual(resp.status_code, 200, 'status code failed')
+
+        # convert response to a dictionary
+        result = json.loads(resp.get_data())
+
+        # retrieve the verified articles
+        expected = self.get_verified_json(filename)
+
+        # compare the response against the verified articles
         self.maxDiff = None
-        self.assertDictEqual(expected, data)
+        self.assertDictEqual(expected, result, "json doesn't match")
+
