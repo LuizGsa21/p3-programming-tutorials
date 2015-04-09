@@ -16,7 +16,7 @@ class Config(object):
 class DevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY = 'how-to-tutorials-development'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
     # SQLALCHEMY_ECHO = True
 
 

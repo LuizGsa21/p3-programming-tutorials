@@ -31,7 +31,6 @@ def create_app(app_name=None, blueprints=None, config=None):
 
     if config.DEBUG:
         from tests import reset_database
-
         with app.app_context():
             reset_database()
     return app
