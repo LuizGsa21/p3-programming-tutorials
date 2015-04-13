@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
-from app.extensions import db, login_manager, current_user, login_user, logout_user, login_required, oid, oauth
+from app.extensions import db, login_manager, current_user, login_user, \
+    logout_user, login_required, oid, oauth, Message, mail
 from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
@@ -12,6 +13,15 @@ login_manager.login_view = 'frontend.login'
 @frontend_bp.route('/')
 def index():
     return render_template('frontend/index.html')
+
+
+@frontend_bp.route('/mail')
+def send_mail():
+    msg = Message('Hello its luiz :)',
+                  body='this is an email. lol',
+                  recipients=['larantessa@icloud.com'])
+    mail.send(msg)
+    return redirect(url_for('frontend.index'))
 
 
 @frontend_bp.route('/login/', methods=['GET', 'POST'])

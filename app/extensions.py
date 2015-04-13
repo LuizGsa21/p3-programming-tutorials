@@ -12,3 +12,6 @@ oid = OpenID()
 
 from flask_oauth import OAuth
 oauth = OAuth()
+
+from flask_mail import Mail, Message
+mail = Mail()

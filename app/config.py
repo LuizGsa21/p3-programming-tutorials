@@ -18,6 +18,13 @@ class DevelopmentConfig(Config):
     SECRET_KEY = 'how-to-tutorials-development'
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
     # SQLALCHEMY_ECHO = True
+    # EMAIL SETTINGS
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 465
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = os.environ['MAIL_USERNAME']
+    MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
+    MAIL_DEFAULT_SENDER = os.environ['MAIL_SENDER']
 
 
 class TestingConfig(Config):

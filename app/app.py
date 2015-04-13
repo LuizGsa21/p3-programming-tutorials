@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, g
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, oid, current_user
+from extensions import db, csrf, login_manager, oid, current_user, mail
 import models
 
 from .admin import admin_bp
@@ -53,6 +53,8 @@ def configure_extensions(app):
 
     oid.fs_store_path = 'openid-store'
     oid.init_app(app)
+
+    mail.init_app(app)
 
 
 def configure_blueprints(app, blueprints):
