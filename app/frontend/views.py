@@ -5,7 +5,7 @@ from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
 
-frontend_bp = Blueprint('frontend', __name__)
+frontend_bp = Blueprint('frontend', __name__, static_url_path='static')
 
 login_manager.login_view = 'frontend.login'
 

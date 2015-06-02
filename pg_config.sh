@@ -14,5 +14,7 @@ pip install beautifulsoup4
 pip install Flask-Login
 pip install Flask-OpenID
 pip install Flask-Mail
+pip install marshmallow
+
 su postgres -c 'createuser -dRS vagrant'
 su vagrant -c 'createdb'

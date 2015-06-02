@@ -23,17 +23,19 @@ def create_app(app_name=None, blueprints=None, config=None):
     if config is None:
         config = DevelopmentConfig
 
-    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES)
+    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES, static_folder =config.PROJECT_STATIC_FOLDER)
+
     app.config.from_object(config)
     configure_hook(app)
     configure_extensions(app)
     configure_blueprints(app, blueprints)
     configure_error_handlers(app)
 
-    if config.DEBUG:
-        from tests import reset_database
-        with app.app_context():
-            reset_database()
+    # if config.DEBUG:
+    #     from tests import reset_database
+    #     with app.app_context():
+    #         reset_database()
+
     return app
 
 
