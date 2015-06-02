@@ -1,13 +1,14 @@
-from flask import Flask, request, render_template, g
+from flask import Flask, render_template, g
+
 from config import DevelopmentConfig
 from extensions import db, csrf, login_manager, oid, current_user, mail
-import models
-
 from .admin import admin_bp
 from .api import api_bp
 from .frontend import frontend_bp
 from .user import user_bp
 from .oauth import oauth_bp
+from .models import Article, Comment, User, Category
+
 
 DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
 
@@ -23,11 +24,11 @@ def create_app(app_name=None, blueprints=None, config=None):
     if config is None:
         config = DevelopmentConfig
 
-    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES, static_folder =config.PROJECT_STATIC_FOLDER)
+    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES, static_folder=config.PROJECT_STATIC_FOLDER)
 
     app.config.from_object(config)
-    configure_hook(app)
     configure_extensions(app)
+    configure_hook(app)
     configure_blueprints(app, blueprints)
     configure_error_handlers(app)
 
@@ -43,6 +44,10 @@ def configure_hook(app):
     @app.before_request
     def before_request():
         g.user = current_user
+
+    @app.context_processor
+    def jinja_globals():
+        return dict(categories=Category.query.all())
 
 
 def configure_extensions(app):

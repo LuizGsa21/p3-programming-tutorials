@@ -5,7 +5,7 @@ from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
 
-frontend_bp = Blueprint('frontend', __name__, static_url_path='static')
+frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
 
@@ -14,6 +14,9 @@ login_manager.login_view = 'frontend.login'
 def index():
     return render_template('frontend/index.html')
 
+@frontend_bp.route('/<category>/')
+def articles(category):
+    return render_template('frontend/index.html')
 
 @frontend_bp.route('/mail')
 def send_mail():
