@@ -12,7 +12,10 @@ login_manager.login_view = 'frontend.login'
 
 @frontend_bp.route('/')
 def index():
-    return render_template('frontend/index.html', active_page='index')
+    registerForm = RegistrationForm()
+    openid_form = OpenIDForm()
+
+    return render_template('frontend/index.html', active_page='index', registerForm=registerForm, openid_form=openid_form)
 
 @frontend_bp.route('/<category>/')
 def articles(category):
@@ -35,8 +38,6 @@ def login():
         return redirect(url_for('frontend.index'))
     form = LoginForm(request.form)
     openid_form = OpenIDForm()
-    print current_user.is_authenticated()
-
     if openid_form.validate_on_submit():
         if openid_form.errors:
             flash(openid_form.errors, 'danger')
@@ -45,11 +46,12 @@ def login():
         return oid.try_login(openid, ask_for=['email'])
 
     elif form.validate_on_submit():
-        username = form.username.data
+        # username = form.username.data
+        email = form.email.data
         password = form.password.data
-        user = User.query.filter(User.username_insensitive == username).first()
+        user = User.query.filter(User.email_insensitive == email).first()
         if not user or not user.check_password(password):
-            flash('Invalid username or password. Please try again.', 'danger')
+            flash('Invalid email or password. Please try again.', 'danger')
         else:
             login_user(user)
             flash('You have successfully logged in.', 'success')
@@ -62,12 +64,16 @@ def login():
 def register():
     form = RegistrationForm(request.form)
     if form.validate_on_submit():
-        user = User(username=form.username.data, pwdhash=form.password.data)
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            pwdhash=form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash('You have successfully registered.', 'success')
+        flash('You have successfully registered. Please login.', 'success')
         return redirect(url_for('frontend.index'))
-    return render_template('frontend/register.html', form=form)
+    flash(form.errors, 'danger')
+    return redirect(url_for('frontend.index'))
 
 
 @oid.after_login
