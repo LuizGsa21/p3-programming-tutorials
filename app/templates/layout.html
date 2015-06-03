@@ -23,6 +23,7 @@
     {% block header %}{% endblock %}
 </head>
 <body id="{% block bodyID %}{% endblock %}" >
+{% set active_page = active_page|default('index') -%}
 
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
@@ -37,50 +38,102 @@
             <a class="navbar-brand" href="#">Programming Tutorials</a>
         </div>
 
-        <!-- Collect the nav links, forms, and other content for toggling -->
+        {# Bear with me on this dropdown menu LOL. The html kind of gets in the way of the logic #}
+        {% set start_dropdown = 3 %} {# how many links to display before creating a dropdown menu (excluding home page) #}
         <div class="collapse navbar-collapse navbar-main-collapse">
-        {% set navigation_bar = [
-            ('/', 'index', 'Index'),
-            ('/downloads/', 'downloads', 'Downloads'),
-            ('/about/', 'about', 'About')
-        ] -%}
             <ul class="nav navbar-nav navbar-right">
+                {# Home page #}
+                <li {% if active_page == 'index' %}class="active"{% endif
+                %}><a href="{{ url_for('frontend.index') }}">Home</a></li>
+                {# Other pages #}
+                {% for category in categories %}
+                      {% if loop.index0 < start_dropdown %}
+                           <li {% if category.name == active_page %}class="active"{% endif
+                           %}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
+                      {% endif %}
 
-                <li class="active"><a href="{{ url_for('frontend.index') }}">Home</a></li>
-                <li class="dropdown onhover">
-                    <a class="dropdown-toggle" href="#" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        {% for category in categories %}
-                            <li><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </li>
-             {% if current_user.is_authenticated() %}
-                <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
-            {% else %}
-                <li><a href="{{ url_for('frontend.login') }}">Login</a></li>
-                <li><a href="{{ url_for('frontend.register') }}">Register</a></li>
-            {% endif %}
+                      {% if loop.index0 >= start_dropdown %}
+                        {% if loop.index0 == start_dropdown %} {# add dropdown menu starting tags #}
+                            <li class="dropdown onhover">
+                                <a class="dropdown-toggle" href="#" data-toggle="dropdown">More <b class="caret"></b></a>
+                                <ul class="dropdown-menu">{%
+                         endif %}
+                         <li {% if category.name == active_page %}class="active"{% endif
+                         %}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
+                       {% if loop.last %}</ul></li>{% endif %} {# add dropdown menu closing tags #}
+                      {% endif %}
+
+                {% endfor %}
+                {% if current_user.is_authenticated() %}
+
+                    <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
+
+                {% elif active_page != 'index' %}{# Home page has a login/register form so their is no need for login/register links #}
+                    <li><a href="{{ url_for('frontend.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('frontend.register') }}">Register</a></li>
+                {% endif %}
             </ul>
         </div><!-- /.navbar-collapse -->
     </div>
 </nav>
 {% block body %}{% endblock %}
 
+<footer class="footer footer-default footer-sticky animated fadeIn">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 col-sm-4 col-md-4">
+                    <h4 class="title">Navigation</h4>
+                    <ul class="nav footer-nav pull-left">
+                        <li class="active"><a href="#">Home</a></li>
+                        <li><a href="#">JavaScript</a></li>
+                        <li><a href="#">HTML/CSS</a></li>
+                        <li><a href="#">Java</a></li>
+                        <li><a href="#">Python</a></li>
+                    </ul>
+                    <ul class="nav footer-nav pull-left">
+                        <li class="active"><a href="#">C</a></li>
+                        <li><a href="#">C++</a></li>
+                        <li><a href="#">Ruby</a></li>
+                    </ul>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 valign">
+                    <div class="quote">"Programming is a lifestyle."</div>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3 col-lg-offset-1">
+                    <div class="stay-connected">
+                        <h4 class="title">Stay Connected</h4>
+                        <p class="text-justify-full">
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i class="fa fa-google-plus"></i></a>
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i class="fa fa-twitter"></i></a>
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i class="fa fa-facebook"></i></a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="copyright text-center">Copyright &copy; All Rights Reserved</div>
+                </div>
+            </div>
+        </div>
+</footer>
+
 <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 <script src="{{ url_for('static', filename='js/bowser.min.js') }}"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script src="/static/js/jquery-plugins.js"></script>
-<script src="/static/js/bootstrap.js"></script>
+<script src="{{ url_for('static', filename='js/jquery-plugins.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+
 <!--[if lte IE 9 ]>
 <script src="js/jquery.html5-placeholder-shim.js"></script>
 <![endif]-->
-
 <script>
     // Let the users we don't care about IE8 and below
     if (bowser.msie && bowser.version <= 8) {
         alert('It seems like you are using Internet Explorer ' + bowser.version + '. If you care about the internet please update your web browser.');
     }
 </script>
+
+{% block bodyPostfix %}{% endblock %}
 </body>
 </html>

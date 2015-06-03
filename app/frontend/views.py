@@ -12,11 +12,11 @@ login_manager.login_view = 'frontend.login'
 
 @frontend_bp.route('/')
 def index():
-    return render_template('frontend/index.html')
+    return render_template('frontend/index.html', active_page='index')
 
 @frontend_bp.route('/<category>/')
 def articles(category):
-    return render_template('frontend/index.html')
+    return render_template('frontend/index.html', active_page=category)
 
 @frontend_bp.route('/mail')
 def send_mail():
