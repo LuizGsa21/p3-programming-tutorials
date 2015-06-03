@@ -33,7 +33,8 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True)
+    username = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
     pwdhash = db.Column(db.String)
     date_joined = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -50,6 +51,9 @@ class User(db.Model, UserMixin):
     def username_insensitive(self):
         return CaseInsensitiveWord(self.username)
 
+    @hybrid_property
+    def email_insensitive(self):
+        return CaseInsensitiveWord(self.email)
 
 class Category(db.Model):
     __tablename__ = 'categories'
