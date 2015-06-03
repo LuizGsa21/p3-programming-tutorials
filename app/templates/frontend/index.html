@@ -3,9 +3,26 @@
 {% block bodyID %}page-index{% endblock %}
 
 {% block body %}
+
     <section class="header">
         <div class="container">
             <div class="row">
+                    {% for category, message in get_flashed_messages(with_categories=true) %}
+                        <div class="alert-messages">
+                            <div class="alert alert-{{ category }}">
+                                <a href="#" class="close" data-dismiss="alert">&times;</a>
+                                {% if message is mapping %}
+                                    <ul>
+                                    {% for key, value in message.items() %}
+                                        <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    {{ message }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
                 <div class="col-sm-6 hidden-xs">
                     <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo" />
                 </div>
@@ -13,15 +30,17 @@
                     <div class="nav-tabs-container">
                         <!-- TAB NAVIGATION -->
                         <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
-                            <li class="active"><a href="#tab-login" role="tab" data-toggle="tab">Register</a></li>
-                            <li><a href="#tab-register" role="tab" data-toggle="tab">Login</a></li>
+                            <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+                            <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
                         </ul>
                         <!-- TAB CONTENT -->
                         <div class="tab-content">
-                            <div class="active tab-pane fade in" id="tab-login">
-                                <form action="register.html" method="post" role="form">
+                            <div class="active tab-pane fade in" id="tab-register">
+                                <form action="{{ url_for('frontend.register') }}" method="post" role="form">
+                                    {{ registerForm.csrf_token }}
                                     <div class="form-group">
                                         <label class="sr-only" for="r-email">Email</label>
+
                                         <input type="text" class="form-control" name="email" id="r-email" placeholder="Email">
                                     </div>
                                     <div class="form-group">
@@ -47,15 +66,16 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="tab-pane fade" id="tab-register">
-                                <form action="login.html" method="post" role="form">
+                            <div class="tab-pane fade" id="tab-login">
+                                <form action="{{ url_for('frontend.login') }}" method="post" role="form">
+                                    {{ registerForm.csrf_token }}
                                     <div class="form-group">
-                                        <label class="sr-only" for="l-username">Username</label>
-                                        <input type="text" class="form-control" name="username" id="l-username" placeholder="Email">
+                                        <label class="sr-only" for="l-email">Email</label>
+                                        <input type="text" class="form-control" name="email" id="l-email" placeholder="Email">
                                     </div>
                                     <div class="form-group">
-                                        <label class="sr-only" for="l-password">Username</label>
-                                        <input type="text" class="form-control" name="username" id="l-password" placeholder="Password">
+                                        <label class="sr-only" for="l-password">Password</label>
+                                        <input type="text" class="form-control" name="password" id="l-password" placeholder="Password">
                                     </div>
                                     <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
                                 </form>
@@ -158,9 +178,11 @@
 
             var $target = $($(this).attr('href'));
 
-            $('html, body').stop().animate({
-                'scrollTop': $target.offset().top
-            }, 900, 'swing');
+            if ($target){
+                $('html, body').stop().animate({
+                    'scrollTop': $target.offset().top
+                }, 900, 'swing');
+            }
         });
     });
 </script>
