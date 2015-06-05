@@ -33,8 +33,10 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True, nullable=False)
-    email = db.Column(db.String, unique=True, nullable=False)
+    username = db.Column(db.String, unique=True)
+    email = db.Column(db.String, unique=True)
+    first_name = db.Column(db.String)
+    last_name = db.Column(db.String)
     pwdhash = db.Column(db.String)
     date_joined = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -46,6 +48,7 @@ class User(db.Model, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.pwdhash, password)
+
 
     @hybrid_property
     def username_insensitive(self):
@@ -61,6 +64,9 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
     articles = db.relationship('Article', backref='category', lazy='dynamic')
+
+    def __str__(self):
+        return self.name
 
 
 class Article(db.Model):
@@ -85,3 +91,19 @@ class Comment(db.Model):
     parent_comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+# init database fixtures
+def init_database():
+    if Category.query.count() != 0:
+        return
+    categories = [
+        {'id': 1, 'name': 'Python'},
+        {'id': 2, 'name': 'PHP'},
+        {'id': 3, 'name': 'Java'},
+        {'id': 4, 'name': 'HTML'},
+        {'id': 5, 'name': 'CSS'},
+        {'id': 6, 'name': 'JavaScript'}
+    ]
+    for c in categories:
+        db.session.add(Category(**c))
+        db.session.commit()

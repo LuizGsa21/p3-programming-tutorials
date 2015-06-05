@@ -1,13 +1,13 @@
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, flash, url_for, redirect
 
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, oid, current_user, mail
+from extensions import db, csrf, login_manager, oid, current_user, mail, babel, format_datetime as b_datetime
 from .admin import admin_bp
 from .api import api_bp
 from .frontend import frontend_bp
 from .user import user_bp
 from .oauth import oauth_bp
-from .models import Article, Comment, User, Category
+from .models import Category, init_database
 
 
 DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
@@ -24,18 +24,18 @@ def create_app(app_name=None, blueprints=None, config=None):
     if config is None:
         config = DevelopmentConfig
 
-    app = Flask(app_name, template_folder=config.PROJECT_TEMPLATES, static_folder=config.PROJECT_STATIC_FOLDER)
+    app = Flask(app_name, template_folder=config.TEMPLATE_FOLDER, static_folder=config.STATIC_FOLDER)
 
     app.config.from_object(config)
     configure_extensions(app)
     configure_hook(app)
     configure_blueprints(app, blueprints)
     configure_error_handlers(app)
+    configure_jinja_filters(app)
 
-    # if config.DEBUG:
-    #     from tests import reset_database
-    #     with app.app_context():
-    #         reset_database()
+    # from .models import init_database
+    with app.app_context():
+        init_database()
 
     return app
 
@@ -57,11 +57,35 @@ def configure_extensions(app):
     csrf.init_app(app)
 
     login_manager.init_app(app)
+    login_manager.login_view = 'frontend.index'
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        flash('You are not logged in.', 'danger')
+        return redirect(url_for('frontend.index'))
 
     oid.fs_store_path = 'openid-store'
     oid.init_app(app)
 
     mail.init_app(app)
+
+    babel.init_app(app)
+
+    # https://pythonhosted.org/Flask-Babel/
+    # @babel.localeselector
+    # def get_locale():
+    ## There is no locale user setting yet
+    # user = getattr(g, 'user', None)
+    # if user is not None:
+    #     return user.locale
+    #
+    # return request.accept_languages.best_match(['de', 'fr', 'en'])
+    #
+    # @babel.timezoneselector
+    # def get_timezone():
+    #     user = getattr(g, 'user', None)
+    #     if user is not None:
+    #         return user.timezone
 
 
 def configure_blueprints(app, blueprints):
@@ -81,3 +105,15 @@ def configure_error_handlers(app):
     @app.errorhandler(500)
     def server_error_page(error):
         return render_template('errors/server-error.html'), 500
+
+
+def configure_jinja_filters(app):
+    @app.template_filter('datetime')
+    def format_datetime(value, format='default'):
+        if format == 'default':
+            format = 'MMMM d, yyyy'
+        elif format == 'full':
+            format = 'EEEE, d. MMMM y HH:mm'
+        elif format == 'medium':
+            format = "EE dd.MM.y HH:mm"
+        return b_datetime(value, format)

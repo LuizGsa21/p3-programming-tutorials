@@ -15,6 +15,6 @@ pip install Flask-Login
 pip install Flask-OpenID
 pip install Flask-Mail
 pip install marshmallow
-
+pip install Flask-Babel
 su postgres -c 'createuser -dRS vagrant'
 su vagrant -c 'createdb'

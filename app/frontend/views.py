@@ -12,14 +12,14 @@ login_manager.login_view = 'frontend.login'
 
 @frontend_bp.route('/')
 def index():
-    registerForm = RegistrationForm()
+    registerForm = RegistrationForm(request.form)
     openid_form = OpenIDForm()
-
     return render_template('frontend/index.html', active_page='index', registerForm=registerForm, openid_form=openid_form)
 
 @frontend_bp.route('/<category>/')
 def articles(category):
-    return render_template('frontend/index.html', active_page=category)
+    # return render_template('frontend/index.html', active_page=category)
+    return 'category page'
 
 @frontend_bp.route('/mail')
 def send_mail():
@@ -99,6 +99,7 @@ def after_login(response):
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash('You have successfully logged out.', 'success')
     return redirect(url_for('frontend.index'))
 

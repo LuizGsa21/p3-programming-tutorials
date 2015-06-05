@@ -4,8 +4,8 @@ import os
 class Config(object):
     PROJECT = 'How-To-Tutorials'
     PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-    PROJECT_TEMPLATES = os.path.join(PROJECT_ROOT, 'templates')
-    PROJECT_STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
+    STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
+    TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = 'sqlite://'

@@ -7,7 +7,8 @@ providers = {
         'authorize_url': 'https://accounts.google.com/o/oauth2/auth',
         'request_token_url': None,
         'request_token_params': {
-            'scope': 'https://www.googleapis.com/auth/userinfo.email',
+            'scope': 'openid email',
+            'approval_prompt': 'force',
             'response_type': 'code'
         },
         'access_token_url': 'https://accounts.google.com/o/oauth2/token',

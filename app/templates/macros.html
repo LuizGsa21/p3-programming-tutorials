@@ -1,3 +1,27 @@
+{% macro active_class(page, active_page) -%}
+     {% if page ==  active_page -%}
+        class="active"
+     {%- endif %}
+{%- endmacro %}
+
+{% macro alert_messages(messages) %}
+    {% for category, message in messages %}
+    <div class="alert-messages">
+        <div class="alert alert-{{ category }}">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            {% if message is mapping %}
+            <ul>
+                {% for key, value in message.items() %}
+                <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                {{ message }}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% endmacro %}
 {#
     Snippet taken from:
     http://bear-z.com/python/render-bootstrap-3-forms-with-wtforms-and-jinja/
@@ -86,7 +110,7 @@
                     class_='',
                     btn_class='btn btn-default',
                     etype='application/x-www-form-urlencoded') -%}
-    <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}" enctype="{{ etype }}">
+    <form method="POST" action="{{ url_for(action_url) }}" role="form" class="{{ class_ }}" enctype="{{ etype }}">
         {{ form.hidden_tag() if form.hidden_tag }}
         {% if caller %}
             {{ caller() }}

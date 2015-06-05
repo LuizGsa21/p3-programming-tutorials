@@ -4,9 +4,6 @@
 {% block header %}
 {% endblock %}
 {% block body %}
-    {% for message in get_flashed_messages() %}
-        {{ message }}
-    {% endfor %}
     <div class="tab-content">
         <ul class="nav nav-tabs">
             <li class="active"><a href="#simple-form" data-toggle="tab">Login</a></li>
@@ -22,7 +19,6 @@
     <div id="signInButton">
           <span class="g-signin"
                 data-scope="openid email"
-{#                data-clientid="{{ client_id }}"#}
                 data-clientid="434873850694-754ltcoj26ircq9s6ruj77to181pb090.apps.googleusercontent.com"
                 data-redirecturi="postmessage"
                 data-accesstype="offline"

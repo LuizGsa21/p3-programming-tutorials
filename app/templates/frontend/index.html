@@ -1,175 +1,193 @@
-{% extends 'layout.html' %}
+    {% extends 'layout.html' %}
+    {% from 'macros.html' import alert_messages %}
+    {% block metaTags %}
+    <meta name="csrf-token" content="{{ csrf_token() }}">{% endblock %}
+    {% block bodyID %}page-index{% endblock %}
 
-{% block bodyID %}page-index{% endblock %}
-
-{% block body %}
-
+    {% block body %}
     <section class="header">
-        <div class="container">
-            <div class="row">
-                    {% for category, message in get_flashed_messages(with_categories=true) %}
-                        <div class="alert-messages">
-                            <div class="alert alert-{{ category }}">
-                                <a href="#" class="close" data-dismiss="alert">&times;</a>
-                                {% if message is mapping %}
-                                    <ul>
-                                    {% for key, value in message.items() %}
-                                        <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>
-                                    {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    {{ message }}
-                                {% endif %}
+    <div class="container">
+        <div class="row">
+
+            {{ alert_messages(get_flashed_messages(with_categories=true)) }}
+
+{#            {% for category, message in get_flashed_messages(with_categories=true) %}#}
+{#            <div class="alert-messages">#}
+{#                <div class="alert alert-{{ category }}">#}
+{#                    <a href="#" class="close" data-dismiss="alert">&times;</a>#}
+{#                    {% if message is mapping %}#}
+{#                    <ul>#}
+{#                        {% for key, value in message.items() %}#}
+{#                        <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>#}
+{#                        {% endfor %}#}
+{#                    </ul>#}
+{#                    {% else %}#}
+{#                        {{ message }}#}
+{#                    {% endif %}#}
+{#                </div>#}
+{#            </div>#}
+{#            {% endfor %}#}
+            <div class="col-sm-6 hidden-xs">
+                <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}"
+                     alt="How-To-Tutorials logo"/>
+            </div>
+            <div class="col-sm-6">
+                <div class="nav-tabs-container">
+                    <!-- TAB NAVIGATION -->
+                    <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
+                        <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+                        <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
+                    </ul>
+                    <!-- TAB CONTENT -->
+                    <div class="tab-content">
+                        <div class="active tab-pane fade in" id="tab-register">
+                            <form action="{{ url_for('frontend.register') }}" method="post" role="form">
+                                {{ registerForm.csrf_token }}
+                                <div class="form-group">
+                                    <label class="sr-only" for="r-email">Email</label>
+
+                                    <input type="text" class="form-control" name="email" id="r-email"
+                                           placeholder="Email">
+                                </div>
+                                <div class="form-group">
+                                    <label class="sr-only" for="r-username">Username</label>
+                                    <input type="text" class="form-control" name="username" id="r-username"
+                                           placeholder="Username">
+                                </div>
+                                <div class="form-group">
+                                    <label class="sr-only" for="r-password">Password</label>
+                                    <input type="text" class="form-control" name="password" id="r-password"
+                                           placeholder="Password">
+                                </div>
+                                <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
+                            </form>
+                            <div class="social-media">
+                                <p class="info">Or register with:</p>
+
+                                <p class="text-justify-full">
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google') }}', 'Google')" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus">
+                                    <i class="fa fa-google-plus"></i></a>
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter') }}', 'Twitter')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
+                                            class="fa fa-twitter"></i></a>
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook') }}', 'Facebook')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
+                                            class="fa fa-facebook"></i></a>
+                                </p>
                             </div>
                         </div>
-                    {% endfor %}
-                <div class="col-sm-6 hidden-xs">
-                    <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo" />
-                </div>
-                <div class="col-sm-6">
-                    <div class="nav-tabs-container">
-                        <!-- TAB NAVIGATION -->
-                        <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
-                            <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
-                            <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
-                        </ul>
-                        <!-- TAB CONTENT -->
-                        <div class="tab-content">
-                            <div class="active tab-pane fade in" id="tab-register">
-                                <form action="{{ url_for('frontend.register') }}" method="post" role="form">
-                                    {{ registerForm.csrf_token }}
-                                    <div class="form-group">
-                                        <label class="sr-only" for="r-email">Email</label>
-
-                                        <input type="text" class="form-control" name="email" id="r-email" placeholder="Email">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="sr-only" for="r-username">Username</label>
-                                        <input type="text" class="form-control" name="username" id="r-username" placeholder="Username">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="sr-only" for="r-password">Password</label>
-                                        <input type="text" class="form-control" name="password" id="r-password" placeholder="Password">
-                                    </div>
-                                    <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
-                                </form>
-                                <div class="social-media">
-                                    <p class="info">Or register with:</p>
-<div id="signInButton">
-          <span class="g-signin"
-                data-scope="openid email"
-                data-clientid="434873850694-754ltcoj26ircq9s6ruj77to181pb090.apps.googleusercontent.com"
-                data-redirecturi="postmessage"
-                data-accesstype="offline"
-                data-cookiepolicy="single_host_origin"
-                data-callback="signInCallback"
-                data-approvalprompt="force">
-          </span>
-</div>
-                                    <p class="text-justify-full">
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i
-                                            class="fa fa-google-plus"></i></a>
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
-                                            class="fa fa-twitter"></i></a>
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
-                                            class="fa fa-facebook"></i></a>
-                                    </p>
+                        <div class="tab-pane fade" id="tab-login">
+                            <form action="{{ url_for('frontend.login') }}" method="post" role="form">
+                                 {{ registerForm.csrf_token }}
+                                <div class="form-group">
+                                    <label class="sr-only" for="l-email">Email</label>
+                                    <input type="text" class="form-control" name="email" id="l-email"
+                                           placeholder="Email">
                                 </div>
-                            </div>
-                            <div class="tab-pane fade" id="tab-login">
-                                <form action="{{ url_for('frontend.login') }}" method="post" role="form">
-{#                                    {{ registerForm.csrf_token }}#}
-                                    <div class="form-group">
-                                        <label class="sr-only" for="l-email">Email</label>
-                                        <input type="text" class="form-control" name="email" id="l-email" placeholder="Email">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="sr-only" for="l-password">Password</label>
-                                        <input type="text" class="form-control" name="password" id="l-password" placeholder="Password">
-                                    </div>
-                                    <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
-                                </form>
-                                <div class="social-media">
-                                    <p class="info">Or login with:</p>
-
-                                    <p class="text-justify-full">
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i
-                                            class="fa fa-google-plus"></i></a>
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
-                                            class="fa fa-twitter"></i></a>
-                                        <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
-                                            class="fa fa-facebook"></i></a>
-                                    </p>
+                                <div class="form-group">
+                                    <label class="sr-only" for="l-password">Password</label>
+                                    <input type="text" class="form-control" name="password" id="l-password"
+                                           placeholder="Password">
                                 </div>
+                                <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
+                            </form>
+                            <div class="social-media">
+                                <p class="info">Or login with:</p>
+
+                                <p class="text-justify-full">
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google') }}', 'Google')" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus">
+                                    <i class="fa fa-google-plus"></i></a>
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter') }}', 'Twitter')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
+                                            class="fa fa-twitter"></i></a>
+                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook') }}', 'Facebook')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
+                                            class="fa fa-facebook"></i></a>
+                                </p>
                             </div>
                         </div>
-
                     </div>
+
                 </div>
             </div>
         </div>
-        <div class="bottom-panel">
-            <div class="learn-more">
-                <a href="#join-our-community-1">Learn More <br/><span class="glyphicon glyphicon-chevron-down"></span></a>
-            </div>
+    </div>
+    <div class="bottom-panel">
+        <div class="learn-more">
+        <a href="#join-our-community-1" data-slowscroll="#join-our-community-1">Learn More <br/><span
+                    class="glyphicon glyphicon-chevron-down"></span></a>
         </div>
+    </div>
     </section>
 
 
     <section id="join-our-community-1" class="join-our-community container vh">
-        <div class="content-wrapper">
-            <div class="row title-container">
-                <div class="col-xs-12">
-                    <h1 class="title">Join Our Community</h1>
-                </div>
+    <div class="content-wrapper">
+        <div class="row title-container">
+            <div class="col-xs-12">
+                <h1 class="title">Join Our Community</h1>
             </div>
-            <div class="row tiles">
-                <div class="col-md-4">
-                    <div class="tile">
-                        <div class="outer-circle">
-                            <div class="circle">
-                                <span class="glyphicon-custom glyphicon-code"></span>
-                            </div>
-                        </div>
-                        <div class="info">BECOME A BETTER
-                            <br/>PROGRAMMER</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="tile">
-                        <div class="outer-circle">
-                            <div class="circle">
-                                <span class="glyphicon-custom glyphicon-knowledge"></span>
-                            </div>
-                        </div>
-                        <div class="info">SHARE YOUR
-                            <br/>KNOWLEDGE</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="tile">
-                        <div class="outer-circle">
-                            <div class="circle">
-                                <span class="glyphicon-custom glyphicon-network"></span>
-                            </div>
-                        </div>
-                        <div class="info">MEET OTHER
-                            <br/>PROGRAMMERS</div>
-                    </div>
-                </div>
-            </div>
-
         </div>
+        <div class="row tiles">
+            <div class="col-md-4">
+                <div class="tile">
+                    <div class="outer-circle">
+                        <div class="circle">
+                            <span class="glyphicon-custom glyphicon-code"></span>
+                        </div>
+                    </div>
+                    <div class="info">BECOME A BETTER
+                        <br/>PROGRAMMER
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tile">
+                    <div class="outer-circle">
+                        <div class="circle">
+                            <span class="glyphicon-custom glyphicon-knowledge"></span>
+                        </div>
+                    </div>
+                    <div class="info">SHARE YOUR
+                        <br/>KNOWLEDGE
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="tile">
+                    <div class="outer-circle">
+                        <div class="circle">
+                            <span class="glyphicon-custom glyphicon-network"></span>
+                        </div>
+                    </div>
+                    <div class="info">MEET OTHER
+                        <br/>PROGRAMMERS
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
     </section>
+    {% endblock %}
 
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-{% endblock %}
+    {% block bodyPostfix %}
 
-{% block bodyPostfix %}
+    <script>
 
-<script>
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+    });
+
+    function oauthLogin(url, provider) {
+        window.open(url, provider + ' Login');
+        return false;
+    }
+
     if (bowser.msie && bowser.version <= 9) {
-        $(window).resize(function() {
+        $(window).resize(function () {
             $('.header').css('height', $(window).height() + 'px');
             $('.join-our-community').css('min-height', $(window).height() + 'px');
         });
@@ -177,59 +195,26 @@
 
         // placeholder shim doesn't work on hidden elements
         // so recall it after user clicks on a tab
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             if (jQuery.placeholder) {
                 jQuery.placeholder.shim();
             }
         });
     }
 
-    $(document).ready(function() {
-        $('a[href^="#"]').on('click', function(e) {
+    $(document).ready(function () {
+        $('a[data-slowscroll^="#"]').on('click', function (e) {
             e.preventDefault();
 
             var $target = $($(this).attr('href'));
 
-            if ($target){
+            if ($target) {
+                console.log($target);
                 $('html, body').stop().animate({
                     'scrollTop': $target.offset().top
                 }, 900, 'swing');
             }
         });
     });
-
-function signInCallback(authResult) {
-    if (authResult['code']) {
-
-        // Hide the sign-in button now that the user is authorized
-        $('#signinButton').attr('style', 'display: none');
-
-        // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
-        $.ajax({
-            type: 'POST',
-            url: '/gconnect?state=' + $('#csrf_token').attr('value'),
-            processData: false,
-            data: authResult['code'],
-            contentType: 'application/octet-stream; charset=utf-8',
-            success: function (result) {
-                // Handle or verify the server response if necessary.
-                if (result) {
-                    $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
-                    setTimeout(function () {
-                        window.location.href = "/restaurant";
-                    }, 4000);
-
-
-                } else if (authResult['error']) {
-
-                    console.log('There was an error: ' + authResult['error']);
-                } else {
-                    $('#result').html('Failed to make a server-side call. Check your configuration and console.');
-                }
-
-            }
-
-        });
-    }
-}</script>
-{% endblock %}
+    </script>
+    {% endblock %}

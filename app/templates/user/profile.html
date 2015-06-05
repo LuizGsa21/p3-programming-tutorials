@@ -1,0 +1,251 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import render_field %}
+
+{% block bodyID %}page-profile{% endblock %}
+{% block body %}
+    <section class="profile">
+        <div class="container">
+            <div class="row row-table-md">
+                <div class="col-xs-12 col-md-4">
+                    <div class="avatar"></div>
+                    <div class="more-info">
+                        <div class="profile-name">Luiz Arantes Sa</div>
+                        <div class="settings"><a href="#">Settings</a></div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-md-8 general-info-container">
+                    <table class="table table-hover profile-table">
+                        <thead><tr>
+                                <th class="title">General Info</th>
+                                <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#modal-general-info-edit">Edit</a>
+                                </th>
+                        </tr></thead>
+                        <tbody>
+                            <tr><th>Username</th>
+                                <td>{{ current_user.username|e }}</td></tr>
+
+                            <tr><th>Email</th>
+                            <td>{{ current_user.email|e }}</td></tr>
+
+                            <tr><th>First Name</th>
+                                <td>{{ current_user.first_name|e }}</td></tr>
+
+                            <tr><th>Last Name</th>
+                                <td>{{ current_user.last_name|e }}</td></tr>
+
+                            <tr><th>Date Joined</th>
+                                <td>{{ current_user.date_joined|datetime }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="published-tutorials">
+        <div class="container">
+            <div class="row row-table-sm">
+                <div class="col-xs-12 col-sm-8">
+                    <h1 class="main-title">Published Tutorials</h1>
+                </div>
+                <div class="col-xs-12 col-sm-4 add-btn-container"><a href="#" class="btn btn-primary" data-toggle="modal" data-target="#published-tutorials">Add New <span class="glyphicon glyphicon-plus-sign"></span></a></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 table-container">
+                    <table class="table table-hover published-tutorials-table">
+                        <thead>
+                            <tr><th>Title</th><th>Category</th><th>Date Created</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for article in current_user.articles %}
+                        <tr>
+                            <td class="title"> {{ article.title }} </td>
+                            <td class="category">{{ article.category.name }}</td>
+                            <td class="date">{{ article.date_created|datetime }}</td>
+                            <td class="action">
+                                <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#published-tutorials">Edit</a>
+                                <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modal-delete-tutorial">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL - GENERAL INFO EDIT
+========================================================  -->
+{#    <div class="modal fade" id="modal-general-info-edit" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">#}
+{#        <div class="modal-dialog">#}
+{#            <div class="modal-content">#}
+{#                <div class="modal-header">#}
+{#                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
+{#                    <h4 class="modal-title" id="modal-general-info-editLabel">General Info</h4>#}
+{#                </div>#}
+{#                <div class="modal-body">#}
+{#                    <form action="general-info" method="post" role="form">#}
+{#                        <div class="form-group">#}
+{#                            <label for="username">Username</label>#}
+{#                            <input type="text" class="form-control" name="username" id="username" disabled>#}
+{#                        </div>#}
+{#                        <div class="form-group">#}
+{#                            <label for="email">Email</label>#}
+{#                            <input type="text" class="form-control" name="email" id="email">#}
+{#                        </div>#}
+{#                        <div class="form-group">#}
+{#                            <label for="first-name">First Name</label>#}
+{#                            <input type="text" class="form-control" name="first-name" id="first-name">#}
+{#                        </div>#}
+{#                        <div class="form-group">#}
+{#                            <label for="last-name">Last Name</label>#}
+{#                            <input type="text" class="form-control" name="last-name" id="last-name">#}
+{#                        </div>#}
+{#                        <div class="form-group">#}
+{#                            <label for="date-joined">Date Joined</label>#}
+{#                            <input type="text" class="form-control" name="date-joined" id="date-joined" disabled>#}
+{#                        </div>#}
+{#                    </form>#}
+{#                </div>#}
+{#                <div class="modal-footer">#}
+{#                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
+{#                    <button type="button" class="btn btn-primary">Save changes</button>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+
+    <!-- MODAL - PUBLISHED TUTORIALS - EDIT
+========================================================  -->
+    <div class="modal fade" id="published-tutorials" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="published-tutorialsLabel">Tutorial</h4>
+                </div>
+                <div class="modal-body">
+                <form id="publish-tutorial-form" action="{{ url_for('user.add_article') }}" method="post">
+                {{ form.hidden_tag() }}
+                {% for field in form if field.widget.input_type != 'hidden' %}
+                  {% if field.name == 'body' %}
+                    {{ render_field(field, cols=30, rows=4) }}
+                  {% else %}
+                    {{ render_field(field) }}
+                   {% endif %}
+                {% endfor %}
+                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="$('#publish-tutorial-form').submit()">Publish Tutorial</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL - PUBLISHED TUTORIALS - DELETE
+========================================================  -->
+{#    <div class="modal fade" id="modal-delete-tutorial" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">#}
+{#        <div class="modal-dialog">#}
+{#            <div class="modal-content">#}
+{#                <div class="modal-header">#}
+{#                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">#}
+{#                        <span aria-hidden="true">&times;</span></button>#}
+{#                    <h4 class="modal-title" id="modal-delete-tutorialLabel">Confirm Delete</h4>#}
+{#                </div>#}
+{#                <div class="modal-body">#}
+{#                    <p>You are about to delete:</p>#}
+{#                    <p class="msg-warning">JavaScript Arrays Explained</p>#}
+{#                </div>#}
+{#                <div class="modal-footer">#}
+{#                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>#}
+{#                    <button type="button" class="btn btn-danger">Delete</button>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+
+    <footer class="footer footer-default footer-sticky animated fadeIn">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-12 col-sm-4 col-md-4">
+                    <h4 class="title">Navigation</h4>
+                    <ul class="nav footer-nav pull-left">
+                        <li class="active"><a href="#">Home</a></li>
+                        <li><a href="#">JavaScript</a></li>
+                        <li><a href="#">HTML/CSS</a></li>
+                        <li><a href="#">Java</a></li>
+                        <li><a href="#">Python</a></li>
+                    </ul>
+                    <ul class="nav footer-nav pull-left">
+                        <li class="active"><a href="#">C</a></li>
+                        <li><a href="#">C++</a></li>
+                        <li><a href="#">Ruby</a></li>
+                    </ul>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 valign">
+                    <div class="quote">"Programming is a lifestyle."</div>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3 col-lg-offset-1">
+                    <div class="stay-connected">
+                        <h4 class="title">Stay Connected</h4>
+                        <p class="text-justify-full">
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i class="fa fa-google-plus"></i></a>
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i class="fa fa-twitter"></i></a>
+                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i class="fa fa-facebook"></i></a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="copyright text-center">Copyright &copy; All Rights Reserved</div>
+                </div>
+            </div>
+        </div>
+    </footer>
+{% endblock %}
+
+{% block bodyPostfix %}
+<script>
+    $('#btn-add-new').click(function (e) {
+        var $template = $('#modal-template'),
+                modalCotent = {
+                    title: 'title',
+                    body: 'body',
+                    btnCancel: 'Cancel',
+                    btnSave: 'Save'
+                };
+
+
+        var html = $template.html(),
+                key;
+        for (key in modalCotent) {
+            html = html.replace('{' + key + '}', modalCotent[key]);
+        }
+        $('body').append(html);
+        var $modal = $('#main-modal');
+        $modal.modal('show');
+        $modal.find('.btn-cancel')
+                .on('click',function (e) {
+//                    e.preventDefault();
+
+                    var $form = $modal.find('form');
+                    $.ajax({
+                        url: $form.attr('action'),
+                        type: $form.attr('method'),
+                        data: $form.serialize(),
+                        success: function (data) {
+                            alert(data)
+                        }
+
+                    });
+                });
+
+    });
+</script>
+{% endblock %}

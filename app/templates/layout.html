@@ -24,6 +24,7 @@
 </head>
 <body id="{% block bodyID %}{% endblock %}" >
 {% set active_page = active_page|default('index') -%}
+{% import 'macros.html' as m %}
 
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
@@ -43,13 +44,13 @@
         <div class="collapse navbar-collapse navbar-main-collapse">
             <ul class="nav navbar-nav navbar-right">
                 {# Home page #}
-                <li {% if active_page == 'index' %}class="active"{% endif
-                %}><a href="{{ url_for('frontend.index') }}">Home</a></li>
+{#                <li {% if active_page == 'index' %}class="active"{% endif#}
+{#                %}><a href="{{ url_for('frontend.index') }}">Home</a></li>#}
+                <li {{ m.active_class('index', active_page) }}><a href="{{ url_for('frontend.index') }}">Home</a></li>
                 {# Other pages #}
                 {% for category in categories %}
                       {% if loop.index0 < start_dropdown %}
-                           <li {% if category.name == active_page %}class="active"{% endif
-                           %}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
+                           <li {{ m.active_class(category.name, active_page) }}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
                       {% endif %}
 
                       {% if loop.index0 >= start_dropdown %}
@@ -58,16 +59,14 @@
                                 <a class="dropdown-toggle" href="#" data-toggle="dropdown">More <b class="caret"></b></a>
                                 <ul class="dropdown-menu">{%
                          endif %}
-                         <li {% if category.name == active_page %}class="active"{% endif
-                         %}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
+                         <li {{ m.active_class(category.name, active_page) }}><a href="{{ url_for('frontend.articles', category=category.name) }}">{{ category.name }}</a></li>
                        {% if loop.last %}</ul></li>{% endif %} {# add dropdown menu closing tags #}
                       {% endif %}
 
                 {% endfor %}
                 {% if current_user.is_authenticated() %}
-
+                    <li {{ m.active_class('profile', active_page) }}><a href="{{ url_for('user.profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
-
                 {% elif active_page != 'index' %}{# Home page has a login/register form so their is no need for login/register links #}
                     <li><a href="{{ url_for('frontend.login') }}">Login</a></li>
                     <li><a href="{{ url_for('frontend.register') }}">Register</a></li>
