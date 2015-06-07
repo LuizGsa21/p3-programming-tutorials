@@ -17,7 +17,7 @@
                     <table class="table table-hover profile-table">
                         <thead><tr>
                                 <th class="title">General Info</th>
-                                <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#modal-general-info-edit">Edit</a>
+                                <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
                                 </th>
                         </tr></thead>
                         <tbody>
@@ -50,23 +50,23 @@
                 <div class="col-xs-12 col-sm-8">
                     <h1 class="main-title">Published Tutorials</h1>
                 </div>
-                <div class="col-xs-12 col-sm-4 add-btn-container"><a href="#" class="btn btn-primary" data-toggle="modal" data-target="#published-tutorials">Add New <span class="glyphicon glyphicon-plus-sign"></span></a></div>
+                <div class="col-xs-12 col-sm-4 add-btn-container"><a href="#" id="btn-add-new" data-toggle="modal" data-action="addTutorial" data-target="#main-modal" class="btn btn-primary">Add New <span class="glyphicon glyphicon-plus-sign"></span></a></div>
             </div>
             <div class="row">
                 <div class="col-xs-12 table-container">
-                    <table class="table table-hover published-tutorials-table">
+                    <table id="tut-table" class="table table-hover published-tutorials-table">
                         <thead>
                             <tr><th>Title</th><th>Category</th><th>Date Created</th></tr>
                         </thead>
                         <tbody>
                         {% for article in current_user.articles %}
-                        <tr>
+                        <tr data-id="{{ article.id }}">
                             <td class="title"> {{ article.title }} </td>
                             <td class="category">{{ article.category.name }}</td>
-                            <td class="date">{{ article.date_created|datetime }}</td>
+                            <td class="date">{{ article.date_created|datetime('standard') }}</td>
                             <td class="action">
-                                <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#published-tutorials">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modal-delete-tutorial">Delete</a>
+                                <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
+                                <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="tutorialDelete" data-target="#main-modal">Delete</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -76,99 +76,6 @@
             </div>
         </div>
     </section>
-
-    <!-- MODAL - GENERAL INFO EDIT
-========================================================  -->
-{#    <div class="modal fade" id="modal-general-info-edit" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">#}
-{#        <div class="modal-dialog">#}
-{#            <div class="modal-content">#}
-{#                <div class="modal-header">#}
-{#                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
-{#                    <h4 class="modal-title" id="modal-general-info-editLabel">General Info</h4>#}
-{#                </div>#}
-{#                <div class="modal-body">#}
-{#                    <form action="general-info" method="post" role="form">#}
-{#                        <div class="form-group">#}
-{#                            <label for="username">Username</label>#}
-{#                            <input type="text" class="form-control" name="username" id="username" disabled>#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <label for="email">Email</label>#}
-{#                            <input type="text" class="form-control" name="email" id="email">#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <label for="first-name">First Name</label>#}
-{#                            <input type="text" class="form-control" name="first-name" id="first-name">#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <label for="last-name">Last Name</label>#}
-{#                            <input type="text" class="form-control" name="last-name" id="last-name">#}
-{#                        </div>#}
-{#                        <div class="form-group">#}
-{#                            <label for="date-joined">Date Joined</label>#}
-{#                            <input type="text" class="form-control" name="date-joined" id="date-joined" disabled>#}
-{#                        </div>#}
-{#                    </form>#}
-{#                </div>#}
-{#                <div class="modal-footer">#}
-{#                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
-{#                    <button type="button" class="btn btn-primary">Save changes</button>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-
-    <!-- MODAL - PUBLISHED TUTORIALS - EDIT
-========================================================  -->
-    <div class="modal fade" id="published-tutorials" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="published-tutorialsLabel">Tutorial</h4>
-                </div>
-                <div class="modal-body">
-                <form id="publish-tutorial-form" action="{{ url_for('user.add_article') }}" method="post">
-                {{ form.hidden_tag() }}
-                {% for field in form if field.widget.input_type != 'hidden' %}
-                  {% if field.name == 'body' %}
-                    {{ render_field(field, cols=30, rows=4) }}
-                  {% else %}
-                    {{ render_field(field) }}
-                   {% endif %}
-                {% endfor %}
-                </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="$('#publish-tutorial-form').submit()">Publish Tutorial</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL - PUBLISHED TUTORIALS - DELETE
-========================================================  -->
-{#    <div class="modal fade" id="modal-delete-tutorial" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">#}
-{#        <div class="modal-dialog">#}
-{#            <div class="modal-content">#}
-{#                <div class="modal-header">#}
-{#                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">#}
-{#                        <span aria-hidden="true">&times;</span></button>#}
-{#                    <h4 class="modal-title" id="modal-delete-tutorialLabel">Confirm Delete</h4>#}
-{#                </div>#}
-{#                <div class="modal-body">#}
-{#                    <p>You are about to delete:</p>#}
-{#                    <p class="msg-warning">JavaScript Arrays Explained</p>#}
-{#                </div>#}
-{#                <div class="modal-footer">#}
-{#                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>#}
-{#                    <button type="button" class="btn btn-danger">Delete</button>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-
     <footer class="footer footer-default footer-sticky animated fadeIn">
         <div class="container">
             <div class="row">
@@ -211,41 +118,183 @@
 {% endblock %}
 
 {% block bodyPostfix %}
+<div id="main-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-submit">Submit</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<script  id="alert-template" type="text/html">
+<div class="alert-messages">
+    <div class="alert">
+        <a href="#" class="close" data-dismiss="alert">&times;</a>
+        <ul>
+{#            <li><strong>{key}</strong>: {value}</li>#}
+        </ul>
+    </div>
+</div>
+</script>
+<script id="tutorial-row" type="text/html">
+<tr>
+    <td class="title"></td>
+    <td class="category"></td>
+    <td class="date"></td>
+    <td class="action">
+        <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
+        <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="tutorialDelete" data-target="#main-modal">Delete</a>
+    </td>
+</tr>
+</script>
+<script id="all-forms" type="text/html">
+    <form id="form-tutorial" action="" method="post">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+        {% if field.name == 'body' %}
+            {{ render_field(field, cols=30, rows=4) }}
+        {% else %}
+            {{ render_field(field) }}
+        {% endif %}
+    {% endfor %}
+    </form>
+
+    <form id="form-profile" action="{{ url_for('user.add_article') }}" method="post">
+    {{ form.hidden_tag() }}
+    {% for field in form if field.widget.input_type != 'hidden' %}
+        {% if field.name == 'body' %}
+            {{ render_field(field, cols=30, rows=4) }}
+        {% else %}
+            {{ render_field(field) }}
+        {% endif %}
+    {% endfor %}
+    </form>
+</script>
 <script>
-    $('#btn-add-new').click(function (e) {
-        var $template = $('#modal-template'),
-                modalCotent = {
-                    title: 'title',
-                    body: 'body',
-                    btnCancel: 'Cancel',
-                    btnSave: 'Save'
-                };
+    $(function($) {
 
-
-        var html = $template.html(),
-                key;
-        for (key in modalCotent) {
-            html = html.replace('{' + key + '}', modalCotent[key]);
+        // submits a form using ajax
+        function ajaxSubmitForm(form, callbacks) {
+            var $form = $(form);
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: $form.serialize(),
+                success: callbacks.success,
+                error: callbacks.error
+            });
         }
-        $('body').append(html);
-        var $modal = $('#main-modal');
-        $modal.modal('show');
-        $modal.find('.btn-cancel')
-                .on('click',function (e) {
-//                    e.preventDefault();
 
-                    var $form = $modal.find('form');
-                    $.ajax({
-                        url: $form.attr('action'),
-                        type: $form.attr('method'),
-                        data: $form.serialize(),
-                        success: function (data) {
-                            alert(data)
-                        }
+        /**
+         * Returns an url from the specified action
+         * @param action {String} the specified action
+         * @returns {String} url
+         */
+        function getURL(action) {
+            var urls = {
+                addTutorial: '{{ url_for('user.add_article') }}',
+                deleteTutorial: '{{ url_for('user.add_article') }}',
+                editTutorial: '{{ url_for('user.add_article') }}',
+                editProfile: '{{ url_for('user.add_article') }}'
+            };
+            return  urls[action];
+        }
 
-                    });
+        function setModalTitle($modal, action) {
+            var title = action
+                        .replace(/([A-Z])/g, ' $1') // insert a space before all caps
+                        .replace(/^./, function(str){ return str.toUpperCase(); }); // uppercase the first character
+            $modal.find('.modal-title').html(title);
+        }
+
+        function setModalBody($modal, action) {
+            // get the form id selector
+            var formId = (action.indexOf('tutorial') > -1) ? '#form-tutorial' : '#form-profile';
+            var $form =  $formTemplates.filter(formId);
+            // set the form action url
+            $form.attr('action', getURL(action));
+            $modal.find('.modal-body').append($form);
+        }
+
+        function setModalFooter($modal, action) {
+           var text = action.split(/[A-Z]/)[0];
+           $modal.find('.modal-footer .btn-submit').html(text.charAt(0).toUpperCase() + text.substring(1));
+        }
+
+        function createAlert(messages, type) {
+            var $template = $($('#alert-template').html());
+            $template.find('.alert').addClass('alert-' + type);
+            // for each message add a new li to ul
+            var li = '';
+            for (var key in messages){
+                li += '<li><strong>'+key+'</strong>: '+ messages[key] + '</li>';
+            }
+            $template.find('ul').html(li);
+            return $template.html();
+        }
+
+        function addTutorial(tutorial) {
+
+        }
+
+        var $formTemplates =  $($('#all-forms').html()),
+            $mainModal = $('#main-modal');
+
+        // clear modal contents after its hidden
+        $mainModal.on('hidden.bs.modal', function(e) {
+            var $modal = $(this);
+            var dirtyDivs = ['.modal-title', '.modal-body'];
+            dirtyDivs.forEach(function(dirtyDiv) {
+                $modal.find(dirtyDiv).html('');
+            });
+        });
+
+        $mainModal.on('show.bs.modal', function(e) {
+            // modal is about to open, lets create and append the appropriate form
+            var action = $(e.relatedTarget).data()['action'];
+            setModalTitle($mainModal, action);
+            setModalBody($mainModal, action);
+            setModalFooter($mainModal, action);
+        });
+
+        $mainModal
+            .find('.btn-submit')
+            .click(function(e) {
+                var $form = $mainModal.find('form');
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: $form.attr('method'),
+                    data: $form.serialize(),
+                    success: function(data) {
+                        var $template = $($('#tutorial-row').html()),
+                            tutorial = data.article;
+                        $template.data('id', tutorial.id);
+                        $template.find('.title').html(tutorial.title);
+                        $template.find('.category').html(tutorial.category);
+                        $template.find('.date').html(tutorial.date_created);
+{#                        $mainModal.modal('hide');#}
+                        console.log(data);
+                        $('#tut-table').find('tbody').append($template);
+
+                    },
+                    error: function(data) {
+                        var r,
+                            $modalBody = $mainModal.find('.modal-body');
+                        r = (data.responseJSON) ? data.responseJSON.error : {server: 'unknown error'};
+                        $modalBody.prepend(createAlert(r, 'danger'))
+                     }
                 });
+            });
 
-    });
+    }, jQuery);
 </script>
 {% endblock %}

@@ -1,13 +1,14 @@
 from flask import Flask, render_template, g, flash, url_for, redirect
 
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, oid, current_user, mail, babel, format_datetime as b_datetime
+from extensions import db, csrf, login_manager, oid, current_user, mail, babel
 from .admin import admin_bp
 from .api import api_bp
 from .frontend import frontend_bp
 from .user import user_bp
 from .oauth import oauth_bp
 from .models import Category, init_database
+from utils import format_datetime
 
 
 DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
@@ -109,11 +110,5 @@ def configure_error_handlers(app):
 
 def configure_jinja_filters(app):
     @app.template_filter('datetime')
-    def format_datetime(value, format='default'):
-        if format == 'default':
-            format = 'MMMM d, yyyy'
-        elif format == 'full':
-            format = 'EEEE, d. MMMM y HH:mm'
-        elif format == 'medium':
-            format = "EE dd.MM.y HH:mm"
-        return b_datetime(value, format)
+    def datetime(*args, **kwargs):
+        return format_datetime(*args, **kwargs)

@@ -4,7 +4,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.ext.hybrid import Comparator, hybrid_property
 from sqlalchemy.sql import func
-
+from utils import format_datetime
 
 class CaseInsensitiveWord(Comparator):
     """Hybrid value representing a lower case representation of a word."""
@@ -28,19 +28,27 @@ class CaseInsensitiveWord(Comparator):
     def __str__(self):
         return self.word
 
+# monkey patch serialize method
+def _serialize(model):
+    obj = {}
+    for key in model.__table__.columns._data.keys():
+        obj[key] = getattr(model, key)
+    return obj
+
+setattr(db.Model, 'serialize', _serialize)
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, unique=True)
-    email = db.Column(db.String, unique=True)
-    first_name = db.Column(db.String)
-    last_name = db.Column(db.String)
-    pwdhash = db.Column(db.String)
-    date_joined = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer(), primary_key=True)
+    username = db.Column(db.String(15), unique=True)
+    email = db.Column(db.String(255), unique=True)
+    first_name = db.Column(db.String(30))
+    last_name = db.Column(db.String(30))
+    pwdhash = db.Column(db.String(255))
+    date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    articles = db.relationship('Article', backref='author', lazy='dynamic')
+    articles = db.relationship('Article', backref='users', lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -61,8 +69,8 @@ class User(db.Model, UserMixin):
 class Category(db.Model):
     __tablename__ = 'categories'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, unique=True)
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(10), unique=True)
     articles = db.relationship('Article', backref='category', lazy='dynamic')
 
     def __str__(self):
@@ -72,25 +80,30 @@ class Category(db.Model):
 class Article(db.Model):
     __tablename__ = 'articles'
 
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String)
-    body = db.Column(db.String)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer(), primary_key=True)
+    title = db.Column(db.String(20))
+    body = db.Column(db.String(20000))
+    author_id = db.Column(db.Integer(), db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer(), db.ForeignKey('categories.id'), nullable=False)
+    date_created = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    comments = db.relationship('Comment', backref='article', lazy='dynamic')
+    comments = db.relationship('Comment', backref='articles', lazy='dynamic')
+
+    def serialize(self):
+        objs = super(Article, self).serialize()
+        objs['date_created'] = format_datetime(self.date_created, 'standard')
+        return objs
 
 
 class Comment(db.Model):
     __tablename__ = 'comments'
 
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String)
-    article_id = db.Column(db.Integer, db.ForeignKey('articles.id'))
-    parent_comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Integer(), primary_key=True)
+    body = db.Column(db.String(1000))
+    article_id = db.Column(db.Integer(), db.ForeignKey('articles.id'))
+    parent_comment_id = db.Column(db.Integer(), db.ForeignKey('comments.id'))
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    date_created = db.Column(db.DateTime(), default=datetime.utcnow)
 
 # init database fixtures
 def init_database():
