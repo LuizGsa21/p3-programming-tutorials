@@ -52,12 +52,13 @@ def login():
         user = User.query.filter(User.email_insensitive == email).first()
         if not user or not user.check_password(password):
             flash('Invalid email or password. Please try again.', 'danger')
+            return redirect(url_for('frontend.index'))
         else:
             login_user(user)
             flash('You have successfully logged in.', 'success')
             return redirect(url_for('frontend.index'))
-
-    return render_template('frontend/login.html', form=form, openid_form=openid_form)
+    flash(form.errors, 'danger')
+    return redirect(url_for('frontend.index'))
 
 
 @frontend_bp.route('/register/', methods=['GET', 'POST'])
