@@ -31,9 +31,6 @@ def redirect_or_json(redirect_url):
     return decorator
 
 def format_datetime(value, format='default'):
-    print value
-    print dir(value)
-    print type(value)
     if format == 'default':
         format = 'MMMM d, yyyy'
     elif format == 'full':

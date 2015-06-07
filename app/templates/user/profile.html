@@ -145,6 +145,7 @@
     </div>
 </div>
 </script>
+
 <script id="tutorial-row" type="text/html">
 <tr>
     <td class="title"></td>
@@ -156,16 +157,17 @@
     </td>
 </tr>
 </script>
+
 <script id="all-forms" type="text/html">
     <form id="form-tutorial" action="" method="post">
     {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' %}
-        {% if field.name == 'body' %}
+    {% for field in form if field.widget.input_type != 'hidden' -%}
+        {%- if field.name == 'body' -%}
             {{ render_field(field, cols=30, rows=4) }}
-        {% else %}
+        {%- else -%}
             {{ render_field(field) }}
         {% endif %}
-    {% endfor %}
+    {%- endfor %}
     </form>
 
     <form id="form-profile" action="{{ url_for('user.add_article') }}" method="post">
@@ -219,7 +221,7 @@
         function setModalBody($modal, action) {
             // get the form id selector
             var formId = (action.indexOf('tutorial') > -1) ? '#form-tutorial' : '#form-profile';
-            var $form =  $formTemplates.filter(formId);
+            var $form =  $formTemplates.filter(formId).clone();
             // set the form action url
             $form.attr('action', getURL(action));
             $modal.find('.modal-body').append($form);
@@ -258,6 +260,7 @@
             });
         });
 
+        // Build the modal's content before its displayed
         $mainModal.on('show.bs.modal', function(e) {
             // modal is about to open, lets create and append the appropriate form
             var action = $(e.relatedTarget).data()['action'];
@@ -277,16 +280,17 @@
                     success: function(data) {
                         var $template = $($('#tutorial-row').html()),
                             tutorial = data.article;
+                        // create and append a table row containing the tutorial's data
                         $template.data('id', tutorial.id);
                         $template.find('.title').html(tutorial.title);
-                        $template.find('.category').html(tutorial.category);
+                        $template.find('.category').html($('#category').find('option:selected').text());
                         $template.find('.date').html(tutorial.date_created);
-{#                        $mainModal.modal('hide');#}
-                        console.log(data);
+                        $mainModal.modal('hide');
                         $('#tut-table').find('tbody').append($template);
 
                     },
                     error: function(data) {
+                        $('.alert').remove();
                         var r,
                             $modalBody = $mainModal.find('.modal-body');
                         r = (data.responseJSON) ? data.responseJSON.error : {server: 'unknown error'};
