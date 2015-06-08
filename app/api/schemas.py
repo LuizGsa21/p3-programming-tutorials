@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields
+from app.utils import format_datetime
 
 
 class CommentSchema(Schema):
@@ -20,6 +21,10 @@ class ArticleSchema(Schema):
     category = fields.Nested(CategorySchema)
     author = fields.Nested(UserSchema)
     comments = fields.Nested(CommentSchema, many=True)
+    date_created = fields.Method('format_date')
+
+    def format_date(self, obj):
+        return format_datetime(obj.date_created, 'standard')
 
     class Meta:
         fields = ('id', 'title', 'body', 'date_created', 'category', 'author', 'comments')

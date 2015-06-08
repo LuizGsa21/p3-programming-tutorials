@@ -1,17 +1,16 @@
 from flask import Blueprint, render_template, g, url_for, redirect, request, flash
 from app.models import User, Article
+from app.api.schemas import article_serializer
 from app.extensions import current_user, login_required, db
 from .forms import AddArticleForm
 from app.utils import template_or_json, redirect_or_json
+
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
 
 @user_bp.route('/profile/')
 @login_required
 def profile():
-    test = current_user.articles
-    print test.all()
-
     return render_template('user/profile.html', active_page='profile', form=AddArticleForm())
 
 @user_bp.route('/profile/articles/add', methods=['POST'])
@@ -27,7 +26,9 @@ def add_article():
         db.session.add(article)
         db.session.commit()
         flash('successfully added article', 'success')
-        return {'status': 200, 'article': article.serialize()}
+        # return {'status': 200, 'article': article.serialize()}
+        result, error = article_serializer.dump(article)
+        return {'status': 200, 'article': result}
     else:
         flash(form.errors, 'danger')
         return {'status': 400, 'error': form.errors}

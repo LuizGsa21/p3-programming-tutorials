@@ -48,7 +48,7 @@ class User(db.Model, UserMixin):
     pwdhash = db.Column(db.String(255))
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    articles = db.relationship('Article', backref='users', lazy='dynamic')
+    articles = db.relationship('Article', backref='author', lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

@@ -10,6 +10,7 @@ pip install Flask-OAuth
 pip install httplib2
 pip install Flask-WTF
 pip install Flask-SQLAlchemy
+#pip install flask-marshmallow
 pip install beautifulsoup4
 pip install Flask-Login
 pip install Flask-OpenID

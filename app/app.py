@@ -1,5 +1,4 @@
 from flask import Flask, render_template, g, flash, url_for, redirect
-
 from config import DevelopmentConfig
 from extensions import db, csrf, login_manager, oid, current_user, mail, babel
 from .admin import admin_bp
@@ -8,6 +7,7 @@ from .frontend import frontend_bp
 from .user import user_bp
 from .oauth import oauth_bp
 from .models import Category, init_database
+
 from utils import format_datetime
 
 
@@ -112,3 +112,10 @@ def configure_jinja_filters(app):
     @app.template_filter('datetime')
     def datetime(*args, **kwargs):
         return format_datetime(*args, **kwargs)
+
+    @app.template_filter('articles_to_json')
+    def articles_to_json(articles):
+        from .api.schemas import articles_serializer
+        import json
+        result, error = articles_serializer.dump(articles)
+        return json.dumps(result)

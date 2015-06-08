@@ -3,121 +3,68 @@
 
 {% block bodyID %}page-profile{% endblock %}
 {% block body %}
-    <section class="profile">
-        <div class="container">
-            <div class="row row-table-md">
-                <div class="col-xs-12 col-md-4">
-                    <div class="avatar"></div>
-                    <div class="more-info">
-                        <div class="profile-name">Luiz Arantes Sa</div>
-                        <div class="settings"><a href="#">Settings</a></div>
-                    </div>
+<section class="profile">
+    <div class="container">
+        <div class="row row-table-md">
+            <div class="col-xs-12 col-md-4">
+                <div class="avatar"></div>
+                <div class="more-info">
+                    <div class="profile-name">Luiz Arantes Sa</div>
+                    <div class="settings"><a href="#">Settings</a></div>
                 </div>
-                <div class="col-xs-12 col-md-8 general-info-container">
-                    <table class="table table-hover profile-table">
-                        <thead><tr>
-                                <th class="title">General Info</th>
-                                <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
-                                </th>
-                        </tr></thead>
-                        <tbody>
-                            <tr><th>Username</th>
-                                <td>{{ current_user.username|e }}</td></tr>
-
-                            <tr><th>Email</th>
-                            <td>{{ current_user.email|e }}</td></tr>
-
-                            <tr><th>First Name</th>
-                                <td>{{ current_user.first_name|e }}</td></tr>
-
-                            <tr><th>Last Name</th>
-                                <td>{{ current_user.last_name|e }}</td></tr>
-
-                            <tr><th>Date Joined</th>
-                                <td>{{ current_user.date_joined|datetime }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
-        </div>
-    </section>
+            <div class="col-xs-12 col-md-8 general-info-container">
+                <table class="table table-hover profile-table">
+                    <thead><tr>
+                            <th class="title">General Info</th>
+                            <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
+                            </th>
+                    </tr></thead>
+                    <tbody>
+                        <tr><th>Username</th>
+                            <td class="username">{{ current_user.username|e }}</td></tr>
 
-    <section class="published-tutorials">
-        <div class="container">
-            <div class="row row-table-sm">
-                <div class="col-xs-12 col-sm-8">
-                    <h1 class="main-title">Published Tutorials</h1>
-                </div>
-                <div class="col-xs-12 col-sm-4 add-btn-container"><a href="#" id="btn-add-new" data-toggle="modal" data-action="addTutorial" data-target="#main-modal" class="btn btn-primary">Add New <span class="glyphicon glyphicon-plus-sign"></span></a></div>
-            </div>
-            <div class="row">
-                <div class="col-xs-12 table-container">
-                    <table id="tut-table" class="table table-hover published-tutorials-table">
-                        <thead>
-                            <tr><th>Title</th><th>Category</th><th>Date Created</th></tr>
-                        </thead>
-                        <tbody>
-                        {% for article in current_user.articles %}
-                        <tr data-id="{{ article.id }}">
-                            <td class="title"> {{ article.title }} </td>
-                            <td class="category">{{ article.category.name }}</td>
-                            <td class="date">{{ article.date_created|datetime('standard') }}</td>
-                            <td class="action">
-                                <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="tutorialDelete" data-target="#main-modal">Delete</a>
-                            </td>
+                        <tr><th>Email</th>
+                        <td class="email">{{ current_user.email|e }}</td></tr>
+
+                        <tr><th>First Name</th>
+                            <td class="first-name">{{ current_user.first_name|e }}</td></tr>
+
+                        <tr><th>Last Name</th>
+                            <td class="last-name">{{ current_user.last_name|e }}</td></tr>
+
+                        <tr><th>Date Joined</th>
+                            <td class="date-joined">{{ current_user.date_joined|datetime }}</td>
                         </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </section>
-    <footer class="footer footer-default footer-sticky animated fadeIn">
-        <div class="container">
-            <div class="row">
-                <div class="col-xs-12 col-sm-4 col-md-4">
-                    <h4 class="title">Navigation</h4>
-                    <ul class="nav footer-nav pull-left">
-                        <li class="active"><a href="#">Home</a></li>
-                        <li><a href="#">JavaScript</a></li>
-                        <li><a href="#">HTML/CSS</a></li>
-                        <li><a href="#">Java</a></li>
-                        <li><a href="#">Python</a></li>
-                    </ul>
-                    <ul class="nav footer-nav pull-left">
-                        <li class="active"><a href="#">C</a></li>
-                        <li><a href="#">C++</a></li>
-                        <li><a href="#">Ruby</a></li>
-                    </ul>
-                </div>
-                <div class="col-xs-12 col-sm-4 col-md-4 valign">
-                    <div class="quote">"Programming is a lifestyle."</div>
-                </div>
-                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3 col-lg-offset-1">
-                    <div class="stay-connected">
-                        <h4 class="title">Stay Connected</h4>
-                        <p class="text-justify-full">
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i class="fa fa-google-plus"></i></a>
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i class="fa fa-twitter"></i></a>
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i class="fa fa-facebook"></i></a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="copyright text-center">Copyright &copy; All Rights Reserved</div>
-                </div>
-            </div>
-        </div>
-    </footer>
-{% endblock %}
 
-{% block bodyPostfix %}
+        </div>
+    </div>
+</section>
+
+<section class="published-tutorials">
+    <div class="container">
+        <div class="row row-table-sm">
+            <div class="col-xs-12 col-sm-8">
+                <h1 class="main-title">Published Tutorials</h1>
+            </div>
+            <div class="col-xs-12 col-sm-4 add-btn-container">
+                <a href="#" id="btn-add-new" data-toggle="modal" data-action="addTutorial" data-target="#main-modal" class="btn btn-primary">
+                    Add New <span class="glyphicon glyphicon-plus-sign"></span></a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 table-container">
+                <table id="tutorial-table" class="table table-hover published-tutorials-table">
+                    <thead><tr><th>Title</th><th>Category</th><th>Date Created</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
 <div id="main-modal" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -130,36 +77,37 @@
                 <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary btn-submit">Submit</button>
             </div>
-        </div>
-        <!-- /.modal-content -->
-    </div>
-    <!-- /.modal-dialog -->
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
 </div>
+{% endblock %}
+
+{% block bodyPostfix %}
+<!-- Templates
+========================================================  -->
 <script  id="alert-template" type="text/html">
-<div class="alert-messages">
-    <div class="alert">
-        <a href="#" class="close" data-dismiss="alert">&times;</a>
-        <ul>
-{#            <li><strong>{key}</strong>: {value}</li>#}
-        </ul>
+    <div class="alert-messages">
+        <div class="alert">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            <ul><li><strong></strong>: <span></span></li></ul>
+        </div>
     </div>
-</div>
 </script>
 
-<script id="tutorial-row" type="text/html">
-<tr>
-    <td class="title"></td>
-    <td class="category"></td>
-    <td class="date"></td>
-    <td class="action">
-        <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
-        <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="tutorialDelete" data-target="#main-modal">Delete</a>
-    </td>
-</tr>
+<script id="tutorial-row-template" type="text/html">
+    <tr>
+        <td class="title"></td>
+        <td class="category"></td>
+        <td class="date"></td>
+        <td class="action">
+            <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
+            <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="deleteTutorial" data-target="#main-modal">Delete</a>
+        </td>
+    </tr>
 </script>
 
-<script id="all-forms" type="text/html">
-    <form id="form-tutorial" action="" method="post">
+<script id="forms-template" type="text/html">
+    <form id="form-tutorial" action="{{ url_for('user.add_article') }}" method="post">
     {{ form.hidden_tag() }}
     {% for field in form if field.widget.input_type != 'hidden' -%}
         {%- if field.name == 'body' -%}
@@ -181,124 +129,136 @@
     {% endfor %}
     </form>
 </script>
-<script>
-    $(function($) {
+<!-- END templates ========================================================  -->
 
-        // submits a form using ajax
-        function ajaxSubmitForm(form, callbacks) {
-            var $form = $(form);
+<script>
+    +function ($) {
+
+        var tutorials = {{ current_user.articles|articles_to_json|safe }};
+
+        // All templates
+        // * make sure templates returns a new instance
+        function cloneWrapper(original) {
+            return function() {
+                return this.clone();
+            }.bind($(original));
+        }
+        var tempForms = $($('#forms-template').html());
+
+        var templates = {
+            tutorialForm: cloneWrapper(tempForms.filter('#form-tutorial')),
+            profileForm: cloneWrapper(tempForms.filter('#form-profile')),
+            tutorialRow: cloneWrapper($('#tutorial-row-template').html()),
+            profileRow: cloneWrapper($('#profile-row-template').html()),
+            alert: cloneWrapper($('#alert-template').html())
+        };
+        tempForms = null;
+
+        function createAlert(messages, type){
+            var $alert = templates.alert(),
+                $li = $alert.find('li'),
+                liBuffer = [];
+
+            for (var key in messages) {
+                var $temp = $li.clone();
+                $temp.find('strong').html(key);
+                $temp.find('span').html(errors[key]);
+                liBuffer.push($temp);
+            }
+
+            $alert.find('ul').html(liBuffer);
+            $alert.addClass(type);
+            return $alert;
+        }
+        function addRows(tableID, createTemplate, data) {
+            var $template,
+                    templateBuffer = [],
+                    $table = $(['#', tableID].join('')),
+                    dataArray = (data instanceof Array) ? data : [data],
+                    length = dataArray.length;
+            console.log(data);
+            if (tableID == 'tutorial-table') {
+                // Create all rows in memory
+                for (var i = 0; i < length; i++) {
+                    $template = createTemplate();
+                    $template.find('.title').html(dataArray[i].title);
+                    $template.find('.category').html(dataArray[i].category.name);
+                    $template.find('.date').html(dataArray[i].date_created);
+                    templateBuffer.push($template)
+                }
+                // add rows to DOM
+                $table.find('tbody').append(templateBuffer);
+            } else if (tableID == 'profile-table') {
+
+            } else {
+                throw Error('Unknown tableID');
+            }
+
+        }
+
+        addRows('tutorial-table', templates.tutorialRow, tutorials);
+
+        // AJAX on success handlers
+        var responseHandler = {
+            addTutorial: function (data) {
+                addRows('tutorial-table', templates.tutorialRow, data);
+            }
+        };
+
+        // Build the modal dynamically
+        var modalBuilder = {
+            addTutorial: function ($modal) {
+                var $form = templates.tutorialForm(),
+                    $actionBtn;
+                $modal.find('.modal-title').append('Add Tutorial');
+                $modal.find('.modal-body').append($form);
+
+                $actionBtn = $modal.find('.modal-footer').find('.btn-submit');
+                $actionBtn.removeClass('btn-danger')
+                          .addClass('btn-primary')
+                          .html('Add Tutorial');
+            }
+        };
+
+        //---- Modal setup
+        var $mainModal = $('#main-modal');
+        // ensure old content gets deleted after modal closes
+        $mainModal.on('hidden.bs.modal', function () {
+            ['.modal-title', '.modal-body'].forEach(function (selector) {
+                $($mainModal).find(selector).html('');
+            });
+        });
+
+        // Create modal before its shown
+        $mainModal.on('show.bs.modal', function (e) {
+            var action = $(e.relatedTarget).data('action');
+            modalBuilder[action]($mainModal);
+            $mainModal.find('.btn-submit')
+                      .data('action', action)
+        });
+
+        $mainModal.find('.btn-submit')
+        .on('click', function(e) {
+            var action = $(this).data('action'),
+                $form = $mainModal.find('form');
             $.ajax({
                 url: $form.attr('action'),
                 type: $form.attr('method'),
                 data: $form.serialize(),
-                success: callbacks.success,
-                error: callbacks.error
-            });
-        }
-
-        /**
-         * Returns an url from the specified action
-         * @param action {String} the specified action
-         * @returns {String} url
-         */
-        function getURL(action) {
-            var urls = {
-                addTutorial: '{{ url_for('user.add_article') }}',
-                deleteTutorial: '{{ url_for('user.add_article') }}',
-                editTutorial: '{{ url_for('user.add_article') }}',
-                editProfile: '{{ url_for('user.add_article') }}'
-            };
-            return  urls[action];
-        }
-
-        function setModalTitle($modal, action) {
-            var title = action
-                        .replace(/([A-Z])/g, ' $1') // insert a space before all caps
-                        .replace(/^./, function(str){ return str.toUpperCase(); }); // uppercase the first character
-            $modal.find('.modal-title').html(title);
-        }
-
-        function setModalBody($modal, action) {
-            // get the form id selector
-            var formId = (action.indexOf('tutorial') > -1) ? '#form-tutorial' : '#form-profile';
-            var $form =  $formTemplates.filter(formId).clone();
-            // set the form action url
-            $form.attr('action', getURL(action));
-            $modal.find('.modal-body').append($form);
-        }
-
-        function setModalFooter($modal, action) {
-           var text = action.split(/[A-Z]/)[0];
-           $modal.find('.modal-footer .btn-submit').html(text.charAt(0).toUpperCase() + text.substring(1));
-        }
-
-        function createAlert(messages, type) {
-            var $template = $($('#alert-template').html());
-            $template.find('.alert').addClass('alert-' + type);
-            // for each message add a new li to ul
-            var li = '';
-            for (var key in messages){
-                li += '<li><strong>'+key+'</strong>: '+ messages[key] + '</li>';
-            }
-            $template.find('ul').html(li);
-            return $template.html();
-        }
-
-        function addTutorial(tutorial) {
-
-        }
-
-        var $formTemplates =  $($('#all-forms').html()),
-            $mainModal = $('#main-modal');
-
-        // clear modal contents after its hidden
-        $mainModal.on('hidden.bs.modal', function(e) {
-            var $modal = $(this);
-            var dirtyDivs = ['.modal-title', '.modal-body'];
-            dirtyDivs.forEach(function(dirtyDiv) {
-                $modal.find(dirtyDiv).html('');
+                success: function(data) {
+                    responseHandler[action](data.article);
+                },
+                error: function(data) {
+                    $('.alert').remove();
+                    var errors = (data.responseJSON) ? data.responseJSON.error : {error: data.statusText};
+                    $mainModal.find('.modal-body')
+                              .prepend(createAlert(errors, 'alert-danger'));
+                 }
             });
         });
 
-        // Build the modal's content before its displayed
-        $mainModal.on('show.bs.modal', function(e) {
-            // modal is about to open, lets create and append the appropriate form
-            var action = $(e.relatedTarget).data()['action'];
-            setModalTitle($mainModal, action);
-            setModalBody($mainModal, action);
-            setModalFooter($mainModal, action);
-        });
 
-        $mainModal
-            .find('.btn-submit')
-            .click(function(e) {
-                var $form = $mainModal.find('form');
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: $form.attr('method'),
-                    data: $form.serialize(),
-                    success: function(data) {
-                        var $template = $($('#tutorial-row').html()),
-                            tutorial = data.article;
-                        // create and append a table row containing the tutorial's data
-                        $template.data('id', tutorial.id);
-                        $template.find('.title').html(tutorial.title);
-                        $template.find('.category').html($('#category').find('option:selected').text());
-                        $template.find('.date').html(tutorial.date_created);
-                        $mainModal.modal('hide');
-                        $('#tut-table').find('tbody').append($template);
 
-                    },
-                    error: function(data) {
-                        $('.alert').remove();
-                        var r,
-                            $modalBody = $mainModal.find('.modal-body');
-                        r = (data.responseJSON) ? data.responseJSON.error : {server: 'unknown error'};
-                        $modalBody.prepend(createAlert(r, 'danger'))
-                     }
-                });
-            });
-
-    }, jQuery);
+    }(jQuery)
 </script>
 {% endblock %}

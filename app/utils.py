@@ -22,7 +22,6 @@ def redirect_or_json(redirect_url):
         @wraps(f)
         def decorator_fn(*args, **kwargs):
             ctx = f(*args, **kwargs)
-            print ctx
             if request.is_xhr:
                 return jsonify(ctx), ctx['status']
             else:

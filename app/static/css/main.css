@@ -29,7 +29,8 @@ a:hover {
     outline: 0;
 }
 
-b {
+b,
+strong {
     font-weight: bold;
 }
 
@@ -300,6 +301,10 @@ p {
     display: inline-block;
     width: 100%;
     content: "";
+}
+
+.text-danger {
+    color: #a94442;
 }
 
 .page-header {
