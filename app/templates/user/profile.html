@@ -105,12 +105,6 @@
         </td>
     </tr>
 </script>
-<script id="profile-row-template" type="text/html">
-    <tr>
-        <th></th>
-        <td class="label"></td>
-    </tr>
-</script>
 
 <script id="forms-template" type="text/html">
     <form id="form-tutorial" method="post">
@@ -162,7 +156,6 @@
             profileForm: cloneWrapper(tempForms.filter('#form-profile')),
             deleteForm: cloneWrapper(tempForms.filter('#form-delete')),
             tutorialRow: cloneWrapper($('#tutorial-row-template').html()),
-            profileRow: cloneWrapper($('#profile-row-template').html()),
             alert: cloneWrapper($('#alert-template').html())
         };
         tempForms = null;
