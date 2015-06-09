@@ -93,8 +93,9 @@ def edit_profile():
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         db.session.commit()
-        flash('Successfully updated your user settings.')
-        return {'status': 200, 'success': 1, 'userInfo': user_info_serializer.dump(user)}
+        flash('Successfully updated user info.', 'success')
+        result, error = user_info_serializer.dump(user)
+        return {'status': 200, 'success': 1, 'userInfo': result}
     else:
         flash(form.errors, 'form-error')
         return {'status': 400, 'success': 0}

@@ -18,7 +18,7 @@
                 <table id="profile-table" class="table table-hover profile-table">
                     <thead><tr>
                             <th class="title">General Info</th>
-                            <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
+                            <th class="text-right"><a href="#" class="btn btn-profile-edit btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
                             </th>
                     </tr></thead>
                     <tbody>
@@ -192,11 +192,12 @@
             }
         }
 
-        function tutorialAddRow(tableSelector, createTemplate, data) {
+        function tutorialAddRow(tableSelector, data) {
                 var $template,
                 templateBuffer = [],
                 $table = $(tableSelector),
                 dataArray = (data instanceof Array) ? data : [data],
+                createTemplate = templates.tutorialRow,
                 length = dataArray.length;
 
                 for (var i = 0; i < length; i++) {
@@ -213,12 +214,12 @@
                 $table.find('tbody').append(templateBuffer);
         }
 
-        function profileAddRow(tableSelector, data) {
+        function updateProfileRows(tableSelector, data) {
                 var $table = $(tableSelector);
                 for (var key in data) {
                     $table.find('.'+key).html(data[key] || 'Not available');
                 }
-                $table.find('thead a').data('item', data);
+                $table.find('.btn-profile-edit').data('item', data);
         }
 
         //---- Modal setup
@@ -230,7 +231,8 @@
                 $($mainModal).find(selector).html('');
             });
             // remove action button css
-            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning')
+            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
+            $mainModal.removeData();
         });
 
         // Initialize modalBuilder methods
@@ -304,46 +306,57 @@
                 var item, title, $form;
                 item = $modal.data('item');
                 $form = templates.profileForm();
-                console.log($form);
+                $form.find(':input').each(function() {
+                    if (this.type == 'hidden') return; // ignore hidden fields
+                    $(this).val(item[this.id]);
+                });
                 $modal.find('.modal-title').html('General Info');
                 $modal.find('.modal-body').append($form);
-                $modal.find('.btn-submit').addClass('btn-primary').html()
+                $modal.find('.btn-submit').addClass('btn-primary').html('Save Profile')
             }
         };
 
         // Dynamically create the modal's content before its shown
         $mainModal.on('show.bs.modal', function (e) {
-            $mainModal.removeData(); // reset data
             var data = $(e.relatedTarget).data();
             $mainModal.data(data);
             modalBuilder[data.action]($mainModal);
         });
 
+        function displayMessages($element, action, flashedMessages) {
+
+            if (! ($element instanceof jQuery) ) $element = $($element);
+
+            flashedMessages.forEach(function(error) {
+                $element[action](createAlert(error.message, error.category));
+            });
+        }
+        function displayModalMessages($modal, flashedMessaged) {
+            // Find out the type of error
+            flashedMessaged.forEach(function(error) {
+                if (error.category == 'form-error') {
+                   // populate the form with the given errors
+                   setFormErrors($modal.find('form'), error.message);
+                } else {
+                    // append alerts messages on top of the form
+                    $modal.find('form').before(createAlert(error.message, error.category))
+                }
+            });
+        }
         // AJAX action handler
         var responseHandler = {
             addTutorial: function ($modal, data) {
-                var errors = data['flashed_messages'];
+                var messages = data['flashed_messages'];
                 if (data.success) {
-                    addRows('tutorial-table', templates.tutorialRow, data.article);
-                    errors.forEach(function(error) {
-                        $('#tutorial-table').before(createAlert(error.message, error.category));
-                    });
+                    tutorialAddRow('#tutorial-table', data.article);
+                    displayMessages('#tutorial-table', 'before', messages);
                 } else {
-                    // Find out the type of error
-                    errors.forEach(function(error) {
-                        if (error.category == 'form-error') {
-                           // populate the form with the given errors
-                           setFormErrors($modal.find('form'), error.message);
-                        } else {
-                            // append alerts messages on top of the form
-                            $modal.find('form').before(createAlert(error.message, error.category))
-                        }
-                    });
+                    displayModalMessages($modal, messages);
                 }
             },
             editTutorial: function($modal, data) {
-                var errors, item, $row;
-
+                var messages, item, $row;
+                messages = data['flashed_messages'];
                 if (data.success) {
                     item = data.article;
                     // get item row and update its content
@@ -351,9 +364,11 @@
                     $row.find('.category').html(item.category.name);
                     $row.find('.title').html(item.title);
                     $row.find('a').data('item', item);
+                    displayMessages('#tutorial-table', 'before', messages);
+                } else {
+                    displayModalMessages($modal, messages);
                 }
-                getFlashedMessages(data['flashed_messages'])
-                    .forEach(function($message){$message.insertBefore('#tutorial-table')});
+
             },
 
             deleteTutorial: function($modal, data) {
@@ -362,11 +377,20 @@
                     // delete item from table row
                     item = $modal.data('item');
                     $('#tutorial-'+item.id).remove(); // remove item from table
-                } else {
-                    $modal.modal('hide');
                 }
-                getFlashedMessages(data['flashed_messages'])
-                    .forEach(function(e) { e.insertBefore('#tutorial-table'); });
+                $modal.modal('hide');
+                displayMessages('#tutorial-table', 'before', data['flashed_messages']);
+            },
+            editProfile: function($modal, data) {
+                var item, messages;
+                messages = data['flashed_messages'];
+                if (data.success) {
+                    item = data.userInfo;
+                    updateProfileRows('#profile-table', item);
+                    displayMessages($('#profile-table'), 'before', messages);
+                } else {
+                   displayModalMessages($modal, messages);
+              }
             }
         };
         // create AJAX request when user clicks the modal's action button
@@ -412,8 +436,8 @@
             });
         });
 
-        tutorialAddRow('#tutorial-table', templates.tutorialRow, tutorials);
-        profileAddRow('#profile-table', userInfo);
+        tutorialAddRow('#tutorial-table', tutorials);
+        updateProfileRows('#profile-table', userInfo);
 
 
 
