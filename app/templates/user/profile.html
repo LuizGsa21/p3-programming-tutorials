@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
-                <table class="table table-hover profile-table">
+                <table id="profile-table" class="table table-hover profile-table">
                     <thead><tr>
                             <th class="title">General Info</th>
                             <th class="text-right"><a href="#" class="btn btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
@@ -23,19 +23,19 @@
                     </tr></thead>
                     <tbody>
                         <tr><th>Username</th>
-                            <td class="username">{{ current_user.username|e }}</td></tr>
+                            <td class="username"></td></tr>
 
                         <tr><th>Email</th>
-                        <td class="email">{{ current_user.email|e }}</td></tr>
+                        <td class="email"></td></tr>
 
                         <tr><th>First Name</th>
-                            <td class="first-name">{{ current_user.first_name|e }}</td></tr>
+                            <td class="first_name"></td></tr>
 
                         <tr><th>Last Name</th>
-                            <td class="last-name">{{ current_user.last_name|e }}</td></tr>
+                            <td class="last_name"></td></tr>
 
                         <tr><th>Date Joined</th>
-                            <td class="date-joined">{{ current_user.date_joined|datetime }}</td>
+                            <td class="date_joined"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -103,6 +103,12 @@
             <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
             <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="deleteTutorial" data-target="#main-modal">Delete</a>
         </td>
+    </tr>
+</script>
+<script id="profile-row-template" type="text/html">
+    <tr>
+        <th></th>
+        <td class="label"></td>
     </tr>
 </script>
 
@@ -194,15 +200,13 @@
             }
         }
 
-        function addRows(tableSelector, createTemplate, data) {
-            var $template,
+        function tutorialAddRow(tableSelector, createTemplate, data) {
+                var $template,
                 templateBuffer = [],
                 $table = $(tableSelector),
                 dataArray = (data instanceof Array) ? data : [data],
                 length = dataArray.length;
 
-            if (tableSelector == '#tutorial-table') {
-                // Create all rows in memory
                 for (var i = 0; i < length; i++) {
                     var item = dataArray[i];
                     $template = createTemplate();
@@ -215,12 +219,13 @@
                 }
                 // add rows to DOM
                 $table.find('tbody').append(templateBuffer);
-            } else if (tableSelector == '.profile-table') {
+        }
 
-            } else {
-                throw Error('Unknown tableID');
-            }
-
+        function profileAddRow(tableSelector, data) {
+                var $table = $(tableSelector);
+                for (var key in data) {
+                    $table.find('.'+key).html(data[key] || 'Not available');
+                }
         }
 
         //---- Modal setup
@@ -408,8 +413,8 @@
             });
         });
 
-        addRows('#tutorial-table', templates.tutorialRow, tutorials);
-        addRows('.profile-table', templates.tutorialRow, userInfo);
+        tutorialAddRow('#tutorial-table', templates.tutorialRow, tutorials);
+        profileAddRow('#profile-table', userInfo);
 
 
 

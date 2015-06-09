@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, g, url_for, redirect, request, fla
 from app.extensions import current_user, login_required, db
 from app.models import User, Article
 from app.utils import template_or_json, redirect_or_json
-from .schemas import articles_serializer, user_info_serializer
+from .schemas import articles_serializer, article_serializer, user_info_serializer
 from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')

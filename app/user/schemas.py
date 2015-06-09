@@ -1,6 +1,6 @@
 from marshmallow import Schema, fields
 from app.utils import format_datetime
-from app.api.schemas import UserSchema, articles_serializer
+from app.api.schemas import UserSchema, articles_serializer, article_serializer
 
 
 class UserSettingSchema(UserSchema):
