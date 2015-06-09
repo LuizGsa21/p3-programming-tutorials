@@ -28,7 +28,7 @@ def oauth_login(provider):
     return remote_apps[provider].authorize(url_for('oauth.%s_authorized' % provider, _external=True))
 
 
-
+# TODO: Fix oauth flash messages after login
 @oauth_bp.route('/oauth2callback')
 @google.authorized_handler
 def google_authorized(resp):

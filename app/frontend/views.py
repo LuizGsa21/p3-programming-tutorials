@@ -9,7 +9,7 @@ frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
 
-
+# TODO: Hide login form after user is logged in
 @frontend_bp.route('/')
 def index():
     registerForm = RegistrationForm(request.form)

@@ -117,5 +117,6 @@ def configure_jinja_filters(app):
     def articles_to_json(articles):
         from .api.schemas import articles_serializer
         import json
+        print articles
         result, error = articles_serializer.dump(articles)
         return json.dumps(result)

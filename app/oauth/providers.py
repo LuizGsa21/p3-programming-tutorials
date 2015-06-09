@@ -8,7 +8,7 @@ providers = {
         'request_token_url': None,
         'request_token_params': {
             'scope': 'openid email',
-            'approval_prompt': 'force',
+            # 'approval_prompt': 'force',
             'response_type': 'code'
         },
         'access_token_url': 'https://accounts.google.com/o/oauth2/token',

@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, jsonify, render_template, redirect, json
+from flask import request, jsonify, render_template, redirect, json, get_flashed_messages
 from extensions import format_datetime as b_datetime
 
 def template_or_json(template=None):
@@ -11,6 +11,8 @@ def template_or_json(template=None):
         def decorated_fn(*args, **kwargs):
             ctx = f(*args, **kwargs)
             if request.is_xhr or not template:
+                ctx['flashed_messages'] = \
+                    [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
                 return jsonify(ctx)
             else:
                 return render_template(template, **ctx)
@@ -23,6 +25,8 @@ def redirect_or_json(redirect_url):
         def decorator_fn(*args, **kwargs):
             ctx = f(*args, **kwargs)
             if request.is_xhr:
+                ctx['flashed_messages'] = \
+                    [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
                 return jsonify(ctx), ctx['status']
             else:
                 return redirect(redirect_url)

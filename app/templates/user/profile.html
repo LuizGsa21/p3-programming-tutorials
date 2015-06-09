@@ -5,6 +5,7 @@
 {% block body %}
 <section class="profile">
     <div class="container">
+        <div class="row"><div class="col-xs-12 alert-box"></div></div>
         <div class="row row-table-md">
             <div class="col-xs-12 col-md-4">
                 <div class="avatar"></div>
@@ -89,7 +90,6 @@
     <div class="alert-messages">
         <div class="alert">
             <a href="#" class="close" data-dismiss="alert">&times;</a>
-            <ul><li><strong></strong>: <span></span></li></ul>
         </div>
     </div>
 </script>
@@ -107,9 +107,9 @@
 </script>
 
 <script id="forms-template" type="text/html">
-    <form id="form-tutorial" action="{{ url_for('user.add_article') }}" method="post">
-    {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' -%}
+    <form id="form-tutorial" method="post">
+    {{ forms.addArticle.hidden_tag() }}
+    {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
         {%- if field.name == 'body' -%}
             {{ render_field(field, cols=30, rows=4) }}
         {%- else -%}
@@ -118,9 +118,9 @@
     {%- endfor %}
     </form>
 
-    <form id="form-profile" action="{{ url_for('user.add_article') }}" method="post">
-    {{ form.hidden_tag() }}
-    {% for field in form if field.widget.input_type != 'hidden' %}
+    <form id="form-delete" style="display: none !important;" action="{{ url_for('user.delete_article') }}" method="post">
+    {{ forms.deleteArticle.hidden_tag() }}
+    {% for field in forms.deleteArticle if field.widget.input_type != 'hidden' %}
         {% if field.name == 'body' %}
             {{ render_field(field, cols=30, rows=4) }}
         {% else %}
@@ -128,6 +128,17 @@
         {% endif %}
     {% endfor %}
     </form>
+
+{#    <form id="form-profile" action="{{ url_for('user.add_article') }}" method="post">#}
+{#    {{ form.hidden_tag() }}#}
+{#    {% for field in form if field.widget.input_type != 'hidden' %}#}
+{#        {% if field.name == 'body' %}#}
+{#            {{ render_field(field, cols=30, rows=4) }}#}
+{#        {% else %}#}
+{#            {{ render_field(field) }}#}
+{#        {% endif %}#}
+{#    {% endfor %}#}
+{#    </form>#}
 </script>
 <!-- END templates ========================================================  -->
 
@@ -143,47 +154,70 @@
                 return this.clone();
             }.bind($(original));
         }
+
         var tempForms = $($('#forms-template').html());
 
         var templates = {
             tutorialForm: cloneWrapper(tempForms.filter('#form-tutorial')),
             profileForm: cloneWrapper(tempForms.filter('#form-profile')),
+            deleteForm: cloneWrapper(tempForms.filter('#form-delete')),
             tutorialRow: cloneWrapper($('#tutorial-row-template').html()),
             profileRow: cloneWrapper($('#profile-row-template').html()),
             alert: cloneWrapper($('#alert-template').html())
         };
+
         tempForms = null;
 
-        function createAlert(messages, type){
-            var $alert = templates.alert(),
-                $li = $alert.find('li'),
-                liBuffer = [];
-
-            for (var key in messages) {
-                var $temp = $li.clone();
-                $temp.find('strong').html(key);
-                $temp.find('span').html(errors[key]);
-                liBuffer.push($temp);
-            }
-
-            $alert.find('ul').html(liBuffer);
-            $alert.addClass(type);
-            return $alert;
+        function getFlashedMessages(messages) {
+            var msgBuffer = [];
+            messages.forEach(function(m) {
+                msgBuffer.push(createAlert(m.message, m.category));
+            });
+            return msgBuffer;
         }
+        function createAlert(message, category) {
+            var $template = templates.alert();
+                $template.addClass(['alert-', category].join(''));
+                $template.find('.alert').append(message);
+                return $template;
+        }
+
+        /**
+         *
+         * @param $form
+         * @param formErrors - [ {formLabelID: arrayOfErrorMessages}, ... ]
+         */
+        function setFormErrors($form, formErrors) {
+            // clear any previous errors before setting the form
+            $form.find('.form-group').removeClass('has-error');
+            $form.find('.help-block').remove();
+
+            for (var labelID in formErrors){
+               formErrors[labelID].forEach(function(errorMessage) {
+                 this.parent().addClass('has-error');
+                 this.after($('<p></p>').addClass('help-block').html(errorMessage));
+
+               }.bind($form.find(['#', labelID].join(''))));
+            }
+        }
+
         function addRows(tableID, createTemplate, data) {
             var $template,
-                    templateBuffer = [],
-                    $table = $(['#', tableID].join('')),
-                    dataArray = (data instanceof Array) ? data : [data],
-                    length = dataArray.length;
-            console.log(data);
+                templateBuffer = [],
+                $table = $(['#', tableID].join('')),
+                dataArray = (data instanceof Array) ? data : [data],
+                length = dataArray.length;
+
             if (tableID == 'tutorial-table') {
                 // Create all rows in memory
                 for (var i = 0; i < length; i++) {
+                    var item = dataArray[i];
                     $template = createTemplate();
-                    $template.find('.title').html(dataArray[i].title);
-                    $template.find('.category').html(dataArray[i].category.name);
-                    $template.find('.date').html(dataArray[i].date_created);
+                    $template.attr('id', ['tutorial-', item.id].join(''));
+                    $template.find('.title').html(item.title);
+                    $template.find('.category').html(item.category.name);
+                    $template.find('.date').html(item.date_created);
+                    $template.find('.action a').data('item', item);
                     templateBuffer.push($template)
                 }
                 // add rows to DOM
@@ -196,67 +230,175 @@
 
         }
 
-        addRows('tutorial-table', templates.tutorialRow, tutorials);
-
-        // AJAX on success handlers
-        var responseHandler = {
-            addTutorial: function (data) {
-                addRows('tutorial-table', templates.tutorialRow, data);
-            }
-        };
-
-        // Build the modal dynamically
-        var modalBuilder = {
-            addTutorial: function ($modal) {
-                var $form = templates.tutorialForm(),
-                    $actionBtn;
-                $modal.find('.modal-title').append('Add Tutorial');
-                $modal.find('.modal-body').append($form);
-
-                $actionBtn = $modal.find('.modal-footer').find('.btn-submit');
-                $actionBtn.removeClass('btn-danger')
-                          .addClass('btn-primary')
-                          .html('Add Tutorial');
-            }
-        };
-
         //---- Modal setup
         var $mainModal = $('#main-modal');
+
         // ensure old content gets deleted after modal closes
         $mainModal.on('hidden.bs.modal', function () {
             ['.modal-title', '.modal-body'].forEach(function (selector) {
                 $($mainModal).find(selector).html('');
             });
+            // remove action button css
+            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning')
         });
 
-        // Create modal before its shown
+        // Initialize modalBuilder methods
+        var modalBuilder = {
+            addTutorial: function ($modal) {
+                var $form = templates.tutorialForm();
+                // set form url
+                $form.attr('action', '{{ url_for('user.add_article') }}');
+
+                // Update modal title
+                $modal.find('.modal-title').append('Add Tutorial');
+                $modal.find('.modal-body').append($form);
+
+                // update action button css
+                var $actionBtn = $modal.find('.btn-submit');
+                $actionBtn.addClass('btn-primary').html('Add Tutorial');
+            },
+            editTutorial: function ($modal) {
+                var $form = templates.tutorialForm(),
+                    item = $modal.data('item');
+                // set form url
+                $form.attr('action', '{{ url_for('user.edit_article') }}');
+
+                // Update modal title
+                $modal.find('.modal-title').append('Edit Tutorial');
+
+                // populate form fields
+                $.each(item, function(key, value) {
+
+                    // category returns and object {id:value, name:value}
+                    if (key == 'category') {
+                        value = value.id;
+                    }
+
+                    $form.find(['#', key].join('')).val(value);
+                });
+
+                // add input field with the item's id attached
+                $form.prepend($('<input/>').attr({type:'hidden', name:'id', value: item.id}));
+
+                // append hidden form to body
+                $modal.find('.modal-body').append($form);
+
+                // update action button css
+                var $actionBtn = $modal.find('.btn-submit');
+                $actionBtn.addClass('btn-primary').html('Save Tutorial');
+            },
+            deleteTutorial: function($modal) {
+                var item = $modal.data('item'),
+                    title = item.title,
+                    $form = templates.deleteForm();
+                $form.attr('action', '{{ url_for('user.delete_article') }}');
+
+                // add item id to form
+                $form.find('#id').val(item.id);
+
+                // create title
+                $modal.find('.modal-title')
+                    .append('<span class="text-danger">Warning!!!</span>');
+
+                var $modalBody = $modal.find('.modal-body');
+                // append hidden form and the dialog message to the modal's body
+                $modalBody.append($form)
+                          .append(['<p>Are you sure you want to delete <strong class="text-danger">', title,
+                                  '</strong> permanently?</p>'].join(''));
+                // update action button css
+                var $actionBtn = $modal.find('.btn-submit');
+                $actionBtn.addClass('btn-danger').html('Delete Tutorial');
+            }
+        };
+
+        // Dynamically create the modal's content before its shown
         $mainModal.on('show.bs.modal', function (e) {
-            var action = $(e.relatedTarget).data('action');
-            modalBuilder[action]($mainModal);
-            $mainModal.find('.btn-submit')
-                      .data('action', action)
+            var data = $(e.relatedTarget).data();
+            $mainModal.data(data);
+            modalBuilder[data.action]($mainModal);
         });
 
+        // AJAX action handler
+        var responseHandler = {
+            addTutorial: function ($modal, data) {
+                var errors = data['flashed_messages'];
+                if (data.success) {
+                    addRows('tutorial-table', templates.tutorialRow, data.article);
+                    errors.forEach(function(error) {
+                        $('#tutorial-table').before(createAlert(error.message, error.category));
+                    });
+                } else {
+                    // Find out the type of error
+                    errors.forEach(function(error) {
+                        if (error.category == 'form-error') {
+                           // populate the form with the given errors
+                           setFormErrors($modal.find('form'), error.message);
+                        } else {
+                            // append alerts messages on top of the form
+                            $modal.find('form').before(createAlert(error.message, error.category))
+                        }
+                    });
+                }
+            },
+            editTutorial: function($modal, data) {
+                var errors, item, $row;
+
+                if (data.success) {
+                    item = data.article;
+                    // get item row and update its content
+                    $row = $('#tutorial-' + item.id);
+                    $row.find('.category').html(item.category.name);
+                    $row.find('.title').html(item.title);
+                    $row.find('a').data('item', item);
+                }
+                getFlashedMessages(data['flashed_messages'])
+                    .forEach(function($message){$message.insertBefore('#tutorial-table')});
+            },
+
+            deleteTutorial: function($modal, data) {
+                var item;
+                if (data.success) {
+                    // delete item from table row
+                    item = $modal.data('item');
+                    $('#tutorial-'+item.id).remove(); // remove item from table
+                } else {
+                    $modal.modal('hide');
+                }
+                getFlashedMessages(data['flashed_messages'])
+                    .forEach(function(e) { e.insertBefore('#tutorial-table'); });
+            }
+        };
+        // create AJAX request when user clicks the modal's action button
         $mainModal.find('.btn-submit')
         .on('click', function(e) {
-            var action = $(this).data('action'),
+            var action = $mainModal.data('action'),
                 $form = $mainModal.find('form');
             $.ajax({
                 url: $form.attr('action'),
                 type: $form.attr('method'),
+                dataType: 'json',
                 data: $form.serialize(),
                 success: function(data) {
-                    responseHandler[action](data.article);
+                    $('.alert-messages').remove();
+                    responseHandler[action]($mainModal, data);
+                    $mainModal.modal('hide');
                 },
                 error: function(data) {
-                    $('.alert').remove();
-                    var errors = (data.responseJSON) ? data.responseJSON.error : {error: data.statusText};
-                    $mainModal.find('.modal-body')
-                              .prepend(createAlert(errors, 'alert-danger'));
+                    $('.alert-messages').remove(); // remove any previous alerts
+                    if (data.responseJSON) { // server sent a json object with additional error messages
+                        responseHandler[action]($mainModal, data.responseJSON);
+                    } else {
+                        // hide modal before appending alert.
+                        $mainModal.modal('hide');
+                        $('.alert-box').prepend(createAlert('Unknown Server Error.', 'danger'));
+                        $('body').scrollTop(0); // scroll to top of window
+                    }
+
                  }
             });
         });
 
+        addRows('tutorial-table', templates.tutorialRow, tutorials);
 
 
     }(jQuery)
