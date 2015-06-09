@@ -121,31 +121,25 @@
     <form id="form-delete" style="display: none !important;" action="{{ url_for('user.delete_article') }}" method="post">
     {{ forms.deleteArticle.hidden_tag() }}
     {% for field in forms.deleteArticle if field.widget.input_type != 'hidden' %}
-        {% if field.name == 'body' %}
-            {{ render_field(field, cols=30, rows=4) }}
-        {% else %}
-            {{ render_field(field) }}
-        {% endif %}
+        {{ render_field(field) }}
     {% endfor %}
     </form>
 
-{#    <form id="form-profile" action="{{ url_for('user.add_article') }}" method="post">#}
-{#    {{ form.hidden_tag() }}#}
-{#    {% for field in form if field.widget.input_type != 'hidden' %}#}
-{#        {% if field.name == 'body' %}#}
-{#            {{ render_field(field, cols=30, rows=4) }}#}
-{#        {% else %}#}
-{#            {{ render_field(field) }}#}
-{#        {% endif %}#}
-{#    {% endfor %}#}
-{#    </form>#}
+    <form id="form-profile" action="{{ url_for('user.edit_profile') }}" method="post">
+    {{ forms.editProfile.hidden_tag() }}
+    {% for field in forms.editProfile if field.widget.input_type != 'hidden' %}
+            {{ render_field(field) }}
+    {% endfor %}
+    </form>
 </script>
 <!-- END templates ========================================================  -->
 
 <script>
     +function ($) {
 
-        var tutorials = {{ current_user.articles|articles_to_json|safe }};
+        var tutorials = {{ current_user.articles|custom_json(serializers['article'])|safe }};
+        var userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }};
+        console.log(userInfo);
 
         // All templates
         // * make sure templates returns a new instance
@@ -165,7 +159,6 @@
             profileRow: cloneWrapper($('#profile-row-template').html()),
             alert: cloneWrapper($('#alert-template').html())
         };
-
         tempForms = null;
 
         function getFlashedMessages(messages) {
@@ -201,14 +194,14 @@
             }
         }
 
-        function addRows(tableID, createTemplate, data) {
+        function addRows(tableSelector, createTemplate, data) {
             var $template,
                 templateBuffer = [],
-                $table = $(['#', tableID].join('')),
+                $table = $(tableSelector),
                 dataArray = (data instanceof Array) ? data : [data],
                 length = dataArray.length;
 
-            if (tableID == 'tutorial-table') {
+            if (tableSelector == '#tutorial-table') {
                 // Create all rows in memory
                 for (var i = 0; i < length; i++) {
                     var item = dataArray[i];
@@ -222,7 +215,7 @@
                 }
                 // add rows to DOM
                 $table.find('tbody').append(templateBuffer);
-            } else if (tableID == 'profile-table') {
+            } else if (tableSelector == '.profile-table') {
 
             } else {
                 throw Error('Unknown tableID');
@@ -308,6 +301,9 @@
                 // update action button css
                 var $actionBtn = $modal.find('.btn-submit');
                 $actionBtn.addClass('btn-danger').html('Delete Tutorial');
+            },
+            editProfile: function($modal) {
+
             }
         };
 
@@ -388,9 +384,23 @@
                     if (data.responseJSON) { // server sent a json object with additional error messages
                         responseHandler[action]($mainModal, data.responseJSON);
                     } else {
-                        // hide modal before appending alert.
+                        var message;
+                        // create error message
+                        if (data.status == 400) {
+                            var $response = $(data.responseText);
+                            console.log($response);
+                            message = [
+                                '<strong>',
+                                $response.filter('h1').html(),
+                                '</strong>: ',
+                                $response.filter('p').html()
+                            ].join('');
+                        } else {
+                            message = 'Unknown Server Error.';
+                        }
                         $mainModal.modal('hide');
-                        $('.alert-box').prepend(createAlert('Unknown Server Error.', 'danger'));
+                        // add alert message to top of page
+                        $('.alert-box').html(createAlert(message, 'danger'));
                         $('body').scrollTop(0); // scroll to top of window
                     }
 
@@ -398,7 +408,9 @@
             });
         });
 
-        addRows('tutorial-table', templates.tutorialRow, tutorials);
+        addRows('#tutorial-table', templates.tutorialRow, tutorials);
+        addRows('.profile-table', templates.tutorialRow, userInfo);
+
 
 
     }(jQuery)

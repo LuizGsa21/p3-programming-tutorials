@@ -113,10 +113,8 @@ def configure_jinja_filters(app):
     def datetime(*args, **kwargs):
         return format_datetime(*args, **kwargs)
 
-    @app.template_filter('articles_to_json')
-    def articles_to_json(articles):
-        from .api.schemas import articles_serializer
+    @app.template_filter('custom_json')
+    def custom_json(obj, serializer):
         import json
-        print articles
-        result, error = articles_serializer.dump(articles)
+        result, error = serializer.dump(obj)
         return json.dumps(result)

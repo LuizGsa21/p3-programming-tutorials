@@ -11,7 +11,6 @@ class UserSchema(Schema):
     class Meta:
         fields = ('id', 'username', 'date_joined')
 
-
 class CategorySchema(Schema):
     class Meta:
         fields = ('id', 'name')
@@ -29,14 +28,14 @@ class ArticleExtendedSchema(ArticleSchema):
     author = fields.Nested(UserSchema)
     comments = fields.Nested(CommentSchema, many=True)
 
-    def format_date(self, obj):
-        return format_datetime(obj.date_created, 'standard')
+    # def format_date(self, obj):
+    #     return format_datetime(obj.date_created, 'standard')
 
     class Meta:
         fields = ('id', 'title', 'body', 'date_created', 'category', 'author', 'comments')
 
 article_serializer = ArticleSchema()
-articleExtended_serializer = ArticleExtendedSchema()
+article_ext_serializer = ArticleExtendedSchema()
 
 articles_serializer = ArticleSchema(many=True)
-articlesExtended_serializer = ArticleExtendedSchema(many=True)
+articles_ext_serializer = ArticleExtendedSchema(many=True)

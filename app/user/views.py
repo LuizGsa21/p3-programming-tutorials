@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, g, url_for, redirect, request, flash
-from app.models import User, Article
-from app.api.schemas import article_serializer
 from app.extensions import current_user, login_required, db
-from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm
+from app.models import User, Article
 from app.utils import template_or_json, redirect_or_json
+from .schemas import articles_serializer, user_info_serializer
+from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -13,9 +13,14 @@ user_bp = Blueprint('user', __name__, url_prefix='/user')
 def profile():
     forms = {
         'addArticle': AddArticleForm(),
-        'deleteArticle': DeleteArticleForm()
+        'deleteArticle': DeleteArticleForm(),
+        'editProfile': DeleteArticleForm()
     }
-    return render_template('user/profile.html', active_page='profile', forms=forms)
+    serializers = {
+        'article': articles_serializer,
+        'userInfo': user_info_serializer
+    }
+    return render_template('user/profile.html', active_page='profile', forms=forms, serializers=serializers)
 
 @user_bp.route('/profile/articles/add', methods=['POST'])
 @redirect_or_json('user.profile')
@@ -77,6 +82,15 @@ def delete_article():
     else:
         flash('Invalid tutorial identification number.', 'danger')
         return {'status': 400, 'success': 0}
+
+@user_bp.route('/profile/settings/edit', methods=['POST'])
+@redirect_or_json('user.profile')
+def edit_profile():
+    form = EditProfileForm(request.form)
+    if form.validate_on_submit():
+        user = User.query.get(current_user.id)
+        user.email = form.email.data
+
 
 @user_bp.route('/settings/')
 def settings():

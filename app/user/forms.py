@@ -6,6 +6,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import InputRequired, EqualTo, Length, Email
 from app.models import User, Category, Article
 
+# Article forms
 class AddArticleForm(Form):
     title = StringField('Title', validators=[InputRequired(), Length(min=4, max=20)])
     category = QuerySelectField('Category', query_factory=lambda: Category.query.all(), validators=[InputRequired()])
@@ -16,3 +17,9 @@ class EditArticleForm(AddArticleForm):
 
 class DeleteArticleForm(Form):
     id = HiddenField('id', validators=[InputRequired()])
+
+# User Forms
+class EditProfileForm(Form):
+    email = HiddenField('id', validators=[InputRequired()])
+    first_name = HiddenField('id', validators=[InputRequired()])
+    last_name = HiddenField('id', validators=[InputRequired()])
