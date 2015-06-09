@@ -20,6 +20,6 @@ class DeleteArticleForm(Form):
 
 # User Forms
 class EditProfileForm(Form):
-    email = HiddenField('id', validators=[InputRequired()])
-    first_name = HiddenField('id', validators=[InputRequired()])
-    last_name = HiddenField('id', validators=[InputRequired()])
+    email = StringField('Email', validators=[InputRequired()])
+    first_name = StringField('First Name', validators=[InputRequired()])
+    last_name = StringField('Last Name', validators=[InputRequired()])

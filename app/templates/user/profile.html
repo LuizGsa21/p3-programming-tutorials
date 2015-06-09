@@ -108,28 +108,28 @@
 
 <script id="forms-template" type="text/html">
     <form id="form-tutorial" method="post">
-    {{ forms.addArticle.hidden_tag() }}
-    {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
-        {%- if field.name == 'body' -%}
-            {{ render_field(field, cols=30, rows=4) }}
-        {%- else -%}
-            {{ render_field(field) }}
-        {% endif %}
-    {%- endfor %}
+        {{ forms.addArticle.hidden_tag() }}
+        {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
+            {%- if field.name == 'body' %}
+                {{ render_field(field, cols=30, rows=4) }}
+            {% else %}
+                {{ render_field(field) }}
+            {% endif %}
+        {% endfor %}
     </form>
 
     <form id="form-delete" style="display: none !important;" action="{{ url_for('user.delete_article') }}" method="post">
-    {{ forms.deleteArticle.hidden_tag() }}
-    {% for field in forms.deleteArticle if field.widget.input_type != 'hidden' %}
-        {{ render_field(field) }}
-    {% endfor %}
+        {{ forms.deleteArticle.hidden_tag() }}
+        {% for field in forms.deleteArticle if field.widget.input_type != 'hidden' %}
+            {{ render_field(field) }}
+        {% endfor %}
     </form>
 
     <form id="form-profile" action="{{ url_for('user.edit_profile') }}" method="post">
-    {{ forms.editProfile.hidden_tag() }}
-    {% for field in forms.editProfile if field.widget.input_type != 'hidden' %}
+        {{ forms.editProfile.hidden_tag() }}
+        {% for field in forms.editProfile if field.widget.input_type != 'hidden' %}
             {{ render_field(field) }}
-    {% endfor %}
+        {% endfor %}
     </form>
 </script>
 <!-- END templates ========================================================  -->
@@ -139,7 +139,6 @@
 
         var tutorials = {{ current_user.articles|custom_json(serializers['article'])|safe }};
         var userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }};
-        console.log(userInfo);
 
         // All templates
         // * make sure templates returns a new instance
@@ -219,6 +218,7 @@
                 for (var key in data) {
                     $table.find('.'+key).html(data[key] || 'Not available');
                 }
+                $table.find('thead a').data('item', data);
         }
 
         //---- Modal setup
@@ -301,12 +301,19 @@
                 $actionBtn.addClass('btn-danger').html('Delete Tutorial');
             },
             editProfile: function($modal) {
-
+                var item, title, $form;
+                item = $modal.data('item');
+                $form = templates.profileForm();
+                console.log($form);
+                $modal.find('.modal-title').html('General Info');
+                $modal.find('.modal-body').append($form);
+                $modal.find('.btn-submit').addClass('btn-primary').html()
             }
         };
 
         // Dynamically create the modal's content before its shown
         $mainModal.on('show.bs.modal', function (e) {
+            $mainModal.removeData(); // reset data
             var data = $(e.relatedTarget).data();
             $mainModal.data(data);
             modalBuilder[data.action]($mainModal);
@@ -386,7 +393,6 @@
                         // create error message
                         if (data.status == 400) {
                             var $response = $(data.responseText);
-                            console.log($response);
                             message = [
                                 '<strong>',
                                 $response.filter('h1').html(),

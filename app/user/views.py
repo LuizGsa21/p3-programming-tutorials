@@ -14,7 +14,7 @@ def profile():
     forms = {
         'addArticle': AddArticleForm(),
         'deleteArticle': DeleteArticleForm(),
-        'editProfile': DeleteArticleForm()
+        'editProfile': EditProfileForm()
     }
     serializers = {
         'article': articles_serializer,
@@ -90,6 +90,14 @@ def edit_profile():
     if form.validate_on_submit():
         user = User.query.get(current_user.id)
         user.email = form.email.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        db.session.commit()
+        flash('Successfully updated your user settings.')
+        return {'status': 200, 'success': 1, 'userInfo': user_info_serializer.dump(user)}
+    else:
+        flash(form.errors, 'form-error')
+        return {'status': 400, 'success': 0}
 
 
 @user_bp.route('/settings/')
