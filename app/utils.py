@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, jsonify, render_template, redirect, json, get_flashed_messages
+from flask import request, jsonify, render_template, redirect, json, get_flashed_messages, current_app
 from extensions import format_datetime as b_datetime
 
 def template_or_json(template=None):
@@ -43,3 +43,7 @@ def format_datetime(value, format='default'):
     elif format == 'standard':
         format = 'HH:mm MMMM d, yyyy'
     return b_datetime(value, format)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in current_app.config.get('ALLOWED_EXTENSIONS', ('',))
