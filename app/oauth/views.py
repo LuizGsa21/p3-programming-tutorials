@@ -47,7 +47,7 @@ def google_authorized(resp):
         user = User(username=userinfo['email'], email=userinfo['email'], pwdhash='')
         db.session.add(user)
         db.session.commit()
-
+        session['change-username-allowed'] = True
     login_user(user)
     flash('Logged in as id=%s name=%s' % (userinfo['id'], userinfo['name']), 'success')
     # return redirect(url_for('frontend.index'))
@@ -71,7 +71,7 @@ def twitter_authorized(resp):
         user = User(username=resp['screen_name'], pwdhash='')
         db.session.add(user)
         db.session.commit()
-
+        session['change-username-allowed'] = True
     login_user(user)
     flash('Logged in as twitter handle=%s' % resp['screen_name'], 'success')
     return render_template('close-popup.html')
@@ -93,6 +93,7 @@ def facebook_authorized(resp):
         user = User(username=me.data['email'], pwdhash='')
         db.session.add(user)
         db.session.commit()
+        session['change-username-allowed'] = True
 
     login_user(user)
     flash('Logged in as id=%s name=%s' % (me.data['id'], me.data['name']), 'success')

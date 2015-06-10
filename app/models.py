@@ -28,6 +28,15 @@ class CaseInsensitiveWord(Comparator):
     def __str__(self):
         return self.word
 
+# monkey patch to db.Model. used as a convenience method for populating values from a wtform
+def populate_form(model, form):
+    fields = form.data
+    for column, value in fields.items():
+        if hasattr(model, column):
+            setattr(model, column, value)
+
+setattr(db.Model, 'populate_form', populate_form)
+
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
@@ -47,6 +56,10 @@ class User(db.Model, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.pwdhash, password)
+
+    def is_admin(self):
+        # Everyone is admin!!! :)
+        return True
 
 
     @hybrid_property

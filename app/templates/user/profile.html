@@ -10,8 +10,8 @@
             <div class="col-xs-12 col-md-4">
                 <div class="avatar"></div>
                 <div class="more-info">
-                    <div class="profile-name">Luiz Arantes Sa</div>
-                    <div class="settings"><a href="#">Settings</a></div>
+                    <div class="profile-name"></div>
+                    <div class="settings"><a data-toggle="modal" data-action="changeAvatar" data-target="#main-modal" href="#">change avatar</a></div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
@@ -140,8 +140,7 @@
         var tutorials = {{ current_user.articles|custom_json(serializers['article'])|safe }};
         var userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }};
 
-        // All templates
-        // * make sure templates returns a new instance
+        // make sure templates returns a new instance
         function cloneWrapper(original) {
             return function() {
                 return this.clone();
@@ -149,7 +148,6 @@
         }
 
         var tempForms = $($('#forms-template').html());
-
         var templates = {
             tutorialForm: cloneWrapper(tempForms.filter('#form-tutorial')),
             profileForm: cloneWrapper(tempForms.filter('#form-profile')),
@@ -166,6 +164,7 @@
             });
             return msgBuffer;
         }
+
         function createAlert(message, category) {
             var $template = templates.alert();
                 $template.addClass(['alert-', category].join(''));
@@ -214,12 +213,15 @@
                 $table.find('tbody').append(templateBuffer);
         }
 
-        function updateProfileRows(tableSelector, data) {
+        function updateProfile(tableSelector, data) {
                 var $table = $(tableSelector);
                 for (var key in data) {
                     $table.find('.'+key).html(data[key] || 'Not available');
+
                 }
+                console.log(data);
                 $table.find('.btn-profile-edit').data('item', data);
+                $('.profile-name').html(data['username']);
         }
 
         //---- Modal setup
@@ -386,7 +388,8 @@
                 messages = data['flashed_messages'];
                 if (data.success) {
                     item = data.userInfo;
-                    updateProfileRows('#profile-table', item);
+                    updateProfile('#profile-table', item);
+
                     displayMessages($('#profile-table'), 'before', messages);
                 } else {
                    displayModalMessages($modal, messages);
@@ -437,9 +440,8 @@
         });
 
         tutorialAddRow('#tutorial-table', tutorials);
-        updateProfileRows('#profile-table', userInfo);
 
-
+        updateProfile('#profile-table', userInfo);
 
     }(jQuery)
 </script>

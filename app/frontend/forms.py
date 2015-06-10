@@ -1,7 +1,8 @@
+from app.extensions import current_user
+from app.models import User, Category
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, ValidationError
 from wtforms.validators import InputRequired, EqualTo, Length, Email
-from app.models import User, Category
 
 
 class RegistrationForm(Form):
@@ -19,13 +20,13 @@ class RegistrationForm(Form):
 
     def validate_email(self, field):
         existing_user = User.query.filter_by(email=field.data).first()
-        if existing_user:
+        if existing_user and current_user.id != existing_user.id:
             raise ValidationError('This email is taken.')
 
 class LoginForm(Form):
     # username = StringField('Username', validators=[InputRequired()])
-    password = PasswordField('Password', validators=[InputRequired()])
     email = StringField('Email', validators=[InputRequired(), Email()])
+    password = PasswordField('Password', validators=[InputRequired()])
 
 class OpenIDForm(Form):
     openid = StringField('OpenID', validators=[InputRequired()])

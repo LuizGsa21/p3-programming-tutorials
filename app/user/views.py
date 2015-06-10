@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, g, url_for, redirect, request, flash
+from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session
 from app.extensions import current_user, login_required, db
 from app.models import User, Article
 from app.utils import template_or_json, redirect_or_json
@@ -48,7 +48,7 @@ def edit_article():
     if form.validate_on_submit():
         article = Article.query.get(form.id.data)
         # ensure user has permission to edit this item
-        if article.author_id == current_user.id or current_user.isAdmin():
+        if article.author_id == current_user.id or current_user.is_admin():
             article.title = form.title.data
             article.body = form.body.data
             article.category_id = form.category.data.id
@@ -89,10 +89,14 @@ def edit_profile():
     form = EditProfileForm(request.form)
     if form.validate_on_submit():
         user = User.query.get(current_user.id)
-        user.email = form.email.data
-        user.first_name = form.first_name.data
-        user.last_name = form.last_name.data
+
+        # Users who registered using OAuth may only change their username once.
+        if form.username.data != user.username:
+            session.pop('change-username-allowed', None)
+
+        user.populate_form(form)
         db.session.commit()
+
         flash('Successfully updated user info.', 'success')
         result, error = user_info_serializer.dump(user)
         return {'status': 200, 'success': 1, 'userInfo': result}
