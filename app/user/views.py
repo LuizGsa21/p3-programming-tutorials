@@ -1,12 +1,13 @@
-from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session
+import pprint
+from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session, current_app
 from app.extensions import current_user, login_required, db
 from app.models import User, Article
-from app.utils import template_or_json, redirect_or_json
+from app.utils import template_or_json, redirect_or_json, allowed_file
+from werkzeug import secure_filename
 from .schemas import articles_serializer, article_serializer, user_info_serializer
-from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm
-
+from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm, UploadAvatarForm
+import os
 user_bp = Blueprint('user', __name__, url_prefix='/user')
-
 
 @user_bp.route('/profile/')
 @login_required
@@ -14,15 +15,18 @@ def profile():
     forms = {
         'addArticle': AddArticleForm(),
         'deleteArticle': DeleteArticleForm(),
-        'editProfile': EditProfileForm()
+        'editProfile': EditProfileForm(),
+        'uploadAvatarForm': UploadAvatarForm()
     }
+
     serializers = {
         'article': articles_serializer,
         'userInfo': user_info_serializer
     }
+
     return render_template('user/profile.html', active_page='profile', forms=forms, serializers=serializers)
 
-@user_bp.route('/profile/articles/add', methods=['POST'])
+@user_bp.route('/profile/articles/add', methods=['POST', 'GET'])
 @redirect_or_json('user.profile')
 def add_article():
     form = AddArticleForm(request.form)
@@ -86,6 +90,9 @@ def delete_article():
 @user_bp.route('/profile/settings/edit', methods=['POST'])
 @redirect_or_json('user.profile')
 def edit_profile():
+    print request.args
+    print allowed_file('loser.txt')
+    print allowed_file('loser.png')
     form = EditProfileForm(request.form)
     if form.validate_on_submit():
         user = User.query.get(current_user.id)
@@ -105,6 +112,29 @@ def edit_profile():
         return {'status': 400, 'success': 0}
 
 
-@user_bp.route('/settings/')
-def settings():
-    return 'settings'
+@user_bp.route('/upload/avatar', methods=['POST'])
+@redirect_or_json('user.profile')
+def upload():
+    # there's no need to pass the form. WTF already takes care of it for file uploads
+    form = UploadAvatarForm()
+
+    if form.validate_on_submit():
+        avatar = form.avatar.data
+
+        # append user id to filename (creates a file namespace)
+        s = avatar.filename.rsplit('.', 1)
+        filename = s[0] + str(current_user.id) + '.' + s[1]
+
+        # filter user input
+        filename = secure_filename(filename)
+        avatar.save(os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars', filename))
+
+        # update user avatar path
+        current_user.avatar = filename
+        db.session.commit()
+        flash('Successfully uploaded avatar image.', 'success')
+        return {'status': 200, 'success': 1}
+    else:
+        flash(form.errors, 'form-error')
+        flash('file upload error', 'danger')
+        return {'status': 400, 'success': 0}
