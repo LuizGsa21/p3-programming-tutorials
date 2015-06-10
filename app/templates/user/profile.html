@@ -132,6 +132,12 @@
             {{ render_field(field) }}
         {% endfor %}
     </form>
+    <form id="form-avatar-upload" action="{{ url_for('user.upload') }}" method="post" enctype="multipart/form-data">
+        {{ forms.uploadAvatarForm.hidden_tag() }}
+        {% for field in forms.uploadAvatarForm if field.widget.input_type != 'hidden' %}
+            {{ render_field(field) }}
+        {% endfor %}
+    </form>
 </script>
 <!-- END templates ========================================================  -->
 
@@ -154,6 +160,7 @@
             profileForm: cloneWrapper(tempForms.filter('#form-profile')),
             deleteForm: cloneWrapper(tempForms.filter('#form-delete')),
             tutorialRow: cloneWrapper($('#tutorial-row-template').html()),
+            avatarUploadForm: cloneWrapper(tempForms.filter('#form-avatar-upload')),
             alert: cloneWrapper($('#alert-template').html())
         };
         tempForms = null;
@@ -316,6 +323,19 @@
                 $modal.find('.modal-title').html('General Info');
                 $modal.find('.modal-body').append($form);
                 $modal.find('.btn-submit').addClass('btn-primary').html('Save Profile')
+            },
+            changeAvatar: function($modal) {
+                var item, title, $form;
+                item = $modal.data('item');
+                $form = templates.avatarUploadForm();
+                console.log($form);
+{#                $form.find(':input').each(function() {#}
+{#                    if (this.type == 'hidden') return; // ignore hidden fields#}
+{#                    $(this).val(item[this.id]);#}
+{#                });#}
+                $modal.find('.modal-title').html('Upload Avatar');
+                $modal.find('.modal-body').append($form);
+                $modal.find('.btn-submit').addClass('btn-primary').html('Upload Avatar')
             }
         };
 
@@ -402,11 +422,9 @@
         .on('click', function(e) {
             var action = $mainModal.data('action'),
                 $form = $mainModal.find('form');
-            $.ajax({
-                url: $form.attr('action'),
-                type: $form.attr('method'),
+
+            $form.ajaxSubmit({
                 dataType: 'json',
-                data: $form.serialize(),
                 success: function(data) {
                     $('.alert-messages').remove();
                     responseHandler[action]($mainModal, data);

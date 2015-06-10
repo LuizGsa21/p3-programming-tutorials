@@ -8,7 +8,7 @@ from app.models import User, Category, Article
 from wtforms import ValidationError, StringField, PasswordField, FileField, HiddenField, TextAreaField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import InputRequired, EqualTo, Length, Email
-
+from werkzeug.datastructures import FileStorage
 # Article forms
 class AddArticleForm(Form):
     title = StringField('Title', validators=[InputRequired(), Length(min=1, max=250)])
@@ -45,8 +45,9 @@ class UploadAvatarForm(Form):
     def validate_avatar(self, field):
         fileStorage = field.data
 
+        if not isinstance(fileStorage, FileStorage):
+            raise ValidationError("Please include a file before submission.")
         # check file size
-        fileStorage.seek(0, os.SEEK_END)
         if fileStorage.tell() == 0:
             raise ValidationError("You can't upload an empty file.")
         fileStorage.seek(0, os.SEEK_SET) # reset file pointer

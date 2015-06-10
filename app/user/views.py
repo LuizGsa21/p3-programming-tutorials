@@ -90,9 +90,7 @@ def delete_article():
 @user_bp.route('/profile/settings/edit', methods=['POST'])
 @redirect_or_json('user.profile')
 def edit_profile():
-    print request.args
-    print allowed_file('loser.txt')
-    print allowed_file('loser.png')
+
     form = EditProfileForm(request.form)
     if form.validate_on_submit():
         user = User.query.get(current_user.id)
