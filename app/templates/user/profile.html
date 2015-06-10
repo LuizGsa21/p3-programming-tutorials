@@ -139,6 +139,9 @@
         {% endfor %}
     </form>
 </script>
+{#<script id="templates">#}
+{##}
+{#</script>#}
 <!-- END templates ========================================================  -->
 
 <script>
@@ -146,6 +149,7 @@
 
         var tutorials = {{ current_user.articles|custom_json(serializers['article'])|safe }};
         var userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }};
+        var $mainModal = $('#main-modal');
 
         // make sure templates returns a new instance
         function cloneWrapper(original) {
@@ -165,19 +169,33 @@
         };
         tempForms = null;
 
-        function getFlashedMessages(messages) {
-            var msgBuffer = [];
-            messages.forEach(function(m) {
-                msgBuffer.push(createAlert(m.message, m.category));
-            });
-            return msgBuffer;
-        }
-
         function createAlert(message, category) {
             var $template = templates.alert();
                 $template.addClass(['alert-', category].join(''));
                 $template.find('.alert').append(message);
                 return $template;
+        }
+
+        function displayMessages($element, action, flashedMessages) {
+
+            if (! ($element instanceof jQuery) ) $element = $($element);
+
+            flashedMessages.forEach(function(error) {
+                $element[action](createAlert(error.message, error.category));
+            });
+        }
+
+        function displayModalMessages($modal, flashedMessaged) {
+            // Find out the type of error
+            flashedMessaged.forEach(function(error) {
+                if (error.category == 'form-error') {
+                   // populate the form with the given errors
+                   setFormErrors($modal.find('form'), error.message);
+                } else {
+                    // append alerts messages on top of the form
+                    $modal.find('form').before(createAlert(error.message, error.category))
+                }
+            });
         }
 
         /**
@@ -199,10 +217,10 @@
             }
         }
 
-        function tutorialAddRow(tableSelector, data) {
+        function updateTutorials(data) {
                 var $template,
                 templateBuffer = [],
-                $table = $(tableSelector),
+                $table = $('#tutorial-table'),
                 dataArray = (data instanceof Array) ? data : [data],
                 createTemplate = templates.tutorialRow,
                 length = dataArray.length;
@@ -221,29 +239,21 @@
                 $table.find('tbody').append(templateBuffer);
         }
 
-        function updateProfile(tableSelector, data) {
-                var $table = $(tableSelector);
-                for (var key in data) {
-                    $table.find('.'+key).html(data[key] || 'Not available');
-
-                }
+        function updateProfile(data) {
+                var $table, $avatar;
+                $table = $('#profile-table');
+                $avatar = $('.avatar');
                 console.log(data);
+                for (var key in data) {
+                    if (key == 'avatar') {
+                        $avatar.css({backgroundImage: 'url('+data[key]+')'});
+                    } else {
+                        $table.find('.'+key).html(data[key] || 'Not available');
+                    }
+                }
                 $table.find('.btn-profile-edit').data('item', data);
                 $('.profile-name').html(data['username']);
         }
-
-        //---- Modal setup
-        var $mainModal = $('#main-modal');
-
-        // ensure old content gets deleted after modal closes
-        $mainModal.on('hidden.bs.modal', function () {
-            ['.modal-title', '.modal-body'].forEach(function (selector) {
-                $($mainModal).find(selector).html('');
-            });
-            // remove action button css
-            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
-            $mainModal.removeData();
-        });
 
         // Initialize modalBuilder methods
         var modalBuilder = {
@@ -328,50 +338,18 @@
                 var item, title, $form;
                 item = $modal.data('item');
                 $form = templates.avatarUploadForm();
-                console.log($form);
-{#                $form.find(':input').each(function() {#}
-{#                    if (this.type == 'hidden') return; // ignore hidden fields#}
-{#                    $(this).val(item[this.id]);#}
-{#                });#}
-                $modal.find('.modal-title').html('Upload Avatar');
+                $modal.find('.modal-title').html('Avatar');
                 $modal.find('.modal-body').append($form);
                 $modal.find('.btn-submit').addClass('btn-primary').html('Upload Avatar')
             }
         };
 
-        // Dynamically create the modal's content before its shown
-        $mainModal.on('show.bs.modal', function (e) {
-            var data = $(e.relatedTarget).data();
-            $mainModal.data(data);
-            modalBuilder[data.action]($mainModal);
-        });
-
-        function displayMessages($element, action, flashedMessages) {
-
-            if (! ($element instanceof jQuery) ) $element = $($element);
-
-            flashedMessages.forEach(function(error) {
-                $element[action](createAlert(error.message, error.category));
-            });
-        }
-        function displayModalMessages($modal, flashedMessaged) {
-            // Find out the type of error
-            flashedMessaged.forEach(function(error) {
-                if (error.category == 'form-error') {
-                   // populate the form with the given errors
-                   setFormErrors($modal.find('form'), error.message);
-                } else {
-                    // append alerts messages on top of the form
-                    $modal.find('form').before(createAlert(error.message, error.category))
-                }
-            });
-        }
         // AJAX action handler
         var responseHandler = {
             addTutorial: function ($modal, data) {
                 var messages = data['flashed_messages'];
                 if (data.success) {
-                    tutorialAddRow('#tutorial-table', data.article);
+                    updateTutorials(data.article);
                     displayMessages('#tutorial-table', 'before', messages);
                 } else {
                     displayModalMessages($modal, messages);
@@ -409,14 +387,44 @@
                 messages = data['flashed_messages'];
                 if (data.success) {
                     item = data.userInfo;
-                    updateProfile('#profile-table', item);
+                    updateProfile(item);
 
                     displayMessages($('#profile-table'), 'before', messages);
                 } else {
                    displayModalMessages($modal, messages);
               }
+            },
+            changeAvatar: function($modal, data) {
+                var item, title, $form, messages;
+                messages = data['flashed_messages'];
+                if (data.success) {
+                    item = data.userInfo;
+                    updateProfile(item);
+                    displayMessages($('#profile-table'), 'before', messages);
+                } else {
+                    displayModalMessages($modal, messages);
+                }
             }
         };
+
+        //---- Modal setup
+        // ensure old content gets deleted after modal closes
+        $mainModal.on('hidden.bs.modal', function () {
+            ['.modal-title', '.modal-body'].forEach(function (selector) {
+                $($mainModal).find(selector).html('');
+            });
+            // remove action button css
+            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
+            $mainModal.removeData();
+        });
+
+        // Dynamically create the modal's content before its shown
+        $mainModal.on('show.bs.modal', function (e) {
+            var data = $(e.relatedTarget).data();
+            $mainModal.data(data);
+            modalBuilder[data.action]($mainModal);
+        });
+
         // create AJAX request when user clicks the modal's action button
         $mainModal.find('.btn-submit')
         .on('click', function(e) {
@@ -439,12 +447,8 @@
                         // create error message
                         if (data.status == 400) {
                             var $response = $(data.responseText);
-                            message = [
-                                '<strong>',
-                                $response.filter('h1').html(),
-                                '</strong>: ',
-                                $response.filter('p').html()
-                            ].join('');
+                            message = ['<strong>', $response.filter('h1').html(), '</strong>: ',
+                                        $response.filter('p').html()].join('');
                         } else {
                             message = 'Unknown Server Error.';
                         }
@@ -458,9 +462,9 @@
             });
         });
 
-        tutorialAddRow('#tutorial-table', tutorials);
+        updateTutorials(tutorials);
 
-        updateProfile('#profile-table', userInfo);
+        updateProfile(userInfo);
 
     }(jQuery)
 </script>

@@ -12,6 +12,7 @@ class Config(object):
     SQLALCHEMY_ECHO = False
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
     UPLOAD_FOLDER =  os.path.join(STATIC_FOLDER, 'uploads')
+    MAX_UPLOAD_SIZE = 500*1024^2 # about 500KB
     LOGIN_DISABLED = False
 
 

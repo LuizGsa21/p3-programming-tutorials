@@ -1,5 +1,5 @@
 import pprint
-from flask import session
+from flask import session, current_app
 import os
 # from app.extensions import Form, current_user
 from app.extensions import current_user, Form
@@ -40,7 +40,7 @@ class EditProfileForm(Form):
 
 
 class UploadAvatarForm(Form):
-    avatar = FileField('Profile Avatar')
+    avatar = FileField('Upload Image')
 
     def validate_avatar(self, field):
         fileStorage = field.data
@@ -48,9 +48,16 @@ class UploadAvatarForm(Form):
         if not isinstance(fileStorage, FileStorage):
             raise ValidationError("Please include a file before submission.")
         # check file size
-        if fileStorage.tell() == 0:
+        fileStorage.seek(0, os.SEEK_END)
+        size = fileStorage.tell()
+        if size == 0:
             raise ValidationError("You can't upload an empty file.")
         fileStorage.seek(0, os.SEEK_SET) # reset file pointer
 
+        maxByteSize = current_app.config['MAX_UPLOAD_SIZE']
+        print maxByteSize
+        if size > maxByteSize:
+            raise ValidationError(
+                'File size is too large... please choose an image smaller than ' + str(int(maxByteSize/1024)) +' KB')
         if not allowed_file(fileStorage.filename):
             raise ValidationError('Only images are allowed...')

@@ -1,5 +1,5 @@
 import pprint
-from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session, current_app
+from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session, current_app, _request_ctx_stack
 from app.extensions import current_user, login_required, db
 from app.models import User, Article
 from app.utils import template_or_json, redirect_or_json, allowed_file
@@ -8,6 +8,7 @@ from .schemas import articles_serializer, article_serializer, user_info_serializ
 from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm, UploadAvatarForm
 import os
 user_bp = Blueprint('user', __name__, url_prefix='/user')
+# TODO: update all `current_user` views to use `current_user`
 
 @user_bp.route('/profile/')
 @login_required
@@ -23,6 +24,9 @@ def profile():
         'article': articles_serializer,
         'userInfo': user_info_serializer
     }
+    form = EditProfileForm()
+    pprint.pprint(dir(form))
+    pprint.pprint(form.data)
 
     return render_template('user/profile.html', active_page='profile', forms=forms, serializers=serializers)
 
@@ -92,6 +96,7 @@ def delete_article():
 def edit_profile():
 
     form = EditProfileForm(request.form)
+
     if form.validate_on_submit():
         user = User.query.get(current_user.id)
 
@@ -131,8 +136,10 @@ def upload():
         current_user.avatar = filename
         db.session.commit()
         flash('Successfully uploaded avatar image.', 'success')
-        return {'status': 200, 'success': 1}
+
+        result, error = user_info_serializer.dump(current_user._get_current_object())
+
+        return {'status': 200, 'success': 1, 'userInfo': result}
     else:
         flash(form.errors, 'form-error')
-        flash('file upload error', 'danger')
         return {'status': 400, 'success': 0}
