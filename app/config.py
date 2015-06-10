@@ -11,6 +11,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     SQLALCHEMY_ECHO = False
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
+    UPLOAD_FOLDER =  os.path.join(TEMPLATE_FOLDER, 'uploads')
     LOGIN_DISABLED = False
 
 

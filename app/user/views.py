@@ -34,7 +34,7 @@ def add_article():
             category_id=form.category.data.id)
         db.session.add(article)
         db.session.commit()
-        flash("Successfully added <strong>'" + article.title + "'</strong> tutorial.", 'success')
+        flash("Successfully published <strong>'" + article.title + "'</strong>.", 'success')
         result, error = article_serializer.dump(article)
         return {'status': 200, 'article': result, 'success': 1}
     else:
