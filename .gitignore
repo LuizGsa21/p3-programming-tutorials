@@ -5,3 +5,6 @@
 *.py[cod]
 *.db
 openid-store/
+
+### Other
+app/static/uploads/avatars
