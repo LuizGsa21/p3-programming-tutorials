@@ -28,15 +28,6 @@ class CaseInsensitiveWord(Comparator):
     def __str__(self):
         return self.word
 
-# monkey patch serialize method
-def _serialize(model):
-    obj = {}
-    for key in model.__table__.columns._data.keys():
-        obj[key] = getattr(model, key)
-    return obj
-
-setattr(db.Model, 'serialize', _serialize)
-
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
@@ -88,11 +79,6 @@ class Article(db.Model):
     date_created = db.Column(db.DateTime(), default=datetime.utcnow)
 
     comments = db.relationship('Comment', backref='articles', lazy='dynamic')
-
-    def serialize(self):
-        objs = super(Article, self).serialize()
-        objs['date_created'] = format_datetime(self.date_created, 'standard')
-        return objs
 
 
 class Comment(db.Model):
