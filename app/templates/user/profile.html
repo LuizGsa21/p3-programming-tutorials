@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field %}
+{% from 'macros.html' import render_field, alert_messages %}
 
 {% block bodyID %}page-profile{% endblock %}
 {% block body %}
@@ -15,6 +15,7 @@
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
+                {{ alert_messages(get_flashed_messages(with_categories=true)) }}
                 <table id="profile-table" class="table table-hover profile-table">
                     <thead><tr>
                             <th class="title">General Info</th>
