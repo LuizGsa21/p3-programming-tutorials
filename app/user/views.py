@@ -10,6 +10,7 @@ import os
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 # TODO: update all `current_user` views to use `current_user`
 
+
 @user_bp.route('/profile/')
 @login_required
 def profile():
@@ -24,9 +25,6 @@ def profile():
         'article': articles_serializer,
         'userInfo': user_info_serializer
     }
-    form = EditProfileForm()
-    pprint.pprint(dir(form))
-    pprint.pprint(form.data)
 
     return render_template('user/profile.html', active_page='profile', forms=forms, serializers=serializers)
 

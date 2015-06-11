@@ -46,7 +46,7 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(30))
     last_name = db.Column(db.String(30))
     pwdhash = db.Column(db.String(255))
-    avatar = db.Column(db.String(255))
+    avatar = db.Column(db.String(255), default='default-avatar.jpg')
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
     articles = db.relationship('Article', backref='author', lazy='dynamic')
