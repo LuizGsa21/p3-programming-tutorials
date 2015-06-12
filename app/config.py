@@ -3,17 +3,21 @@ import os
 
 class Config(object):
     PROJECT = 'How-To-Tutorials'
+
     PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
     STATIC_FOLDER = os.path.join(PROJECT_ROOT, 'static')
     TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
-    DEBUG = False
-    TESTING = False
+
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     SQLALCHEMY_ECHO = False
+
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
     UPLOAD_FOLDER =  os.path.join(STATIC_FOLDER, 'uploads')
     MAX_UPLOAD_SIZE = 500*1024^2 # about 500KB
+
     LOGIN_DISABLED = False
+    DEBUG = False
+    TESTING = False
 
 
 class DevelopmentConfig(Config):
@@ -33,5 +37,5 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     SECRET_KEY = 'how-to-tutorials-development'
     TESTING = True
-    WTF_CSRF_ENABLED = False
+    # WTF_CSRF_ENABLED = False
     # SQLALCHEMY_ECHO = True

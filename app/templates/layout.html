@@ -101,11 +101,12 @@
                 <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3 col-lg-offset-1">
                     <div class="stay-connected">
                         <h4 class="title">Stay Connected</h4>
-                        <p class="text-justify-full">
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus"><i class="fa fa-google-plus"></i></a>
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i class="fa fa-twitter"></i></a>
-                            <a href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i class="fa fa-facebook"></i></a>
-                        </p>
+                        {{ m.get_social_buttons() }}
+{#                        <p class="text-justify-full">#}
+{#                            <a href="#" class="btn-square azm-google-plus"><i class="fa fa-google-plus"></i></a>#}
+{#                            <a href="#" class="btn-square azm-twitter"><i class="fa fa-twitter"></i></a>#}
+{#                            <a href="#" class="btn-square azm-facebook"><i class="fa fa-facebook"></i></a>#}
+{#                        </p>#}
                     </div>
                 </div>
             </div>
@@ -127,10 +128,24 @@
 <script src="js/jquery.html5-placeholder-shim.js"></script>
 <![endif]-->
 <script>
-    // Let the users we don't care about IE8 and below
+    // Let the users know we don't care about IE8
     if (bowser.msie && bowser.version <= 8) {
         alert('It seems like you are using Internet Explorer ' + bowser.version + '. If you care about the internet please update your web browser.');
     }
+
+      // opens a new tab and redirects to the provider's uri by submitting a form
+     function oauthLogin(url, provider) {
+          var popup = window.open('', provider + ' Login');
+          var pDocument = popup.document;
+          var $form = $('<form>', {
+              action: url,
+              method: 'post'
+              });
+          $form.append('<input id="csrf_token" name="csrf_token" type="hidden" value="'+'{{ csrf_token() }}'+'"/>');
+          $(pDocument).find('body').append($form);
+          $form.submit();
+          return false;
+      }
 </script>
 
 {% block bodyPostfix %}{% endblock %}

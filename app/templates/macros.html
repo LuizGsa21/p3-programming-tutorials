@@ -37,10 +37,10 @@
     Example usage:
         {{ macros.render_field(form.email, placeholder='Input email', type='email') }}
 #}
-{% macro render_field(field, label_visible=true) -%}
+{% macro render_field(field, label_visible=true, label_class='') -%}
     <div class="form-group{% if field.errors %} has-error{% endif %} {{ kwargs.pop('class_', '') }}">
         {% if field.type != 'HiddenField' and field.type !='CSRFTokenField' and label_visible %}
-            {{ field.label(class_='control-label') }}
+            {{ field.label(class_='control-label ' + label_class) }}
             {{ field(class_='form-control', **kwargs) }}
         {% endif %}
         {% if field.errors %}
@@ -128,3 +128,15 @@
         <button type="submit" class="{{ btn_class }}">{{ action_text }}</button>
     </form>
 {%- endmacro %}
+
+
+{% macro get_social_buttons(messages) %}
+    <p class="text-justify-full">
+        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google', _external=True) }}', 'Google')" class="btn-square azm-google-plus">
+        <i class="fa fa-google-plus"></i></a>
+        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter', _external=True) }}', 'Twitter')" href="#" class="btn-square azm-twitter"><i
+                class="fa fa-twitter"></i></a>
+        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook', _external=True) }}', 'Facebook')" href="#" class="btn-square azm-facebook"><i
+                class="fa fa-facebook"></i></a>
+    </p>
+{% endmacro %}

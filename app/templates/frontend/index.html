@@ -1,32 +1,12 @@
     {% extends 'layout.html' %}
-    {% from 'macros.html' import alert_messages %}
-    {% block metaTags %}
-    <meta name="csrf-token" content="{{ csrf_token() }}">{% endblock %}
+    {% import 'macros.html' as m %}
     {% block bodyID %}page-index{% endblock %}
 
     {% block body %}
     <section class="header">
     <div class="container">
         <div class="row">
-
-            {{ alert_messages(get_flashed_messages(with_categories=true)) }}
-
-{#            {% for category, message in get_flashed_messages(with_categories=true) %}#}
-{#            <div class="alert-messages">#}
-{#                <div class="alert alert-{{ category }}">#}
-{#                    <a href="#" class="close" data-dismiss="alert">&times;</a>#}
-{#                    {% if message is mapping %}#}
-{#                    <ul>#}
-{#                        {% for key, value in message.items() %}#}
-{#                        <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>#}
-{#                        {% endfor %}#}
-{#                    </ul>#}
-{#                    {% else %}#}
-{#                        {{ message }}#}
-{#                    {% endif %}#}
-{#                </div>#}
-{#            </div>#}
-{#            {% endfor %}#}
+            {{ m.alert_messages(get_flashed_messages(with_categories=true)) }}
             <div class="col-sm-6 hidden-xs">
                 <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}"
                      alt="How-To-Tutorials logo"/>
@@ -42,64 +22,28 @@
                     <div class="tab-content">
                         <div class="active tab-pane fade in" id="tab-register">
                             <form action="{{ url_for('frontend.register') }}" method="post" role="form">
-                                {{ registerForm.csrf_token }}
-                                <div class="form-group">
-                                    <label class="sr-only" for="r-email">Email</label>
-
-                                    <input type="text" class="form-control" name="email" id="r-email"
-                                           placeholder="Email">
-                                </div>
-                                <div class="form-group">
-                                    <label class="sr-only" for="r-username">Username</label>
-                                    <input type="text" class="form-control" name="username" id="r-username"
-                                           placeholder="Username">
-                                </div>
-                                <div class="form-group">
-                                    <label class="sr-only" for="r-password">Password</label>
-                                    <input type="text" class="form-control" name="password" id="r-password"
-                                           placeholder="Password">
-                                </div>
+                                {{ forms['register'].csrf_token }}
+                                {% for field in forms['register'] if field.widget.input_type != 'hidden' -%}
+                                        {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                                {% endfor %}
                                 <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
                             </form>
                             <div class="social-media">
                                 <p class="info">Or register with:</p>
-
-                                <p class="text-justify-full">
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google') }}', 'Google')" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus">
-                                    <i class="fa fa-google-plus"></i></a>
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter') }}', 'Twitter')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
-                                            class="fa fa-twitter"></i></a>
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook') }}', 'Facebook')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
-                                            class="fa fa-facebook"></i></a>
-                                </p>
+                                {{ m.get_social_buttons() }}
                             </div>
                         </div>
                         <div class="tab-pane fade" id="tab-login">
                             <form action="{{ url_for('frontend.login') }}" method="post" role="form">
-                                 {{ registerForm.csrf_token }}
-                                <div class="form-group">
-                                    <label class="sr-only" for="l-email">Email</label>
-                                    <input type="text" class="form-control" name="email" id="l-email"
-                                           placeholder="Email">
-                                </div>
-                                <div class="form-group">
-                                    <label class="sr-only" for="l-password">Password</label>
-                                    <input type="text" class="form-control" name="password" id="l-password"
-                                           placeholder="Password">
-                                </div>
+                                {{ forms['login'].csrf_token }}
+                                {% for field in forms['login'] if field.widget.input_type != 'hidden' -%}
+                                        {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                                {% endfor %}
                                 <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
                             </form>
                             <div class="social-media">
                                 <p class="info">Or login with:</p>
-
-                                <p class="text-justify-full">
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google') }}', 'Google')" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-google-plus">
-                                    <i class="fa fa-google-plus"></i></a>
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter') }}', 'Twitter')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-twitter"><i
-                                            class="fa fa-twitter"></i></a>
-                                    <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook') }}', 'Facebook')" href="#" class="btn azm-social azm-size-48 azm-r-square hvr-grow azm-facebook"><i
-                                            class="fa fa-facebook"></i></a>
-                                </p>
+                                {{ m.get_social_buttons() }}
                             </div>
                         </div>
                     </div>
@@ -115,8 +59,6 @@
         </div>
     </div>
     </section>
-
-
     <section id="join-our-community-1" class="join-our-community container vh">
     <div class="content-wrapper">
         <div class="row title-container">
@@ -162,30 +104,13 @@
                 </div>
             </div>
         </div>
-
     </div>
     </section>
     {% endblock %}
 
     {% block bodyPostfix %}
-
     <script>
-
-    var csrftoken = $('meta[name=csrf-token]').attr('content')
-
-    $.ajaxSetup({
-        beforeSend: function (xhr, settings) {
-            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken)
-            }
-        }
-    });
-
-    function oauthLogin(url, provider) {
-        window.open(url, provider + ' Login');
-        return false;
-    }
-
+    // fallback for browsers that don't support viewport units
     if (bowser.msie && bowser.version <= 9) {
         $(window).resize(function () {
             $('.header').css('height', $(window).height() + 'px');
@@ -201,15 +126,12 @@
             }
         });
     }
-
+    // slow scroll animation
     $(document).ready(function () {
         $('a[data-slowscroll^="#"]').on('click', function (e) {
             e.preventDefault();
-
             var $target = $($(this).attr('href'));
-
             if ($target) {
-                console.log($target);
                 $('html, body').stop().animate({
                     'scrollTop': $target.offset().top
                 }, 900, 'swing');

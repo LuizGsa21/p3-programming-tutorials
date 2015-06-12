@@ -1,6 +1,7 @@
+import pprint
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from app.extensions import db, login_manager, current_user, login_user, \
-    logout_user, login_required, oid, oauth, Message, mail
+    logout_user, login_required, oauth, Message, mail
 from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
@@ -12,9 +13,9 @@ login_manager.login_view = 'frontend.login'
 # TODO: Hide login form after user is logged in
 @frontend_bp.route('/')
 def index():
-    registerForm = RegistrationForm(request.form)
-    openid_form = OpenIDForm()
-    return render_template('frontend/index.html', active_page='index', registerForm=registerForm, openid_form=openid_form)
+    forms = {'register': RegistrationForm(request.form), 'login': LoginForm(request.form)}
+
+    return render_template('frontend/index.html', active_page='index', forms=forms)
 
 @frontend_bp.route('/<category>/')
 def articles(category):
@@ -31,21 +32,20 @@ def send_mail():
 
 
 @frontend_bp.route('/login/', methods=['GET', 'POST'])
-@oid.loginhandler
 def login():
     if g.user and current_user.is_authenticated():
         flash('You are already logged in.', 'warning')
         return redirect(url_for('frontend.index'))
     form = LoginForm(request.form)
-    openid_form = OpenIDForm()
-    if openid_form.validate_on_submit():
-        if openid_form.errors:
-            flash(openid_form.errors, 'danger')
-            return render_template('frontend/login.html', form=form, openid_form=openid_form)
-        openid = request.form.get('openid')
-        return oid.try_login(openid, ask_for=['email'])
+    # openid_form = OpenIDForm()
+    # if openid_form.validate_on_submit():
+    #     if openid_form.errors:
+    #         flash(openid_form.errors, 'danger')
+    #         return render_template('frontend/login.html', form=form, openid_form=openid_form)
+    #     openid = request.form.get('openid')
+    #     return oid.try_login(openid, ask_for=['email'])
 
-    elif form.validate_on_submit():
+    if form.validate_on_submit():
         # username = form.username.data
         email = form.email.data
         password = form.password.data
@@ -77,7 +77,6 @@ def register():
     return redirect(url_for('frontend.index'))
 
 
-@oid.after_login
 def after_login(response):
     username = response.email
     if not username:
