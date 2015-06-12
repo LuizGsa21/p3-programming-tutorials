@@ -7,10 +7,18 @@
     <div class="container">
         <div class="row">
             {{ m.alert_messages(get_flashed_messages(with_categories=true)) }}
+
+            {#  bring the owl to the center of the page if the use is logged in #}
+            {% if current_user.is_authenticated() %}
+            <div class="col-sm-12">
+            {% else %}
             <div class="col-sm-6 hidden-xs">
+            {% endif %}
                 <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}"
                      alt="How-To-Tutorials logo"/>
             </div>
+            {#  hide login/registration forms #}
+            {% if not current_user.is_authenticated() %}
             <div class="col-sm-6">
                 <div class="nav-tabs-container">
                     <!-- TAB NAVIGATION -->
@@ -50,6 +58,7 @@
 
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
     <div class="bottom-panel">
@@ -110,6 +119,10 @@
 
     {% block bodyPostfix %}
     <script>
+    var loggedIn = $('#logged-in').length == 1;
+    if (loggedIn) {
+
+    }
     // fallback for browsers that don't support viewport units
     if (bowser.msie && bowser.version <= 9) {
         $(window).resize(function () {
