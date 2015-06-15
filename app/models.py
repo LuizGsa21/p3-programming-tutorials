@@ -43,9 +43,16 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer(), primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(255), unique=True)
+
+    # for oauth providers that don't guarantee user's email (GitHub)
+    oauth_id = db.Column(db.Integer())
+    oauth_provider = db.Column(db.String(20))
+
     first_name = db.Column(db.String(30))
     last_name = db.Column(db.String(30))
+
     pwdhash = db.Column(db.String(255))
+
     avatar = db.Column(db.String(255), default='default-avatar.jpg')
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
@@ -65,11 +72,20 @@ class User(db.Model, UserMixin):
 
     @hybrid_property
     def username_insensitive(self):
-        return CaseInsensitiveWord(self.username)
+        return self.username.lower()
+
+    @username_insensitive.comparator
+    def username_insensitive(cls):
+        return CaseInsensitiveWord(cls.username)
 
     @hybrid_property
     def email_insensitive(self):
-        return CaseInsensitiveWord(self.email)
+        return self.email.lower()
+
+    @email_insensitive.comparator
+    def email_insensitive(cls):
+        return CaseInsensitiveWord(cls.email)
+
 
 class Category(db.Model):
     __tablename__ = 'categories'

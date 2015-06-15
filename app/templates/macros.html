@@ -1,15 +1,24 @@
+
 {% macro active_class(page, active_page) -%}
      {% if page ==  active_page -%}
         class="active"
      {%- endif %}
 {%- endmacro %}
 
-{% macro alert_messages(messages) %}
-    {% for category, message in messages %}
+{% macro get_social_buttons(providers) -%}
+    {% for provider in providers %}
+        {% for name, url in provider.items() %}
+        <a class="btn-square hvr-grow azm-{{ name }}" href="{{ url }}"><i class="fa fa-{{ name }}"> </i></a>
+        {% endfor %}
+    {%- endfor -%}
+{%- endmacro %}
+
+{% macro alert_messages(messages) -%}
+    {% for category, message in messages -%}
     <div class="alert-messages">
         <div class="alert alert-{{ category }}">
             <a href="#" class="close" data-dismiss="alert">&times;</a>
-            {% if message is mapping %}
+            {% if messeage is mapping %}
             <ul>
                 {% for key, value in message.items() %}
                 <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>
@@ -20,12 +29,11 @@
             {% endif %}
         </div>
     </div>
-    {% endfor %}
-{% endmacro %}
-{#
-    Snippet taken from:
-    http://bear-z.com/python/render-bootstrap-3-forms-with-wtforms-and-jinja/
-#}
+    {%- endfor %}
+{%- endmacro %}
+
+{# Snippet taken from:
+    http://bear-z.com/python/render-bootstrap-3-forms-with-wtforms-and-jinja/ #}
 
 {# Renders field for bootstrap 3 standards.
 
@@ -86,57 +94,3 @@
         </div>
     {% endfor %}
 {%- endmacro %}
-
-{# Renders WTForm in bootstrap way. There are two ways to call function:
-     - as macros: it will render all field forms using cycle to iterate over them
-     - as call: it will insert form fields as you specify:
-     e.g. {% call macros.render_form(form, action_url=url_for('login_view'), action_text='Login',
-                                        class_='login-form') %}
-                {{ macros.render_field(form.email, placeholder='Input email', type='email') }}
-                {{ macros.render_field(form.password, placeholder='Input password', type='password') }}
-                {{ macros.render_checkbox_field(form.remember_me, type='checkbox') }}
-            {% endcall %}
-
-     Params:
-        form - WTForm class
-        action_url - url where to submit this form
-        action_text - text of submit button
-        class_ - sets a class for form
-        etype - enctype attribute
-    #}
-{% macro render_form(form,
-                    action_url='',
-                    action_text='Submit',
-                    class_='',
-                    btn_class='btn btn-default',
-                    etype='application/x-www-form-urlencoded') -%}
-    <form method="POST" action="{{ url_for(action_url) }}" role="form" class="{{ class_ }}" enctype="{{ etype }}">
-        {{ form.hidden_tag() if form.hidden_tag }}
-        {% if caller %}
-            {{ caller() }}
-        {% else %}
-            {%- for f in form -%}
-                {%- if f.type == 'BooleanField' %}
-                    {{ render_checkbox_field(f) }}
-                {% elif f.type == 'RadioField' %}
-                    {{ render_radio_field(f) }}
-                {% else%}
-                    {{ render_field(f) if f.type != 'CSRFTokenField' }}
-                {% endif %}
-            {% endfor %}
-        {% endif %}
-        <button type="submit" class="{{ btn_class }}">{{ action_text }}</button>
-    </form>
-{%- endmacro %}
-
-
-{% macro get_social_buttons(messages) %}
-    <p class="text-justify-full">
-        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='google', _external=True) }}', 'Google')" class="btn-square azm-google-plus">
-        <i class="fa fa-google-plus"></i></a>
-        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='twitter', _external=True) }}', 'Twitter')" href="#" class="btn-square azm-twitter"><i
-                class="fa fa-twitter"></i></a>
-        <a onclick="oauthLogin('{{ url_for('oauth.oauth_login', provider='facebook', _external=True) }}', 'Facebook')" href="#" class="btn-square azm-facebook"><i
-                class="fa fa-facebook"></i></a>
-    </p>
-{% endmacro %}

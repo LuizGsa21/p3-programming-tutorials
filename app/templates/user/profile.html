@@ -11,7 +11,7 @@
                 <div class="avatar"></div>
                 <div class="more-info">
                     <div class="profile-name"></div>
-                    <div class="settings"><a data-toggle="modal" data-action="changeAvatar" data-target="#main-modal" href="#">change avatar</a></div>
+                    <div class="settings"><a data-toggle="modal" data-action="editAvatar" data-target="#main-modal" href="#">change avatar</a></div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
@@ -90,13 +90,6 @@
 <!-- Templates
 ========================================================  -->
 <script id="templates" type="text/html">
-{#    <input id="id" name="id" type="hidden" value="">#}
-    <div class="alert-messages">
-            <div class="alert">
-                <a href="#" class="close" data-dismiss="alert">&times;</a>
-            </div>
-    </div>
-
     <table><thead></thead>
     <tbody>
         <tr>
@@ -110,7 +103,6 @@
         </tr>
     </tbody>
     </table>
-
     <form id="form-tutorial" method="post">
         {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
             {%- if field.name == 'body' %}
@@ -136,14 +128,6 @@
 
 <script>
     +function ($) {
-        // attach csrf_token on ajax calls
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}")
-                }
-            }
-        });
 
         function initTemplates() {
             var temp = $($('#templates').html());
@@ -153,8 +137,7 @@
                 tutorialForm: clone.bind(temp.filter('#form-tutorial')),
                 profileForm: clone.bind(temp.filter('#form-profile')),
                 tutorialRow: clone.bind(temp.find('tr')),
-                avatarUploadForm: clone.bind(temp.filter('#form-avatar-upload')),
-                alert: clone.bind(temp.filter('.alert-messages'))
+                avatarUploadForm: clone.bind(temp.filter('#form-avatar-upload'))
             };
         }
 
@@ -163,49 +146,6 @@
             userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }},
             $mainModal = $('#main-modal'),
             templates = initTemplates();
-
-        // Creates and returns an alert dialog.
-        function createAlert(message, category) {
-            var $template = templates.alert();
-                $template.addClass(['alert-', category].join(''));
-                $template.find('.alert').append(message);
-                return $template;
-        }
-
-        /**
-         * @param $form
-         * @param formErrors - [ {formLabelID: arrayOfErrorMessages}, ... ]
-         */
-        function setFormErrors($form, formErrors) {
-            // clear any previous errors before setting the form
-            $form.find('.form-group').removeClass('has-error');
-            $form.find('.help-block').remove();
-
-            for (var labelID in formErrors) {
-               formErrors[labelID].forEach(function(errorMessage) {
-                 this.parent().addClass('has-error');
-                 this.after($('<p></p>').addClass('help-block').html(errorMessage));
-
-               }.bind($form.find(['#', labelID].join(''))));
-            }
-        }
-
-
-        // Displays flashedMessages. Creates form errors or alert messages
-        // depending on the message's category
-        function displayMessages($element, action, flashedMessages) {
-            // ensure a jQuery element was given
-            if (! ($element instanceof jQuery) ) $element = $($element);
-
-            flashedMessages.forEach(function(message) {
-                if (message.category == 'form-error') {
-                   // populate the form with the given errors
-                   setFormErrors($element, message.message);
-                } else {
-                    $element[action](createAlert(message.message, message.category));
-                }
-            });
-        }
 
         function tutorialAddRows(rows, action) {
                 var $template,
@@ -244,7 +184,7 @@
                 item = rows[i];
                 $('#tutorial-'+item.id).remove();
             }
-
+            // If all items were deleted give the table a better look
             if ($tableBody.find('tr').length == 0) {
                 addEmptyRow('#tutorial-table', 'No published tutorials', 4)
             }
@@ -276,8 +216,10 @@
         }
 
         // Initialize modalBuilder
-        // These methods will be triggered by the `show.bs.modal` event
-        // depending on the current action
+        // The modal is created dynamically on `show.bs.modal` event.
+        // Example:
+        //  An anchor tag with an attribute of [data-action="addTutorial"]
+        //  will call `modalBuilder.addTutorial()` when clicked
         var modalBuilder = {
             addTutorial: function ($modal) {
                 var $form = templates.tutorialForm();
@@ -303,7 +245,6 @@
 
                 // populate form fields
                 $.each(item, function(key, value) {
-                    // category returns and object {id:value, name:value}
                     if (key == 'category') {
                         value = value.id;
                     }
@@ -311,7 +252,6 @@
                 });
 
                 // add input field with the item's id attached
-{#                $form.prepend($('<input/>').attr({type:'hidden', name:'id', value: item.id}));#}
                 $form.append('<input id="id" name="id" type="hidden" value="'+item.id+'"/>');
 
                 // append hidden form to body
@@ -355,7 +295,7 @@
                 $modal.find('.modal-body').append($form);
                 $modal.find('.btn-submit').addClass('btn-primary').html('Save Profile')
             },
-            changeAvatar: function($modal) {
+            editAvatar: function($modal) {
                 var item, title, $form;
                 item = $modal.data('item');
                 $form = templates.avatarUploadForm();
@@ -387,8 +327,8 @@
         var responseHandler = {
             addTutorial: function ($modal, data) {
                 var messages = data['flashed_messages'];
-                    tutorialAddRows(data.article);
-                    displayMessages('#tutorial-table', 'before', messages);
+                tutorialAddRows(data.article);
+                app.displayMessages('#tutorial-table', messages);
             },
             editTutorial: function($modal, data) {
                 var messages, item, $row;
@@ -399,25 +339,24 @@
                 $row.find('.category').html(item.category.name);
                 $row.find('.title').html(item.title);
                 $row.find('a').data('item', item);
-                displayMessages('#tutorial-table', 'before', messages);
+                app.displayMessages('#tutorial-table', messages);
             },
             deleteTutorial: function($modal, data) {
                 var item;
                 item = $modal.data('item');
                 tutorialDeleteRows(item);
                 $modal.modal('hide');
-                displayMessages('#tutorial-table', 'before', data['flashed_messages']);
+                app.displayMessages('#tutorial-table', data['flashed_messages']);
             },
             editProfile: function($modal, data) {
                 var item, messages;
                 messages = data['flashed_messages'];
                 item = data.userInfo;
                 updateProfile(item);
-                displayMessages($('#profile-table'), 'before', messages);
+                app.displayMessages($('#profile-table'), messages);
 
             },
-            changeAvatar: function($modal, data) {
-                // don't ask LOL.
+            editAvatar: function($modal, data) {
                 this.editProfile($modal, data);
             }
         };
@@ -428,13 +367,15 @@
             // get the current action:
             //      [add|edit|delete]Article]
             //      editProfile
-            //      changeAvatar
+            //      editAvatar
             currentAction = $mainModal.data('action');
+
 
             // extract the form from modal and submit ajax request
             $form = $mainModal.find('form');
             $form.ajaxSubmit({
                 dataType: 'json',
+                beforeSend: app.getCSRFHeader(),
                 success: function(data) {
                     $('.alert-messages').remove(); // remove any previous alerts
                     responseHandler[currentAction]($mainModal, data);
@@ -446,7 +387,7 @@
                     // If the server returned a JSON on error.
                     // display the errors inside the modal
                     if (data.responseJSON) {
-                        displayMessages($mainModal.find('form'), 'before', data.responseJSON['flashed_messages']);
+                        app.displayMessages($mainModal.find('form'), data.responseJSON['flashed_messages']);
                     } else {
                         // else dynamically create an alert message and append to '.alert-box'
                         var message;
@@ -460,7 +401,7 @@
                         }
                         $mainModal.modal('hide');
                         // add alert message to top of page
-                        $('.alert-box').html(createAlert(message, 'danger'));
+                        $('.alert-box').html(app.createAlertMessage(message, 'danger'));
                         $('body').scrollTop(0); // scroll to top of window
                     }
 

@@ -5,12 +5,12 @@ from app.extensions import db, login_manager, current_user, login_user, \
 from forms import LoginForm, RegistrationForm, OpenIDForm
 from app.models import User
 import requests
+from sqlalchemy import or_
 
 frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
 
-# TODO: Hide login form after user is logged in
 @frontend_bp.route('/')
 def index():
     forms = {'register': RegistrationForm(request.form), 'login': LoginForm(request.form)}
@@ -22,7 +22,7 @@ def articles(category):
     # return render_template('frontend/index.html', active_page=category)
     return 'category page'
 
-@frontend_bp.route('/mail')
+@frontend_bp.route('/mail/')
 def send_mail():
     msg = Message('Hello its luiz :)',
                   body='this is an email. lol',
@@ -37,14 +37,6 @@ def login():
         flash('You are already logged in.', 'warning')
         return redirect(url_for('frontend.index'))
     form = LoginForm(request.form)
-    # openid_form = OpenIDForm()
-    # if openid_form.validate_on_submit():
-    #     if openid_form.errors:
-    #         flash(openid_form.errors, 'danger')
-    #         return render_template('frontend/login.html', form=form, openid_form=openid_form)
-    #     openid = request.form.get('openid')
-    #     return oid.try_login(openid, ask_for=['email'])
-
     if form.validate_on_submit():
         # username = form.username.data
         email = form.email.data
@@ -108,3 +100,7 @@ def logout():
 def load_user(id):
     return User.query.get(int(id))
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash('You are not logged in.', 'danger')
+    return redirect(url_for('frontend.index'))

@@ -1,6 +1,7 @@
+import os
 from flask import Flask, render_template, g, flash, url_for, redirect
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, oid, current_user, mail, babel
+from extensions import db, csrf, login_manager, current_user, mail, babel
 from .admin import admin_bp
 from .api import api_bp
 from .frontend import frontend_bp
@@ -60,33 +61,8 @@ def configure_extensions(app):
     login_manager.init_app(app)
     login_manager.login_view = 'frontend.index'
 
-    @login_manager.unauthorized_handler
-    def unauthorized():
-        flash('You are not logged in.', 'danger')
-        return redirect(url_for('frontend.index'))
-
-    oid.fs_store_path = 'openid-store'
-    oid.init_app(app)
-
-    mail.init_app(app)
-
+    # mail.init_app(app)
     babel.init_app(app)
-
-    # https://pythonhosted.org/Flask-Babel/
-    # @babel.localeselector
-    # def get_locale():
-    ## There is no locale user setting yet
-    # user = getattr(g, 'user', None)
-    # if user is not None:
-    #     return user.locale
-    #
-    # return request.accept_languages.best_match(['de', 'fr', 'en'])
-    #
-    # @babel.timezoneselector
-    # def get_timezone():
-    #     user = getattr(g, 'user', None)
-    #     if user is not None:
-    #         return user.timezone
 
 
 def configure_blueprints(app, blueprints):
@@ -118,3 +94,12 @@ def configure_jinja_filters(app):
         import json
         result, error = serializer.dump(obj)
         return json.dumps(result)
+
+    @app.template_filter('os_environ')
+    def os_environ(key):
+        return os.environ.get(key, None)
+
+    @app.template_filter('chunks')
+    def chunks(l, n):
+        n = max(1, n)
+        return [l[i:i + n] for i in range(0, len(l), n)]

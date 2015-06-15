@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify, render_template, redirect, json, get_flashed_messages, current_app, url_for
-from extensions import format_datetime as b_datetime
+from extensions import format_datetime as b_datetime, login_manager
 
 def template_or_json(template=None):
     """"Return a dict from your view and this will either
@@ -23,8 +23,10 @@ def redirect_or_json(redirect_url):
     def decorator(f):
         @wraps(f)
         def decorator_fn(*args, **kwargs):
-            ctx = f(*args, **kwargs)
-            if request.is_xhr:
+            # only invoke view on xhr requests
+            if request.is_xhr or not redirect_url:
+                ctx = f(*args, **kwargs)
+                # preformat flashed messages
                 ctx['flashed_messages'] = \
                     [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
                 return jsonify(ctx), ctx['status']

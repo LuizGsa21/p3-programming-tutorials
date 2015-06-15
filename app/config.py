@@ -9,7 +9,7 @@ class Config(object):
     TEMPLATE_FOLDER = os.path.join(PROJECT_ROOT, 'templates')
 
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
-    SQLALCHEMY_ECHO = False
+    # SQLALCHEMY_ECHO = True
 
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
     UPLOAD_FOLDER =  os.path.join(STATIC_FOLDER, 'uploads')
@@ -20,11 +20,25 @@ class Config(object):
     TESTING = False
 
 
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY = 'how-to-tutorials-development'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
-    # SQLALCHEMY_ECHO = True
+
+    GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
+    GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
+
+    FACEBOOK_CLIENT_ID = os.environ['FACEBOOK_CLIENT_ID']
+    FACEBOOK_CLIENT_SECRET = os.environ['FACEBOOK_CLIENT_SECRET']
+
+    TWITTER_CLIENT_ID = os.environ['TWITTER_CLIENT_ID']
+    TWITTER_CLIENT_SECRET = os.environ['TWITTER_CLIENT_SECRET']
+
+    GITHUB_CLIENT_ID = os.environ['GITHUB_CLIENT_ID']
+    GITHUB_CLIENT_SECRET = os.environ['GITHUB_CLIENT_SECRET']
+
     # EMAIL SETTINGS
     # MAIL_SERVER = 'smtp.gmail.com'
     # MAIL_PORT = 465

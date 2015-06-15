@@ -1,155 +1,177 @@
-    {% extends 'layout.html' %}
-    {% import 'macros.html' as m %}
-    {% block bodyID %}page-index{% endblock %}
+{% extends 'layout.html' -%}
+{% import 'macros.html' as m -%}
+{% block metaTags %}{% endblock -%}
 
-    {% block body %}
-    <section class="header">
-    <div class="container">
-        <div class="row">
-            {{ m.alert_messages(get_flashed_messages(with_categories=true)) }}
-
-            {#  bring the owl to the center of the page if the use is logged in #}
-            {% if current_user.is_authenticated() %}
-            <div class="col-sm-12">
-            {% else %}
-            <div class="col-sm-6 hidden-xs">
-            {% endif %}
-                <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}"
-                     alt="How-To-Tutorials logo"/>
-            </div>
-            {#  hide login/registration forms #}
-            {% if not current_user.is_authenticated() %}
-            <div class="col-sm-6">
-                <div class="nav-tabs-container">
-                    <!-- TAB NAVIGATION -->
-                    <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
-                        <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
-                        <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
-                    </ul>
-                    <!-- TAB CONTENT -->
-                    <div class="tab-content">
-                        <div class="active tab-pane fade in" id="tab-register">
-                            <form action="{{ url_for('frontend.register') }}" method="post" role="form">
-                                {{ forms['register'].csrf_token }}
-                                {% for field in forms['register'] if field.widget.input_type != 'hidden' -%}
-                                        {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
-                                {% endfor %}
-                                <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
-                            </form>
-                            <div class="social-media">
-                                <p class="info">Or register with:</p>
-                                {{ m.get_social_buttons() }}
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="tab-login">
-                            <form action="{{ url_for('frontend.login') }}" method="post" role="form">
-                                {{ forms['login'].csrf_token }}
-                                {% for field in forms['login'] if field.widget.input_type != 'hidden' -%}
-                                        {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
-                                {% endfor %}
-                                <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
-                            </form>
-                            <div class="social-media">
-                                <p class="info">Or login with:</p>
-                                {{ m.get_social_buttons() }}
-                            </div>
+{%- block bodyID %}page-index{% endblock -%}
+{% block body %}
+<section class="header">
+<div class="container">
+    <div class="row">
+        <div id="alert-container">
+            {{ m.alert_messages(get_flashed_messages(with_categories=true)) -}}
+        </div>
+        {#  bring the owl to the center of the page if the user is logged in #}
+        {%- if current_user.is_authenticated() -%}
+        <div class="col-sm-12">
+        {% else -%}
+            <div id="main-logo-container" class="col-sm-6 hidden-xs">
+        {% endif -%}
+            <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo"/>
+        </div>
+        {#  hide login/registration forms #}
+        {% if not current_user.is_authenticated() -%}
+        <div class="col-sm-6">
+            <div id="sign-registration-form" class="nav-tabs-container">
+                <!-- TAB NAVIGATION -->
+                <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
+                    <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+                    <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
+                </ul>
+                <!-- TAB CONTENT -->
+                <div class="tab-content">
+                    <div class="active tab-pane fade in" id="tab-register">
+                        <form action="{{ url_for('frontend.register') }}" method="post" role="form">
+                            {{ forms['register'].csrf_token }}
+                            {% for field in forms['register'] if field.widget.input_type != 'hidden' -%}
+                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                            {% endfor %}
+                            <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
+                        </form>
+                        <div class="social-media">
+                            <p class="info">Or register with:</p>
+                            <p class="text-justify-full">
+                                {{ m.get_social_buttons([
+                                {'google-plus':'#'},
+                                {'github':url_for('oauth.github_authorized')},
+                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                            </p>
                         </div>
                     </div>
-
+                    <div class="tab-pane fade" id="tab-login">
+                        <form action="{{ url_for('frontend.login') }}" method="post" role="form">
+                            {{ forms['login'].csrf_token }}
+                            {% for field in forms['login'] if field.widget.input_type != 'hidden' -%}
+                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                            {% endfor %}
+                            <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
+                        </form>
+                        <div class="social-media">
+                            <p class="info">Or login with:</p>
+                            <p class="text-justify-full">
+                                {{ m.get_social_buttons([
+                                {'google-plus':'#'},
+                                {'github':url_for('oauth.github_authorized')},
+                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
+
             </div>
-            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="bottom-panel">
+    <div class="learn-more">
+        <a href="#community" data-slowscroll="#community">Learn More <br/><span class="glyphicon glyphicon-chevron-down"></span></a>
+    </div>
+</div>
+</section>
+<section id="community" class="join-our-community container vh">
+<div class="content-wrapper">
+    <div class="row title-container">
+        <div class="col-xs-12">
+            <h1 class="title">Join Our Community</h1>
         </div>
     </div>
-    <div class="bottom-panel">
-        <div class="learn-more">
-        <a href="#join-our-community-1" data-slowscroll="#join-our-community-1">Learn More <br/><span
-                    class="glyphicon glyphicon-chevron-down"></span></a>
-        </div>
-    </div>
-    </section>
-    <section id="join-our-community-1" class="join-our-community container vh">
-    <div class="content-wrapper">
-        <div class="row title-container">
-            <div class="col-xs-12">
-                <h1 class="title">Join Our Community</h1>
-            </div>
-        </div>
-        <div class="row tiles">
-            <div class="col-md-4">
-                <div class="tile">
-                    <div class="outer-circle">
-                        <div class="circle">
-                            <span class="glyphicon-custom glyphicon-code"></span>
-                        </div>
-                    </div>
-                    <div class="info">BECOME A BETTER
-                        <br/>PROGRAMMER
+    <div class="row tiles">
+        <div class="col-md-4">
+            <div class="tile">
+                <div class="outer-circle">
+                    <div class="circle">
+                        <span class="glyphicon-custom glyphicon-code"></span>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="tile">
-                    <div class="outer-circle">
-                        <div class="circle">
-                            <span class="glyphicon-custom glyphicon-knowledge"></span>
-                        </div>
-                    </div>
-                    <div class="info">SHARE YOUR
-                        <br/>KNOWLEDGE
-                    </div>
+                <div class="info">BECOME A BETTER
+                    <br/>PROGRAMMER
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="tile">
-                    <div class="outer-circle">
-                        <div class="circle">
-                            <span class="glyphicon-custom glyphicon-network"></span>
-                        </div>
+        </div>
+        <div class="col-md-4">
+            <div class="tile">
+                <div class="outer-circle">
+                    <div class="circle">
+                        <span class="glyphicon-custom glyphicon-knowledge"></span>
                     </div>
-                    <div class="info">MEET OTHER
-                        <br/>PROGRAMMERS
+                </div>
+                <div class="info">SHARE YOUR
+                    <br/>KNOWLEDGE
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="tile">
+                <div class="outer-circle">
+                    <div class="circle">
+                        <span class="glyphicon-custom glyphicon-network"></span>
                     </div>
+                </div>
+                <div class="info">MEET OTHER
+                    <br/>PROGRAMMERS
                 </div>
             </div>
         </div>
     </div>
-    </section>
-    {% endblock %}
+</div>
+</section>
+{% endblock %}
+{% block bodyPostfix %}
+<script>
+function onSuccessSignIn(data, provider) {
+    // when a user logs in from the index page
+    // we have to do the following things:
+    // #1 - hide the login/registration form (parent container)
+    $('#sign-registration-form').parent().attr('style', 'display: none');
+    // #2 - center the main website logo
+    $('#main-logo-container').attr('class', 'col-xs-12');
+    // #3 - Show profile and logout navigation link
+    app.updateNavbar(['Profile', 'Logout']);
+    // #4 - show any messages receives from the server
+    app.displayMessages('#alert-container', data['flashed_messages'], 'append');
+}
 
-    {% block bodyPostfix %}
-    <script>
-    var loggedIn = $('#logged-in').length == 1;
-    if (loggedIn) {
+function onFailSignIn(data, provider) {
 
-    }
+}
+
+if (bowser.msie && bowser.version <= 9) {
     // fallback for browsers that don't support viewport units
-    if (bowser.msie && bowser.version <= 9) {
-        $(window).resize(function () {
-            $('.header').css('height', $(window).height() + 'px');
-            $('.join-our-community').css('min-height', $(window).height() + 'px');
-        });
-        $(window).trigger('resize');
-
-        // placeholder shim doesn't work on hidden elements
-        // so recall it after user clicks on a tab
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-            if (jQuery.placeholder) {
-                jQuery.placeholder.shim();
-            }
-        });
-    }
-    // slow scroll animation
-    $(document).ready(function () {
-        $('a[data-slowscroll^="#"]').on('click', function (e) {
-            e.preventDefault();
-            var $target = $($(this).attr('href'));
-            if ($target) {
-                $('html, body').stop().animate({
-                    'scrollTop': $target.offset().top
-                }, 900, 'swing');
-            }
-        });
+    $(window).resize(function () {
+        $('.header').css('height', $(window).height() + 'px');
+        $('.join-our-community').css('min-height', $(window).height() + 'px');
     });
-    </script>
-    {% endblock %}
+    $(window).trigger('resize');
+
+    // placeholder shim doesn't work on hidden elements
+    // so recall it after user clicks on a new tab
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        if (jQuery.placeholder) {
+            jQuery.placeholder.shim();
+        }
+    });
+}
+
+// slow animation scroll
+$('a[href^="#community"]').on('click', function (e) {
+    e.preventDefault();
+    var $target = $($(this).attr('href'));
+    if ($target.length) {
+        $('html, body').stop().animate({
+            scrollTop: $target.offset().top
+        }, 900, 'swing');
+    }
+});
+</script>
+{% endblock %}

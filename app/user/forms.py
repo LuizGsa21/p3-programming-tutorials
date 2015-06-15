@@ -31,7 +31,7 @@ class EditProfileForm(Form):
     last_name = StringField('Last Name', validators=[InputRequired()])
 
     def validate_username(self, field):
-        if not current_user.is_admin() and not session.get('change-username-allowed'):
+        if not current_user.is_admin() and not session.get('change-username'):
             raise ValidationError('You do not have permission to change your username.')
 
         existing_user = User.query.filter_by(username_insensitive=field.data).first()

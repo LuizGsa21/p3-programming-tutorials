@@ -100,7 +100,7 @@ def edit_profile():
 
         # Users who registered using OAuth may only change their username once.
         if form.username.data != user.username:
-            session.pop('change-username-allowed', None)
+            session.pop('change-username', None)
 
         user.populate_form(form)
         db.session.commit()
