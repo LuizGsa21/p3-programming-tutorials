@@ -4,7 +4,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.ext.hybrid import Comparator, hybrid_property
 from sqlalchemy.sql import func
-from utils import format_datetime
+from sqlalchemy.ext.mutable import Mutable
 
 class CaseInsensitiveWord(Comparator):
     """Hybrid value representing a lower case representation of a word."""
@@ -28,28 +28,34 @@ class CaseInsensitiveWord(Comparator):
     def __str__(self):
         return self.word
 
-# monkey patch to db.Model. used as a convenience method for populating values from a wtform
-def populate_form(model, form):
-    fields = form.data
-    for column, value in fields.items():
-        if hasattr(model, column):
-            setattr(model, column, value)
 
-setattr(db.Model, 'populate_form', populate_form)
+class MutableList(Mutable, list):
+    def append(self, value):
+        list.append(self, value)
+        self.changed()
+
+    @classmethod
+    def coerce(cls, key, value):
+        if not isinstance(value, MutableList):
+            if isinstance(value, list):
+                return MutableList(value)
+            return Mutable.coerce(key, value)
+        else:
+            return value
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer(), primary_key=True)
-    username = db.Column(db.String(15), unique=True)
+    username = db.Column(db.String(50), unique=True)
     email = db.Column(db.String(255), unique=True)
 
     # for oauth providers that don't guarantee user's email (GitHub)
-    oauth_id = db.Column(db.Integer())
-    oauth_provider = db.Column(db.String(20))
+    oauth_id = db.Column(db.String(50))
+    oauth_provider = db.Column(db.String(50))
 
-    first_name = db.Column(db.String(30))
-    last_name = db.Column(db.String(30))
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
 
     pwdhash = db.Column(db.String(255))
 
@@ -57,6 +63,8 @@ class User(db.Model, UserMixin):
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
     articles = db.relationship('Article', backref='author', lazy='dynamic')
+
+    comments = db.relationship('Comment', backref='user', lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -69,6 +77,9 @@ class User(db.Model, UserMixin):
         # Everyone is admin!!! :)
         return True
 
+    @hybrid_property
+    def full_name(self):
+        return self.first_name + ' ' + self.last_name
 
     @hybrid_property
     def username_insensitive(self):
@@ -91,7 +102,7 @@ class Category(db.Model):
     __tablename__ = 'categories'
 
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(10), unique=True)
+    name = db.Column(db.String(50), unique=True)
     articles = db.relationship('Article', backref='category', lazy='dynamic')
 
     def __str__(self):
@@ -102,7 +113,7 @@ class Article(db.Model):
     __tablename__ = 'articles'
 
     id = db.Column(db.Integer(), primary_key=True)
-    title = db.Column(db.String(20))
+    title = db.Column(db.String(255))
     body = db.Column(db.String(20000))
     author_id = db.Column(db.Integer(), db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer(), db.ForeignKey('categories.id'), nullable=False)
@@ -115,11 +126,16 @@ class Comment(db.Model):
     __tablename__ = 'comments'
 
     id = db.Column(db.Integer(), primary_key=True)
-    body = db.Column(db.String(1000))
-    article_id = db.Column(db.Integer(), db.ForeignKey('articles.id'))
-    parent_comment_id = db.Column(db.Integer(), db.ForeignKey('comments.id'))
+    parent_id = db.Column(db.Integer(), db.ForeignKey('comments.id'), nullable=True)
+
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    article_id = db.Column(db.Integer(), db.ForeignKey('articles.id'))
+
+    subject = db.Column(db.String(200))
+    message = db.Column(db.String(10000))
     date_created = db.Column(db.DateTime(), default=datetime.utcnow)
+
+
 
 # init database fixtures
 def init_database():

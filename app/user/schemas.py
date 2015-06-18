@@ -1,8 +1,9 @@
 from flask import url_for
-from app.utils import format_datetime
-from app.api.schemas import UserSchema, articles_serializer, article_serializer
-from marshmallow import Schema, fields
-import os
+from marshmallow import fields
+
+from app.helpers.utils import format_datetime
+from app.api.schemas import UserSchema
+
 
 class UserSettingSchema(UserSchema):
     date_joined = fields.Method('format_date')

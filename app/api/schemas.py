@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields
-from app.utils import format_datetime
+
+from app.helpers.utils import format_datetime
 
 
 class CommentSchema(Schema):

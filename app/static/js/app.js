@@ -23,20 +23,34 @@ var app = {
     },
 
     displayFormErrors: function ($form, formErrors) {
-        // clear any previous errors before setting the form
+        var $field,
+            prefix;
+
+        // clear any previous errors
         $form.find('.form-group').removeClass('has-error');
         $form.find('.help-block').remove();
 
+        // form configurations
+        prefix = formErrors.hasOwnProperty('_prefix') ? '#' + formErrors['_prefix'] : '#';
 
         for (var labelID in formErrors) {
+            if (labelID.indexOf('_') == 0) continue; // ignore object configurations
 
             if (formErrors.hasOwnProperty(labelID)) {
+                $field = $form.find(prefix + labelID);
+
                 formErrors[labelID].forEach(function (errorMessage) {
+                    var $element,// a help-block gets appended "after" this element
+                        $parent;
+                    this.closest('.form-group').addClass('has-error');
 
-                    this.parent().addClass('has-error');
-                    this.after($('<p></p>').addClass('help-block').html(errorMessage));
+                    // for input-group fields, append the help-block after its container
+                    $parent = this.parent();
+                    $element = $parent.hasClass('input-group') ? $parent : this;
 
-                }.bind($form.find('#' + labelID))); // bind input element to `this` context
+                    $element.after($('<p></p>').addClass('help-block').html(errorMessage));
+
+                }, $field);
             }
         }
     },

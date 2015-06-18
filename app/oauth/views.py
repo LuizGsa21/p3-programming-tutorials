@@ -1,17 +1,18 @@
 import os
 from os.path import join as joinpath
 import pprint
-from flask import Blueprint, request, redirect, url_for, flash, session, g, abort, render_template, jsonify, \
-    make_response
-from flask_oauth import OAuthException
-from app.extensions import db, login_user, oauth, current_user, csrf
-from app.models import User
-import app.utils
-from providers import providers
+
+from flask import Blueprint, request, redirect, url_for, flash, session, g, abort, render_template, jsonify
 import requests
+
+from app.extensions import db, login_user, oauth, current_user
+from app.models import User
+from app.helpers.utils import xhr_required
+from providers import providers
+
 oauth_bp = Blueprint('oauth', __name__, url_prefix='/oauth')
 
-from oauth2client.client import flow_from_clientsecrets, OAuth2WebServerFlow
+from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 
 facebook = oauth.remote_app('facebook', **providers['facebook'])
@@ -39,7 +40,7 @@ def oauth_login(provider):
 
 # @google.authorized_handler
 @oauth_bp.route('/google-authorized', methods=['POST'])
-@app.utils.redirect_or_json('frontend.user')
+@xhr_required
 def google_authorized():
     # CSRF is handled implicitly by flask_wtf.csrf (for post requests)
 
@@ -81,6 +82,8 @@ def google_authorized():
         return jsonify(userinfo), result.status_code
 
     user = User.query.filter_by(email_insensitive=userinfo['email']).first()
+
+    print user
 
     if not user:
         user = User(username=userinfo['email'],

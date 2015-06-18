@@ -1,26 +1,100 @@
 import pprint
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g, abort, jsonify
+from sqlalchemy.orm import aliased
+from sqlalchemy.dialects.postgresql import array
 from app.extensions import db, login_manager, current_user, login_user, \
     logout_user, login_required, oauth, Message, mail
-from forms import LoginForm, RegistrationForm, OpenIDForm
-from app.models import User
-import requests
-from sqlalchemy import or_
-
+from app.helpers.utils import xhr_required
+from forms import LoginForm, RegisterForm, CommentReplyAddForm, CommentAddForm
+from sqlalchemy.dialects.postgresql import ARRAY
+from app.models import User, Article, Category, Comment
+from sqlalchemy import type_coerce, Integer
+from sqlalchemy.sql.expression import literal
 frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
 
 @frontend_bp.route('/')
 def index():
-    forms = {'register': RegistrationForm(request.form), 'login': LoginForm(request.form)}
+    forms = {'register': RegisterForm(prefix='r'), 'login': LoginForm(prefix='l')}
 
     return render_template('frontend/index.html', active_page='index', forms=forms)
 
 @frontend_bp.route('/<category>/')
-def articles(category):
-    # return render_template('frontend/index.html', active_page=category)
-    return 'category page'
+def category_articles(category):
+    category = Category.query.filter_by(name=category).first()
+    articles = category.articles
+    # TODO: order articles by most popular
+    page_articles = {
+        'latest': articles.order_by(Article.date_created).all()
+        # 'popular': articles.join(Comment)
+    }
+    return render_template('frontend/tutorials.html', active_page=category, articles=page_articles)
+
+
+@frontend_bp.route('/<category>/<int:article_id>/<title>')
+def article(category, article_id, title):
+    article = Article.query.get(article_id)
+
+    cte = db.session.query(Comment,
+                           array([Comment.id]).label('path'),
+                           literal(0, type_=Integer).label('depth')
+                           ) \
+        .filter_by(parent_id=None)\
+        .cte(name='cte', recursive=True)
+
+    c1_alias = aliased(cte, name='c1')
+    c2_alias = aliased(Comment, name='c2')
+
+    cte = cte.union_all(
+        db.session.query(c2_alias,
+                         c1_alias.c.path + array([c2_alias.id]).label('path'),
+                         c1_alias.c.depth + literal(1, type_=Integer).label('depth'))
+            .join(c1_alias, c2_alias.parent_id==c1_alias.c.id))
+
+    result = db.session.query(Comment,
+                              type_coerce(cte.c.path, ARRAY(Integer, as_tuple=True)),
+                              cte.c.depth
+                              ).\
+                              select_entity_from(cte).order_by('path').all()
+    forms = {
+        'addComment': CommentAddForm(prefix='a', article_id=article.id),
+        'replyComment': CommentReplyAddForm(prefix='r', article_id=article.id),
+        'register': RegisterForm(prefix='r'),
+        'login': LoginForm(prefix='l')
+    }
+
+    parents = [] # comments referring to the article.
+    children = [] # comments referring to other comments
+    for comment, path , depth in result:
+        if depth == 0: # if its a parent
+            children = []
+            parents.append((comment, depth, children))
+        else:
+            children.append((comment, depth, None))
+
+    pprint.pprint(parents)
+    return render_template('frontend/tutorial.html', comments=parents, article=article, forms=forms)
+
+
+@frontend_bp.route('/add/comment', methods=['POST'])
+@login_required
+@xhr_required
+def add_comment():
+    if not request.is_xhr:
+        abort(404)
+    form = CommentAddForm(request.form, prefix='a')
+
+    if form.validate_on_submit():
+
+        db.session.add(Comment(user_id=current_user.id, **form.data))
+        db.session.commit()
+        return {'success':1, 'status': 200}
+    else:
+        pprint.pprint(form.errors)
+        form.errors['_prefix'] = 'a-'
+        flash(form.errors, 'form-error')
+        return {'success':0, 'status': 404}
 
 @frontend_bp.route('/mail/')
 def send_mail():
@@ -55,7 +129,7 @@ def login():
 
 @frontend_bp.route('/register/', methods=['GET', 'POST'])
 def register():
-    form = RegistrationForm(request.form)
+    form = RegisterForm(request.form)
     if form.validate_on_submit():
         user = User(
             username=form.username.data,
@@ -65,7 +139,7 @@ def register():
         db.session.commit()
         flash('You have successfully registered. Please login.', 'success')
         return redirect(url_for('frontend.index'))
-    flash(form.errors, 'danger')
+    flash(form.errors, 'form-errors')
     return redirect(url_for('frontend.index'))
 
 

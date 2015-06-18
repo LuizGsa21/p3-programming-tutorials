@@ -217,9 +217,10 @@
 
         // Initialize modalBuilder
         // The modal is created dynamically on `show.bs.modal` event.
-        // Example:
+        //  How it works:
         //  An anchor tag with an attribute of [data-action="addTutorial"]
-        //  will call `modalBuilder.addTutorial()` when clicked
+        //  will call `modalBuilder.addTutorial()` when clicked.
+        //  bootstrap's data attributes `target` and `toggle` are still required
         var modalBuilder = {
             addTutorial: function ($modal) {
                 var $form = templates.tutorialForm();

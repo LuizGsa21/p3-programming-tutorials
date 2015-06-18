@@ -1,12 +1,13 @@
-import pprint
-from flask import Blueprint, render_template, g, url_for, redirect, request, flash, session, current_app, _request_ctx_stack
+import os
+from flask import Blueprint, render_template, request, flash, session, current_app
+from werkzeug import secure_filename
 from app.extensions import current_user, login_required, db
 from app.models import User, Article
-from app.utils import template_or_json, redirect_or_json, allowed_file
-from werkzeug import secure_filename
-from .schemas import articles_serializer, article_serializer, user_info_serializer
+from app.helpers.utils import xhr_required
+from app.api.schemas import articles_serializer, article_serializer
+from .schemas import user_info_serializer
 from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm, UploadAvatarForm
-import os
+
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 # TODO: update all `current_user` views to use `current_user`
 
@@ -29,7 +30,7 @@ def profile():
     return render_template('user/profile.html', active_page='profile', forms=forms, serializers=serializers)
 
 @user_bp.route('/profile/articles/add', methods=['POST', 'GET'])
-@redirect_or_json('user.profile')
+@xhr_required
 def add_article():
     form = AddArticleForm(request.form)
     if form.validate_on_submit():
@@ -48,7 +49,7 @@ def add_article():
         return {'status': 400, 'success': 0}
 
 @user_bp.route('/profile/articles/edit', methods=['POST'])
-@redirect_or_json('user.profile')
+@xhr_required
 def edit_article():
     form = EditArticleForm(request.form)
     if form.validate_on_submit():
@@ -70,7 +71,7 @@ def edit_article():
         return {'status': 400, 'success': 0}
 
 @user_bp.route('/profile/articles/delete', methods=['POST'])
-@redirect_or_json('user.profile')
+@xhr_required
 def delete_article():
     form = DeleteArticleForm(request.form)
     if form.validate_on_submit():
@@ -90,7 +91,7 @@ def delete_article():
         return {'status': 400, 'success': 0}
 
 @user_bp.route('/profile/settings/edit', methods=['POST'])
-@redirect_or_json('user.profile')
+@xhr_required
 def edit_profile():
 
     form = EditProfileForm(request.form)
@@ -114,7 +115,7 @@ def edit_profile():
 
 
 @user_bp.route('/upload/avatar', methods=['POST'])
-@redirect_or_json('user.profile')
+@xhr_required
 def upload():
     # there's no need to pass the form. WTF already takes care of it for file uploads
     form = UploadAvatarForm()

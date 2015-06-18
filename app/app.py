@@ -1,15 +1,17 @@
 import os
-from flask import Flask, render_template, g, flash, url_for, redirect
+
+from flask import Flask, render_template, g
+
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, current_user, mail, babel
+from extensions import db, csrf, login_manager, current_user, babel
 from .admin import admin_bp
 from .api import api_bp
 from .frontend import frontend_bp
 from .user import user_bp
 from .oauth import oauth_bp
 from .models import Category, init_database
-
-from utils import format_datetime
+from .helpers.utils import format_datetime, slugify
+from .helpers.momentjs import momentjs
 
 
 DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
@@ -89,6 +91,10 @@ def configure_jinja_filters(app):
     def datetime(*args, **kwargs):
         return format_datetime(*args, **kwargs)
 
+    @app.template_filter('slug')
+    def slug(url, delim=u'-'):
+        return slugify(url, delim=u'-')
+
     @app.template_filter('custom_json')
     def custom_json(obj, serializer):
         import json
@@ -103,3 +109,9 @@ def configure_jinja_filters(app):
     def chunks(l, n):
         n = max(1, n)
         return [l[i:i + n] for i in range(0, len(l), n)]
+
+    # TODO: replace this with the current datetime filter
+    @app.template_filter('fromnow')
+    def fromnow(timestamp):
+
+        return momentjs(timestamp).fromNow()

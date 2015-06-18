@@ -1,0 +1,308 @@
+{% extends 'layout.html' %}
+{% import 'macros.html' as m %}
+{% block bodyID %}page-tutorial{% endblock %}
+{% block header %}
+{% endblock %}
+{% block body %}
+<main class="container">
+<div class="row">
+    <div class="col-xs-12 col-md-7">
+        <section class="tutorial">
+            <h1 class="page-header">{{ article.title }}</h1>
+            <div class="tutorial-body">
+                {{ article.body }}
+            </div>
+            <footer class="tutorial-footer">
+                By <a href="#" class="author">{{ article.author.username }}</a><br/>
+                <span class="date-created">{{ article.date_created|fromnow }}</span><br/>
+{#                <span class="last-modified">Last modified 3 days ago</span>#}
+            </footer>
+        </section>
+        <div class="comment-container">
+            <div class="comment-header row row-table-xs">
+                <div class="col-xs-8">
+                    <h1>Comments</h1>
+                </div>
+                <div class="col-xs-4">
+                    <a  data-toggle="collapse"
+                        href="#add-comment-form"
+                        aria-expanded="false"
+                        id="btn-add-comment"
+                        onclick="$(this).fadeOut();"
+                        class="btn btn-primary pull-right">Add Comment</a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                <div id="add-comment-form" class="add-comment media collapse">
+                        <a class="media-left" href="#">
+                             <img class="avatar" src="{{ url_for('static', filename='uploads/avatars/'+current_user.avatar) }}">
+                        </a>
+                        <div class="media-body">
+                            {{ forms['addComment'].hidden_tag() }}
+                            {% for field in forms['addComment'] if field.widget.input_type != 'hidden' %}
+                                {% if field.type == 'TextAreaField' %}
+                                    {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
+                                {% else %}
+                                    {{ m.render_input_group(field, placeholder=field.label.text) }}
+                                {% endif %}
+                            {% endfor %}
+                            <div class="actionbar text-right">
+                                <a
+                                 data-toggle="collapse"
+                                 href="#add-comment-form"
+                                 aria-expanded="false"
+                                 onclick="$('#btn-add-comment').fadeIn()"
+                                 class="btn btn-danger">Cancel</a>
+                                <a href="#" class="btn btn-primary">Submit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                {# Display comments  #}
+                <ul class="media-list">
+                    {% for comment, depth, children in comments -%}
+                        {% if depth == 0 %}
+                            <li class="media"> {# start a new head comment #}
+                        {% else %}
+                            {# lets ignore any depths higher than 1... #}
+                            <div class="reply media depth-1">
+                        {% endif %}
+                        <a class="media-left" href="#">
+                            <img class="avatar" src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}">
+                        </a>
+                        <div class="media-body">
+                            <h4 class="media-heading">{{ comment.subject }}</h4>
+                            <div class="comment-info"><a class="reply-to" href="#">@{{ comment.user.username }}</a> <span class="comment-date">posted on {{comment.date_created|fromnow}}</span></div>
+                            <div class="content">
+                            {{ comment.message }}
+                            </div>
+                            <div class="actionbar text-right">
+                                <a href="#" data-id="{{ comment.id }}" class="btn btn-reply btn-primary">Reply</a>
+                            </div>
+                        </div>
+                        {% if depth == 0 %} {# if is a parent container #}
+                            {% if children %}
+                                {{ loop(children) }} {# recusively add its children #}
+                            {% endif %}
+                             </li> {# close the parent container #}
+                        {% else %}
+                             </div> {# close a child container #}
+                        {% endif %}
+                    {%- endfor %}
+                </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+        <section class="right-panel col-md-4 col-md-offset-1">
+            {% if current_user.is_authenticated() -%}
+            <div class="is-logged-in">
+                <div class="profile">
+                    <div class="avatar"></div>
+                    <div class="more-info">
+                        <div class="profile-name">{{ current_user.full_name }}</div>
+                        <div class="settings"><a href="#">Settings</a></div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div id="login-form" class="animated fadeIn nav-tabs-container">
+                <!-- TAB NAVIGATION -->
+                <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
+                    <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+                    <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
+                </ul>
+                <!-- TAB CONTENT -->
+                <div class="tab-content">
+                    <div class="active tab-pane fade in" id="tab-register">
+                        <form action="{{ url_for('frontend.register') }}" method="post" role="form">
+                            {{ forms['register'].csrf_token }}
+                            {% for field in forms['register'] if field.widget.input_type != 'hidden' -%}
+                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                            {% endfor %}
+                            <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
+                        </form>
+                        <div class="social-media">
+                            <p class="info">Or register with:</p>
+                            <p class="text-justify-full">
+                                {{ m.get_social_buttons([
+                                {'google-plus':'#'},
+                                {'github':url_for('oauth.github_authorized')},
+                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab-login">
+                        <form action="{{ url_for('frontend.login') }}" method="post" role="form">
+                            {{ forms['login'].csrf_token }}
+                            {% for field in forms['login'] if field.widget.input_type != 'hidden' -%}
+                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+                            {% endfor %}
+                            <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
+                        </form>
+                        <div class="social-media">
+                            <p class="info">Or login with:</p>
+                            <p class="text-justify-full">
+                                {{ m.get_social_buttons([
+                                {'google-plus':'#'},
+                                {'github':url_for('oauth.github_authorized')},
+                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</main>
+{% endblock %}
+
+{% block bodyPostfix %}
+<script id="comment-reply-template" type="text/html">
+    <form class="comment-reply-form collapse" aria-expanded="false" action="">
+    {{ forms['replyComment'].hidden_tag() }}
+    {% for field in forms['replyComment'] if field.widget.input_type != 'hidden' %}
+        {% if field.type == 'TextAreaField' %}
+            {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
+        {% else %}
+            {{ m.render_input_group(field, placeholder=field.label.text) }}
+        {% endif %}
+    {% endfor %}
+    </form>
+</script>
+
+<script>
+
+// This form is used form replying to a comment. multiple instances may exist.
+var $replyCommentForm = $($('#comment-reply-template').html());
+// This form is used form commenting the article. only one instance should exist.
+var $addCommentForm = $('#add-comment-form');
+
+// Add a new comment
+$addCommentForm.find('.btn-primary').on('click',function(e) {
+   e.preventDefault();
+
+    submitReply($addCommentForm, {
+        success: function(data) {
+            console.log(data);
+        },
+        error: function(data) {
+            console.log(data);
+            app.displayMessages($addCommentForm, data.responseJSON['flashed_messages'])
+        }
+    });
+    $('#btn-add-comment').show();
+    $addCommentForm.collapse('show');
+});
+
+// toggle the reply form when a reply button is clicked
+function submitReply($form, callback) {
+    $.ajax({
+        url: '{{ url_for('frontend.add_comment') }}',
+        beforeSend: app.getCSRFHeader(),
+        type: 'POST',
+        dataType: 'json',
+        data: $form.find('input, textarea').serialize(),
+        success: callback.success,
+        error: callback.error
+    });
+}
+
+// creates a dynamic form and setups up its events.
+// this gets called once for each button.
+$('.btn-reply').one('click', function(e) {
+    var $btnReply = $(this),
+        $container = $btnReply.closest('.media-body'),
+        $btnSubmit,
+        $form;
+
+    // create a submit button dynamically and bind its events
+    $btnSubmit = $btnReply.clone();
+    $btnSubmit.html('Submit');
+    $btnSubmit.hide(); // hide the button until the form is displayed
+    $btnSubmit.insertAfter($btnReply);
+
+    $btnSubmit.on('click', function(e) {
+        submitReply($form, {
+            success: function(data) {
+
+            },
+            error: function(data) {
+
+            }
+        });
+
+        e.preventDefault();
+    });
+
+
+    $btnReply.on('click', function(e) {
+        $form.collapse('toggle');
+        $btnReply.html('Reply');
+        e.preventDefault();
+    });
+
+    // create a form using the provided template
+    $form = $replyCommentForm.clone();
+    $container.find('.content').after($form);
+
+    $form.collapse('show').on('shown.bs.collapse', function(e) {
+        // update this form's parent_id input field
+        $form.find('#r-parent_id').val($btnReply.data('id'));
+        // position the submit button
+        $btnSubmit.show();
+        // toggle button states
+        $btnReply.html('Cancel');
+        $btnReply.toggleClass('btn-primary replying btn-danger');
+    });
+
+    $form.on('hide.bs.collapse', function(e) {
+        // update this form's parent_id input field
+        $btnSubmit.hide();
+        // toggle button states
+        $btnReply.html('Cancel');
+        $btnReply.toggleClass('btn-primary replying btn-danger');
+    });
+
+    e.preventDefault()
+})
+</script>
+
+<script>
+
+    $(function () {
+        var $loginForm = $('#login-form'),
+            $footer = $('.footer-sticky'),
+            legacyIE = bowser.msie && bowser.version <= 9;
+
+        if ( ! $loginForm.length || ! $footer.length) return;
+
+        $(document).scroll(function () {
+            if ($loginForm.isAbove($footer, 100)) {
+                if ($loginForm.hasClass('fadeIn')) {
+                    // Make form disappear
+                    $loginForm.removeClass('fadeIn');
+                    $loginForm.addClass('fadeOut');
+                    if (legacyIE) {
+                        $loginForm.animate({opacity: 0}, 400, 'swing', function () {
+                            $loginForm.invisible();
+                        });
+                    }
+                }
+            } else if ($loginForm.hasClass('fadeOut')) {
+                // Make login form visible
+                $loginForm.removeClass('fadeOut');
+                $loginForm.addClass('fadeIn');
+                if (legacyIE) {
+                    $loginForm.visible().animate({opacity: 1.0}, 400);
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

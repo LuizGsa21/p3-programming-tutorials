@@ -1,13 +1,14 @@
-import pprint
-from flask import session, current_app
 import os
+
+from flask import session, current_app
+
 # from app.extensions import Form, current_user
 from app.extensions import current_user, Form
-from app.utils import allowed_file
-from app.models import User, Category, Article
-from wtforms import ValidationError, StringField, PasswordField, FileField, HiddenField, TextAreaField
+from app.helpers.utils import allowed_file
+from app.models import User, Category
+from wtforms import ValidationError, StringField, FileField, HiddenField, TextAreaField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import InputRequired, EqualTo, Length, Email
+from wtforms.validators import InputRequired, Length, Email
 from werkzeug.datastructures import FileStorage
 # Article forms
 class AddArticleForm(Form):

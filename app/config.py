@@ -21,11 +21,10 @@ class Config(object):
 
 
 
-
 class DevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY = 'how-to-tutorials-development'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://vagrant:vagrant@localhost:5432/test'
 
     GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
     GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']

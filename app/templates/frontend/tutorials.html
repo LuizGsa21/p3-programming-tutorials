@@ -1,0 +1,59 @@
+{% extends 'layout.html' %}
+
+{% block bodyID %}page-tutorials{% endblock %}
+{% block body %}
+<section class="tutorials container">
+    <div class="tiles row">
+        <div class="tutorials-main col-xs-12 col-md-6">
+            {% if articles.latest %}
+                <h1 class="page-header text-center">{{ active_page }} Tutorials</h1>
+               {% for article in articles.latest %}
+               <article class="tile">
+                   <h3 class="title">
+                   <a href="{{ url_for('frontend.article',
+                        category=active_page, article_id=article.id, title=article.title|slug) }}">{{ article.title }}</a></h3>
+                   <footer class="tile-footer row">
+                       <div class="col-xs-12">
+                           <div class="author">By <a href="#">{{ article.author.username }}</a></div>
+                           <div class="published-date">Published {{ article.date_created|datetime }}</div>
+                       </div>
+                   </footer>
+               </article>
+               {% endfor %}
+            {% else %}
+                <h1 class="page-header text-center" style="border: none; white-space: nowrap">No {{ active_page }} tutorials listed.
+                    <br/><small>Why not contribute?</small></h1>
+            {% endif %}
+
+        </div>
+{#        <div class="tutorials-popular col-xs-12 col-md-5 col-md-offset-2">#}
+{#            <h1 class="page-header text-center">Most Active</h1>#}
+{#            <article class="tile">#}
+{#                <h3 class="title"><a href="">Setting Up PyCharm on MAC OS X</a></h3>#}
+{#                <footer class="tile-footer row">#}
+{#                    <div class="col-xs-12">#}
+{#                        <div class="author">By <a href="#">LuizGsa21</a></div>#}
+{#                        <div class="published-date">Published May 3, 2015</div>#}
+{#                    </div>#}
+{#                </footer>#}
+{#            </article>#}
+{#        </div>#}
+    </div>
+</section>
+{% endblock %}
+
+{% block bodyPostfix %}
+<script>
+    +function ($) {
+
+        function show($element) {
+            setTimeout(function () {
+                $element.visible().animate({opacity: 1.0}, 400);
+                show($element.next());
+            }, 400);
+        }
+        show($('.tutorials-main .tile').invisible().css({opacity: 0}).first());
+        show($('.tutorials-popular .tile').invisible().css({opacity: 0}).first());
+    }(jQuery);
+</script>
+{% endblock %}

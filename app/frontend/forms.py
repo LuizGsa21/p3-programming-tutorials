@@ -1,11 +1,11 @@
 from app.extensions import current_user
 from app.models import User, Category
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, ValidationError
+from wtforms import StringField, PasswordField, ValidationError, HiddenField, TextAreaField
 from wtforms.validators import InputRequired, EqualTo, Length, Email
 
 
-class RegistrationForm(Form):
+class RegisterForm(Form):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=12)])
     email = StringField('Email', validators=[InputRequired(), Email()])
     password = PasswordField(
@@ -28,5 +28,10 @@ class LoginForm(Form):
     email = StringField('Email', validators=[InputRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired()])
 
-class OpenIDForm(Form):
-    openid = StringField('OpenID', validators=[InputRequired()])
+class CommentAddForm(Form):
+    article_id = HiddenField('id', validators=[InputRequired()])
+    subject = StringField('Subject', validators=[InputRequired()])
+    message = TextAreaField('Message', validators=[InputRequired()])
+
+class CommentReplyAddForm(CommentAddForm):
+    parent_id = HiddenField('id', validators=[InputRequired()])

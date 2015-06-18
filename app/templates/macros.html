@@ -32,6 +32,54 @@
     {%- endfor %}
 {%- endmacro %}
 
+{% macro render_input_group(field, placeholder='', size='', csrf_allowed=true) %}
+    {% if size != '' %}
+        {% set size = 'input-group-' + size  %}
+    {% endif %}
+    <div class="form-group">
+        <label class="control-label sr-only">{{ placeholder }}</label>
+        <div class="input-group {{ size }}">
+          <span class="input-group-addon">{{ placeholder }}</span>
+          {{ field(class_='form-control', **kwargs) }}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro render_media_list() %}
+<li class="media">
+    <a class="media-left" href="#">
+        <img class="avatar" src="">
+    </a>
+    <div class="media-body">
+        <h4 class="media-heading">Awesome tutorial</h4>
+        <a class="reply-to" href="#">@LuizGsa21</a>
+        <div class="content"></div>
+        <div class="actionbar text-right">
+            <a href="#" class="btn btn-primary">Reply</a>
+        </div>
+    </div>
+</li>
+{% endmacro %}
+
+{% macro render_media_reply() %}
+<div class="reply media depth-1">
+    <a class="media-left" href="#">
+         <img class="avatar" src="">
+    </a>
+    <div class="media-body">
+        <h4 class="media-heading">Thanks</h4>
+        <a class="reply-to" href="#">@LuizGsa21</a>
+        <p>Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante
+            sollicitudin commodo. Cras purus odio, vestibulum in vulputate at, tempus viverra
+            turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis
+            in faucibus.</p>
+        <div class="actionbar text-right">
+            <a href="#" class="btn btn-primary">Reply</a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
 {# Snippet taken from:
     http://bear-z.com/python/render-bootstrap-3-forms-with-wtforms-and-jinja/ #}
 
