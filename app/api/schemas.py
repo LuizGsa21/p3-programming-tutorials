@@ -5,7 +5,7 @@ from app.helpers.utils import format_datetime
 
 class CommentSchema(Schema):
     class Meta:
-        fields = ('id', 'body', 'parent_comment_id', 'date_created', 'article_id')
+        fields = ('id', 'parent_id', 'user_id', 'message', 'subject', 'date_created', 'article_id')
 
 
 class UserSchema(Schema):
