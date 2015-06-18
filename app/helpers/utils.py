@@ -1,6 +1,9 @@
 from functools import wraps
-from flask import request, jsonify, render_template, redirect, json, get_flashed_messages, current_app, url_for
-from extensions import format_datetime as b_datetime, login_manager
+import re
+import re
+from unidecode import unidecode
+from flask import request, jsonify, render_template, redirect, json, get_flashed_messages, current_app, url_for, abort
+from app.extensions import format_datetime as b_datetime, login_manager
 
 def template_or_json(template=None):
     """"Return a dict from your view and this will either
@@ -19,20 +22,15 @@ def template_or_json(template=None):
         return decorated_fn
     return decorated
 
-def redirect_or_json(redirect_url):
-    def decorator(f):
-        @wraps(f)
-        def decorator_fn(*args, **kwargs):
-            # only invoke view on xhr requests
-            if request.is_xhr or not redirect_url:
-                ctx = f(*args, **kwargs)
-                # preformat flashed messages
-                ctx['flashed_messages'] = \
-                    [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
-                return jsonify(ctx), ctx['status']
-            else:
-                return redirect(url_for(redirect_url))
-        return decorator_fn
+def xhr_required(f):
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        if not request.is_xhr:
+            abort(404)
+        ctx = f(*args, **kwargs)
+        ctx['flashed_messages'] = \
+            [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
+        return jsonify(ctx), ctx['status']
     return decorator
 
 def format_datetime(value, format='default'):
@@ -45,6 +43,20 @@ def format_datetime(value, format='default'):
     elif format == 'standard':
         format = 'HH:mm MMMM d, yyyy'
     return b_datetime(value, format)
+
+
+
+# taken from: http://flask.pocoo.org/snippets/5/
+_punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
+
+
+def slugify(text, delim=u'-'):
+    """Generates an ASCII-only slug."""
+    result = []
+    for word in _punct_re.split(text.lower()):
+        result.extend(unidecode(word).split())
+    return unicode(delim.join(result))
+
 
 def allowed_file(filename):
     return '.' in filename and \
