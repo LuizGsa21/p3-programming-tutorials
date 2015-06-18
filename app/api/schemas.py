@@ -40,3 +40,5 @@ article_ext_serializer = ArticleExtendedSchema()
 
 articles_serializer = ArticleSchema(many=True)
 articles_ext_serializer = ArticleExtendedSchema(many=True)
+
+comment_serializer = CommentSchema()
