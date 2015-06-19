@@ -1,18 +1,8 @@
-/**
- * Returns true if this elements bottom y axis
- * is less than or equal to the given element's top y axis - maxRange.
- *
- * @param element - string selector
- * @param maxRange - max range to check if the object is above
- *                   Default = 0
- * @returns {boolean}
- */
-$.fn.isAbove = function (element, maxRange) {
-    maxRange = maxRange || 0;
-    var eTop = $(element).offset().top;
+$.fn.isAbove = function (element) {
+    var eTop = element.getBoundingClientRect().top;
     // this elements bottom y coordinate
-    var bottom = this.offset().top + this.outerHeight();
-    return  eTop - maxRange <= bottom;
+    var bottom = this[0].getBoundingClientRect().bottom;
+    return  eTop <= bottom;
 };
 
 

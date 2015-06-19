@@ -1,7 +1,7 @@
 from app.extensions import current_user
 from app.models import User, Category
 from flask_wtf import Form
-from wtforms import StringField, PasswordField, ValidationError, HiddenField, TextAreaField
+from wtforms import StringField, PasswordField, ValidationError, HiddenField, TextAreaField, IntegerField
 from wtforms.validators import InputRequired, EqualTo, Length, Email
 
 
@@ -28,10 +28,16 @@ class LoginForm(Form):
     email = StringField('Email', validators=[InputRequired(), Email()])
     password = PasswordField('Password', validators=[InputRequired()])
 
-class CommentAddForm(Form):
+class CommentForm(Form):
     article_id = HiddenField('id', validators=[InputRequired()])
     subject = StringField('Subject', validators=[InputRequired()])
     message = TextAreaField('Message', validators=[InputRequired()])
+    parent_id = HiddenField('id')
 
-class CommentReplyAddForm(CommentAddForm):
-    parent_id = HiddenField('id', validators=[InputRequired()])
+    def validate_parent_id(self, field):
+        data = field.data
+        try:
+            data = int(data)
+        except ValueError:
+            data = None
+        field.data = data

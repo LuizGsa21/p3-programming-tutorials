@@ -117,7 +117,8 @@ class Article(db.Model):
     body = db.Column(db.String(20000))
     author_id = db.Column(db.Integer(), db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer(), db.ForeignKey('categories.id'), nullable=False)
-    date_created = db.Column(db.DateTime(), default=datetime.utcnow)
+    date_created = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
+    last_modified = db.Column(db.DateTime())
 
     comments = db.relationship('Comment', backref='articles', lazy='dynamic')
 
@@ -133,7 +134,8 @@ class Comment(db.Model):
 
     subject = db.Column(db.String(200))
     message = db.Column(db.String(10000))
-    date_created = db.Column(db.DateTime(), default=datetime.utcnow)
+    last_modified = db.Column(db.DateTime(), nullable=True)
+    date_created = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
 
 
 

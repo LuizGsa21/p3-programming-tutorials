@@ -25,7 +25,7 @@
                 </div>
                 <div class="col-xs-4">
                     <a  data-toggle="collapse"
-                        href="#add-comment-form"
+                        href="#comment-article-form"
                         aria-expanded="false"
                         id="btn-add-comment"
                         onclick="$(this).fadeOut();"
@@ -35,13 +35,13 @@
 
             <div class="row">
                 <div class="col-xs-12">
-                <div id="add-comment-form" class="add-comment media collapse">
+                <div id="comment-article-form" class="add-comment media collapse">
                         <a class="media-left" href="#">
-                             <img class="avatar" src="{{ url_for('static', filename='uploads/avatars/'+current_user.avatar) }}">
+                             <img class="avatar" src="">
                         </a>
                         <div class="media-body">
-                            {{ forms['addComment'].hidden_tag() }}
-                            {% for field in forms['addComment'] if field.widget.input_type != 'hidden' %}
+                            {{ forms['commentForm'].hidden_tag() }}
+                            {% for field in forms['commentForm'] if field.widget.input_type != 'hidden' %}
                                 {% if field.type == 'TextAreaField' %}
                                     {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
                                 {% else %}
@@ -51,7 +51,7 @@
                             <div class="actionbar text-right">
                                 <a
                                  data-toggle="collapse"
-                                 href="#add-comment-form"
+                                 href="#comment-article-form"
                                  aria-expanded="false"
                                  onclick="$('#btn-add-comment').fadeIn()"
                                  class="btn btn-danger">Cancel</a>
@@ -63,24 +63,28 @@
                 <div class="col-xs-12">
                 {# Display comments  #}
                 <ul class="media-list">
-                    {% for comment, depth, children in comments -%}
-                        {% if depth == 0 %}
-                            <li class="media"> {# start a new head comment #}
+                    {% for comment, depth, children in comments recursive -%}
+                        {% if depth == 0 %} {# start a new head comment #}
+                            <li class="media" id="comment-{{ comment.id }}">
                         {% else %}
                             {# lets ignore any depths higher than 1... #}
-                            <div class="reply media depth-1">
+                            <div class="reply media depth-1" id="comment-{{ comment.id }}">
                         {% endif %}
                         <a class="media-left" href="#">
                             <img class="avatar" src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}">
                         </a>
                         <div class="media-body">
                             <h4 class="media-heading">{{ comment.subject }}</h4>
-                            <div class="comment-info"><a class="reply-to" href="#">@{{ comment.user.username }}</a> <span class="comment-date">posted on {{comment.date_created|fromnow}}</span></div>
+                            <div class="comment-info"><a class="reply-to" href="#">@{{ comment.user.username }}</a>
+
+                            {% set lastmodified = comment.last_modified|default(comment.date_created, true) %}
+                            <span data-lastmodified="{{ lastmodified }}" class="comment-date">{{lastmodified|fromnow}}</span></div>
                             <div class="content">
                             {{ comment.message }}
                             </div>
                             <div class="actionbar text-right">
-                                <a href="#" data-id="{{ comment.id }}" class="btn btn-reply btn-primary">Reply</a>
+                                <a href="#" class="btn btn-reply btn-primary">Reply</a>
+                                <a href="#" style="display: none" data-id="{{ comment.id }}" class="btn btn-submit btn-primary">Submit</a>
                             </div>
                         </div>
                         {% if depth == 0 %} {# if is a parent container #}
@@ -162,10 +166,28 @@
 {% endblock %}
 
 {% block bodyPostfix %}
-<script id="comment-reply-template" type="text/html">
-    <form class="comment-reply-form collapse" aria-expanded="false" action="">
-    {{ forms['replyComment'].hidden_tag() }}
-    {% for field in forms['replyComment'] if field.widget.input_type != 'hidden' %}
+<script id="comment-template" type="text/html">
+<li class="media" id="comment-">
+    <a class="media-left" href="#"><img class="avatar" src=""></a>
+    <div class="media-body">
+        <h4 class="media-heading"></h4>
+        <div class="comment-info">
+            <a class="reply-to" href="#">@larantessa@gmail.com</a>
+            <span data-lastmodified="" class="comment-date"></span>
+        </div>
+        <div class="content"></div>
+        <div class="actionbar text-right">
+            <a href="#" data-id="" class="btn btn-reply btn-primary">Reply</a>
+            <a href="#" style="display: none" data-id="" class="btn btn-submit btn-primary">Submit</a>
+        </div>
+    </div>
+</li>
+</script>
+
+<script id="comment-form" type="text/html">
+    <form class="comment-form collapse" aria-expanded="false" action="">
+    {{ forms['commentForm'].hidden_tag() }}
+    {% for field in forms['commentForm'] if field.widget.input_type != 'hidden' %}
         {% if field.type == 'TextAreaField' %}
             {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
         {% else %}
@@ -176,104 +198,157 @@
 </script>
 
 <script>
+$(function($) {
 
-// This form is used form replying to a comment. multiple instances may exist.
-var $replyCommentForm = $($('#comment-reply-template').html());
-// This form is used form commenting the article. only one instance should exist.
-var $addCommentForm = $('#add-comment-form');
+    var $commentContainer,
+        $commentArticleForm;
 
-// Add a new comment
-$addCommentForm.find('.btn-primary').on('click',function(e) {
-   e.preventDefault();
+    function getLastModified() {
+        var $e = $('.media-list').find('[data-lastmodified]'),
+            timestamps;
 
-    submitReply($addCommentForm, {
-        success: function(data) {
-            console.log(data);
-        },
-        error: function(data) {
-            console.log(data);
-            app.displayMessages($addCommentForm, data.responseJSON['flashed_messages'])
-        }
-    });
-    $('#btn-add-comment').show();
-    $addCommentForm.collapse('show');
-});
+        if ($e.length == 0) return null;
 
-// toggle the reply form when a reply button is clicked
-function submitReply($form, callback) {
-    $.ajax({
-        url: '{{ url_for('frontend.add_comment') }}',
-        beforeSend: app.getCSRFHeader(),
-        type: 'POST',
-        dataType: 'json',
-        data: $form.find('input, textarea').serialize(),
-        success: callback.success,
-        error: callback.error
-    });
-}
+        timestamps = $e.map(function(i, e) {return $(e).data('lastmodified');}).get();
 
-// creates a dynamic form and setups up its events.
-// this gets called once for each button.
-$('.btn-reply').one('click', function(e) {
-    var $btnReply = $(this),
-        $container = $btnReply.closest('.media-body'),
-        $btnSubmit,
-        $form;
+        var i, length, max;
+        length = timestamps.length;
+        max = timestamps[0];
+        // since the `lastmodified` timestamps are formatted "YYYY-MM-DD hh-mm-ss"
+        // there's no need to convert it to a datetime object
+        for (i = 1; i < length; i++)
+            if (timestamps[i] > max)
+                max = timestamps[i];
 
-    // create a submit button dynamically and bind its events
-    $btnSubmit = $btnReply.clone();
-    $btnSubmit.html('Submit');
-    $btnSubmit.hide(); // hide the button until the form is displayed
-    $btnSubmit.insertAfter($btnReply);
+        return max;
+    }
 
-    $btnSubmit.on('click', function(e) {
-        submitReply($form, {
-            success: function(data) {
+    function submitComment($form, callback) {
+        $.ajax({
+            url: '{{ url_for('frontend.add_comment') }}',
+            beforeSend: app.getCSRFHeader(),
+            type: 'POST',
+            dataType: 'json',
+            data: $form.find('input, textarea').serialize() + '&'+$.param({lastmodified:getLastModified()}),
+            success: callback.success,
+            error: callback.error
+        });
+    }
 
-            },
-            error: function(data) {
+    function updateComments(comments) {
+        var $parentTemplate = $($('#comment-template').html()).filter('li'),
+            $childTemplate = $('<div></div>', {'class': 'reply media depth-1'})
+                                .append($parentTemplate.html());
 
+        comments.forEach(function(item, i) {
+            var $e,
+                $container,
+                isParent = item.parent_id == null;
+
+            $e = isParent ? $parentTemplate.clone() : $childTemplate.clone();
+
+            $e.data('item', item);
+            $e.attr('id', 'comment-'+item.id);
+            $e.find('.media-heading').html(item.subject);
+            $e.find('.content').html(item.message);
+            $e.find('.reply-to');
+            $e.find('.comment-date')
+                .attr('data-lastmodified', item.last_modified ? item.last_modified : item.date_created);
+            $e.find('.btn-submit').attr('data-id', item.id);
+            if (isParent) {
+                // start a new comment list
+                $('.media-list').append($e);
+            } else {
+                // append it below the parent id
+                $container = $('#comment-' + item.parent_id);
+                if ($container.is('li')) {
+                    $container.append($e);
+                } else {
+                    $container.parent().append($e);
+                }
             }
         });
+    }
 
+    $commentArticleForm = $('#comment-article-form');
+    $commentArticleForm.find('.btn-primary').on('click',function(e) {
+        submitComment($commentArticleForm, {
+            success: function(data) {
+                updateComments(data.comments);
+                $commentArticleForm
+                    .find('.form-group')
+                    .find('input, textarea').val('');
+                $commentArticleForm.collapse('hide');
+            },
+            error: function(data) {
+                app.displayMessages($commentArticleForm, data.responseJSON['flashed_messages'])
+            }
+        });
+        $('#btn-add-comment').show();
+        $commentArticleForm.collapse('show');
         e.preventDefault();
     });
 
+    $commentContainer = $('.media-list');
+    $commentContainer.on('click', '.btn-reply', function(e) {
+        var $btnReply = $(this),
+            $form = $btnReply.closest('.media-body').find('form');
 
-    $btnReply.on('click', function(e) {
+        if ($form.length == 0) {
+            // create a form using the provided template
+            $form = $($('#comment-form').html()).clone();
+            // insert the form after `.content`
+            $btnReply.closest('.media-body')
+                .find('.content').after($form);
+        }
+
         $form.collapse('toggle');
-        $btnReply.html('Reply');
-        e.preventDefault();
+        e.preventDefault()
     });
 
-    // create a form using the provided template
-    $form = $replyCommentForm.clone();
-    $container.find('.content').after($form);
-
-    $form.collapse('show').on('shown.bs.collapse', function(e) {
+    $commentContainer.on('shown.bs.collapse', 'form', function(e) {
         // update this form's parent_id input field
-        $form.find('#r-parent_id').val($btnReply.data('id'));
+        var $form = $(this),
+            $btnSubmit = $form.closest('.media-body').find('.btn-submit'),
+            $btnReply = $btnSubmit.prev();
+        $form.find('#parent_id').val($btnSubmit.data('id'));
         // position the submit button
         $btnSubmit.show();
         // toggle button states
         $btnReply.html('Cancel');
-        $btnReply.toggleClass('btn-primary replying btn-danger');
+        $btnReply.toggleClass('btn-primary btn-danger');
     });
 
-    $form.on('hide.bs.collapse', function(e) {
+    $commentContainer.on('hide.bs.collapse', 'form',function(e) {
+        // update this form's parent_id input field
+        var $btnSubmit = $(this).closest('.media-body').find('.btn-submit'),
+            $btnReply = $btnSubmit.prev();
         // update this form's parent_id input field
         $btnSubmit.hide();
         // toggle button states
-        $btnReply.html('Cancel');
-        $btnReply.toggleClass('btn-primary replying btn-danger');
+        $btnReply.html('Reply');
+        $btnReply.toggleClass('btn-primary btn-danger');
     });
 
-    e.preventDefault()
-})
+
+    $commentContainer.on('click', '.btn-submit', function(e) {
+        var $form = $(this).closest('.media-body').find('form');
+        submitComment($form, {
+            success: function(data) {
+                $form.find('input, textarea').val('');
+                $form.collapse('toggle');
+                updateComments(data.comments);
+            },
+            error: function(data) {
+            }
+        });
+        e.preventDefault();
+    });
+
+}, jQuery)
 </script>
 
 <script>
-
     $(function () {
         var $loginForm = $('#login-form'),
             $footer = $('.footer-sticky'),
@@ -282,21 +357,17 @@ $('.btn-reply').one('click', function(e) {
         if ( ! $loginForm.length || ! $footer.length) return;
 
         $(document).scroll(function () {
-            if ($loginForm.isAbove($footer, 100)) {
+            if ($loginForm.isAbove($footer[0])) {
                 if ($loginForm.hasClass('fadeIn')) {
                     // Make form disappear
-                    $loginForm.removeClass('fadeIn');
-                    $loginForm.addClass('fadeOut');
+                    $loginForm.toggleClass('fadeIn fadeOut');
                     if (legacyIE) {
-                        $loginForm.animate({opacity: 0}, 400, 'swing', function () {
-                            $loginForm.invisible();
-                        });
+                        $loginForm.animate({opacity: 0}, 400, 'swing', function () {$loginForm.invisible();});
                     }
                 }
             } else if ($loginForm.hasClass('fadeOut')) {
                 // Make login form visible
-                $loginForm.removeClass('fadeOut');
-                $loginForm.addClass('fadeIn');
+                $loginForm.toggleClass('fadeIn fadeOut');
                 if (legacyIE) {
                     $loginForm.visible().animate({opacity: 1.0}, 400);
                 }

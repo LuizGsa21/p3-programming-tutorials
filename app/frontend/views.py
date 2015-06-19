@@ -5,11 +5,14 @@ from sqlalchemy.dialects.postgresql import array
 from app.extensions import db, login_manager, current_user, login_user, \
     logout_user, login_required, oauth, Message, mail
 from app.helpers.utils import xhr_required
-from forms import LoginForm, RegisterForm, CommentReplyAddForm, CommentAddForm
+from forms import LoginForm, RegisterForm, CommentForm
 from sqlalchemy.dialects.postgresql import ARRAY
 from app.models import User, Article, Category, Comment
-from sqlalchemy import type_coerce, Integer
+from sqlalchemy import type_coerce, Integer, or_
 from sqlalchemy.sql.expression import literal
+from app.api.schemas import comments_nested_serializer
+from sqlalchemy import DateTime, cast
+
 frontend_bp = Blueprint('frontend', __name__)
 
 login_manager.login_view = 'frontend.login'
@@ -58,8 +61,7 @@ def article(category, article_id, title):
                               ).\
                               select_entity_from(cte).order_by('path').all()
     forms = {
-        'addComment': CommentAddForm(prefix='a', article_id=article.id),
-        'replyComment': CommentReplyAddForm(prefix='r', article_id=article.id),
+        'commentForm': CommentForm(article_id=article.id),
         'register': RegisterForm(prefix='r'),
         'login': LoginForm(prefix='l')
     }
@@ -73,7 +75,6 @@ def article(category, article_id, title):
         else:
             children.append((comment, depth, None))
 
-    pprint.pprint(parents)
     return render_template('frontend/tutorial.html', comments=parents, article=article, forms=forms)
 
 
@@ -81,20 +82,28 @@ def article(category, article_id, title):
 @login_required
 @xhr_required
 def add_comment():
-    if not request.is_xhr:
-        abort(404)
-    form = CommentAddForm(request.form, prefix='a')
+    form = CommentForm(request.form)
+    lastmodified = request.form.get('lastmodified')
 
     if form.validate_on_submit():
-
-        db.session.add(Comment(user_id=current_user.id, **form.data))
+        comment = Comment(user_id=current_user.id, **form.data)
+        db.session.add(comment)
         db.session.commit()
-        return {'success':1, 'status': 200}
+
+        # get the new comments according to the given `lastmodified` value
+        if lastmodified:
+            comments = Comment.query.\
+                filter_by(article_id=comment.article_id).\
+                filter(or_(Comment.date_created > cast(lastmodified, DateTime),
+                           Comment.last_modified > cast(lastmodified, DateTime)))\
+                .order_by(Comment.id).all()
+        else:
+            comments = [comment]
+        result, error = comments_nested_serializer.dump(comments)
+        return {'success':1, 'status': 200, 'comments': result}
     else:
-        pprint.pprint(form.errors)
-        form.errors['_prefix'] = 'a-'
         flash(form.errors, 'form-error')
-        return {'success':0, 'status': 404}
+        return {'success':0, 'status': 400}
 
 @frontend_bp.route('/mail/')
 def send_mail():
