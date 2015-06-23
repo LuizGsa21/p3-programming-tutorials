@@ -4,7 +4,7 @@ var app = {
     csrfToken: null,
     client_id: '',
     $navbar: null,
-    dynamicLinks : null,
+    dynamicLinks: null,
 
     getCSRFHeader: function () {
         var token = this.csrfToken;
@@ -83,5 +83,27 @@ var app = {
                 .append($('<a>', {href: dynamicLinks[link], html: link}));
             $navbar.append($li);
         });
+    },
+    populateForm: function ($form, item, filter) {
+        var id, $input;
+        for (id in item) {
+            if ( ! item.hasOwnProperty(id)) continue;
+
+            $input = $form.find('#' + id);
+
+            if ($input.length == 0) continue;
+
+            if ( ! filter || $input.attr('type') == filter ) {
+
+                if ($input.is('select')) {
+                    // select items have to go 1 level deeper to get its value
+                    $input.val(item[id].id)
+                } else {
+                    $input.val(item[id]);
+                }
+            }
+
+        }
     }
+
 };
