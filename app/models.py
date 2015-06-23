@@ -29,19 +29,13 @@ class CaseInsensitiveWord(Comparator):
         return self.word
 
 
-class MutableList(Mutable, list):
-    def append(self, value):
-        list.append(self, value)
-        self.changed()
-
-    @classmethod
-    def coerce(cls, key, value):
-        if not isinstance(value, MutableList):
-            if isinstance(value, list):
-                return MutableList(value)
-            return Mutable.coerce(key, value)
-        else:
-            return value
+# monkey patch to db.Model. used as a convenience method for populating values from a wtform
+def populate_form(model, form):
+    fields = form.data
+    for column, value in fields.items():
+        if hasattr(model, column):
+            setattr(model, column, value)
+setattr(db.Model, 'populate_form', populate_form)
 
 class User(db.Model, UserMixin):
     __tablename__ = 'users'

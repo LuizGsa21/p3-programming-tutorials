@@ -1,4 +1,5 @@
 import os
+import pprint
 from flask import Blueprint, render_template, request, flash, session, current_app
 from werkzeug import secure_filename
 from app.extensions import current_user, login_required, db
@@ -34,11 +35,7 @@ def profile():
 def add_article():
     form = AddArticleForm(request.form)
     if form.validate_on_submit():
-        article = Article(
-            title=form.title.data,
-            body=form.body.data,
-            author_id=current_user.id,
-            category_id=form.category.data.id)
+        article = Article(author_id=current_user.id, **form.data)
         db.session.add(article)
         db.session.commit()
         flash("Successfully published <strong>'" + article.title + "'</strong>.", 'success')
@@ -54,11 +51,10 @@ def edit_article():
     form = EditArticleForm(request.form)
     if form.validate_on_submit():
         article = Article.query.get(form.id.data)
-        # ensure user has permission to edit this item
+        # ensure user has permission to edit this article
         if article.author_id == current_user.id or current_user.is_admin():
-            article.title = form.title.data
-            article.body = form.body.data
-            article.category_id = form.category.data.id
+            del form.id
+            article.populate_form(form)
             db.session.commit()
             flash("Successfully updated <strong>'" + article.title + "'</strong> tutorial.", 'success')
             result, error = article_serializer.dump(article)
