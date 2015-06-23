@@ -8,10 +8,10 @@
         <div class="row"><div class="col-xs-12 alert-box"></div></div>
         <div class="row row-table-md">
             <div class="col-xs-12 col-md-4">
-                <div class="avatar"></div>
+                <div><img class="avatar img-responsive" src="" alt=""/></div>
                 <div class="more-info">
                     <div class="profile-name"></div>
-                    <div class="settings"><a data-toggle="modal" data-action="editAvatar" data-target="#main-modal" href="#">change avatar</a></div>
+                    <div class="settings"><a data-toggle="modal" data-action="editAvatar" href="#main-modal">Edit Avatar</a></div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
@@ -19,7 +19,8 @@
                 <table id="profile-table" class="table table-hover profile-table">
                     <thead><tr>
                             <th class="title">General Info</th>
-                            <th class="text-right"><a href="#" class="btn btn-profile-edit btn-xs btn-warning" data-toggle="modal" data-action="editProfile" data-target="#main-modal">Edit</a>
+                            <th class="text-right">
+                                <a href="#main-modal" class="btn-profile-edit" data-toggle="modal" data-action="editProfile">Edit</a>
                             </th>
                     </tr></thead>
                     <tbody>
@@ -53,7 +54,7 @@
                 <h1 class="main-title">Published Tutorials</h1>
             </div>
             <div class="col-xs-12 col-sm-4 add-btn-container">
-                <a href="#" id="btn-add-new" data-toggle="modal" data-action="addTutorial" data-target="#main-modal" class="btn btn-primary">
+                <a href="#main-modal" data-toggle="modal" data-action="addTutorial" class="btn btn-primary">
                     Add New <span class="glyphicon glyphicon-plus-sign"></span></a>
             </div>
         </div>
@@ -90,19 +91,6 @@
 <!-- Templates
 ========================================================  -->
 <script id="templates" type="text/html">
-    <table><thead></thead>
-    <tbody>
-        <tr>
-            <td class="title"></td>
-            <td class="category"></td>
-            <td class="date"></td>
-            <td class="action">
-                <a href="#" class="btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial" data-target="#main-modal">Edit</a>
-                <a href="#" class="btn btn-sm btn-danger" data-toggle="modal" data-action="deleteTutorial" data-target="#main-modal">Delete</a>
-            </td>
-        </tr>
-    </tbody>
-    </table>
     <form id="form-tutorial" method="post">
         {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
             {%- if field.name == 'body' %}
@@ -128,6 +116,7 @@
 
 <script>
     +function ($) {
+        'use strict';
 
         function initTemplates() {
             var temp = $($('#templates').html());
@@ -136,7 +125,6 @@
             return {
                 tutorialForm: clone.bind(temp.filter('#form-tutorial')),
                 profileForm: clone.bind(temp.filter('#form-profile')),
-                tutorialRow: clone.bind(temp.find('tr')),
                 avatarUploadForm: clone.bind(temp.filter('#form-avatar-upload'))
             };
         }
@@ -147,82 +135,71 @@
             $mainModal = $('#main-modal'),
             templates = initTemplates();
 
-        function tutorialAddRows(rows, action) {
-                var $template,
+        var tutorialTable = {
+            addRows: function (rows) {
+                var $row,
                     item,
                     templateBuffer = [],
                     $table = $('#tutorial-table'),
-                    // if a single row was given turn it to an array
+                    // if a single row was given make it compatible
                     dataArray = (rows instanceof Array) ? rows : [rows],
-                    createTemplate = templates.tutorialRow,
-                    length = dataArray.length;
+                    length = dataArray.length,
+                    template =  [
+                        '<tr><td class="title"></td><td class="category"></td><td class="date"></td><td class="action">',
+                        '<a href="#main-modal" class="btn-tutorial-edit btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial">Edit</a>',
+                        '<a href="#main-modal" class="btn-tutorial-delete btn btn-sm btn-danger" data-toggle="modal" data-action="deleteTutorial">Delete</a>',
+                        '</td></tr>'
+                    ].join('');
 
                 $('.empty-table').remove(); // remove empty table cell
 
                 for (var i = 0; i < length; i++) {
                     item = dataArray[i];
-                    $template = createTemplate();
-                    $template.attr('id', ['tutorial-', item.id].join(''));
-                    $template.find('.title').html(item.title);
-                    $template.find('.category').html(item.category.name);
-                    $template.find('.date').html(item.date_created);
-                    $template.find('.action a').data('item', item);
-                    templateBuffer.push($template)
+                    $row = $(template);
+                    $row.attr('id', ['tutorial-', item.id].join(''));
+                    $row.find('.title').html(item.title);
+                    $row.find('.category').html(item.category.name);
+                    $row.find('.date').html(item.date_created);
+                    $row.find('.action a').data('item', item);
+                    templateBuffer.push($row)
                 }
                 // add rows to DOM
                 $table.find('tbody').append(templateBuffer);
-        }
+            },
+            deleteRows: function (rows) {
+                var $table, $tableBody, item;
+                $table = $('#tutorial-table');
+                $tableBody = $table.find('tbody');
+                // if a single row was given turn it to an array
+                rows = (rows instanceof Array) ? rows : [rows];
 
-        function tutorialDeleteRows(rows) {
-            var $table, $tableBody, item;
-            $table = $('#tutorial-table');
-            $tableBody = $table.find('tbody');
-            // if a single row was given turn it to an array
-            rows = (rows instanceof Array) ? rows : [rows];
-
-            for (var i = 0; i < rows.length; i++) {
-                item = rows[i];
-                $('#tutorial-'+item.id).remove();
-            }
-            // If all items were deleted give the table a better look
-            if ($tableBody.find('tr').length == 0) {
-                addEmptyRow('#tutorial-table', 'No published tutorials', 4)
-            }
-        }
-
-
-        function addEmptyRow(selector, messsage, colspan) {
-            // add an informative row to display to the user
-            $(selector)
-                .find('tbody')
-                .html(['<tr class="empty-table"><td colspan="',
-                        colspan,'" class="text-center">', messsage,'</td></tr>'].join(''));
-        }
-
-
-        function updateProfile(data) {
-            var $table, $avatar;
-            $table = $('#profile-table');
-            $avatar = $('.avatar');
-            for (var key in data) {
-                if (key == 'avatar') {
-                    $avatar.css({backgroundImage: 'url('+data[key]+')'});
-                } else {
-                    $table.find('.'+key).html(data[key] || 'Not available');
+                for (var i = 0; i < rows.length; i++) {
+                    item = rows[i];
+                    $('#tutorial-' + item.id).remove();
                 }
-            }
-            $table.find('.btn-profile-edit').data('item', data);
-            $('.profile-name').html(data['username']);
-        }
+                // If all items were deleted give the table a better look
+                if ($tableBody.find('tr').length == 0) {
+                    tutorialTable.addEmptyRow()
+                }
+            },
+            editRow: function(item) {
+                var $row;
+                $row = $('#tutorial-' + item.id);
+                $row.find('.category').html(item.category.name);
+                $row.find('.title').html(item.title);
+                $row.find('a').data('item', item);
 
-        // Initialize modalBuilder
-        // The modal is created dynamically on `show.bs.modal` event.
-        //  How it works:
-        //  An anchor tag with an attribute of [data-action="addTutorial"]
-        //  will call `modalBuilder.addTutorial()` when clicked.
-        //  bootstrap's data attributes `target` and `toggle` are still required
-        var modalBuilder = {
-            addTutorial: function ($modal) {
+            },
+            addEmptyRow: function () {
+                $('#tutorial-table')
+                    .find('tbody')
+                    .html([
+                        '<tr class="empty-table">',
+                        '<td colspan="', colspan, '" class="text-center">',
+                        'No published tutorials',
+                        '</td></tr>'].join(''));
+            },
+            modalAddTutorial: function($modal) {
                 var $form = templates.tutorialForm();
                 // set form url
                 $form.attr('action', '{{ url_for('user.add_article') }}');
@@ -235,7 +212,7 @@
                 var $actionBtn = $modal.find('.btn-submit');
                 $actionBtn.addClass('btn-primary').html('Add Tutorial');
             },
-            editTutorial: function ($modal) {
+            modalEditTutorial: function($modal) {
                 var $form = templates.tutorialForm(),
                     item = $modal.data('item');
                 // set form url
@@ -262,7 +239,7 @@
                 var $actionBtn = $modal.find('.btn-submit');
                 $actionBtn.addClass('btn-primary').html('Save Tutorial');
             },
-            deleteTutorial: function($modal) {
+            modalDeleteTutorial: function($modal) {
                 var item = $modal.data('item'),
                     title = item.title,
                     $form = $('<form/>', {
@@ -283,8 +260,27 @@
                 // update action button css
                 var $actionBtn = $modal.find('.btn-submit');
                 $actionBtn.addClass('btn-danger').html('Delete Tutorial');
+            }
+        };
+
+
+        var profileTable = {
+            editRows: function (data) {
+                var $table, $avatar;
+                $table = $('#profile-table');
+                $avatar = $('.avatar');
+                $table.find('.btn-profile-edit').data('item', data);
+                for (var key in data) {
+                    if ( ! data.hasOwnProperty(key)) continue;
+                    if (key == 'avatar') {
+                        $avatar.attr('src', data[key]);
+                    } else {
+                        $table.find('.' + key).html(data[key] || 'Not available');
+                    }
+                }
+                $('.profile-name').html(data['username']);
             },
-            editProfile: function($modal) {
+            modalEditProfile: function($modal) {
                 var item, title, $form;
                 item = $modal.data('item');
                 $form = templates.profileForm();
@@ -296,7 +292,7 @@
                 $modal.find('.modal-body').append($form);
                 $modal.find('.btn-submit').addClass('btn-primary').html('Save Profile')
             },
-            editAvatar: function($modal) {
+            modalEditAvatar: function($modal) {
                 var item, title, $form;
                 item = $modal.data('item');
                 $form = templates.avatarUploadForm();
@@ -306,35 +302,18 @@
             }
         };
 
-        //---- Modal setup
-        // ensure old content gets deleted after modal closes
-        $mainModal.on('hidden.bs.modal', function () {
-            ['.modal-title', '.modal-body'].forEach(function (selector) {
-                $($mainModal).find(selector).html('');
-            });
-            // remove action button css
-            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
-            $mainModal.removeData();
-        });
-
-        // Dynamically create the modal's content before its shown
-        $mainModal.on('show.bs.modal', function (e) {
-            var data = $(e.relatedTarget).data();
-            $mainModal.data(data);
-            modalBuilder[data.action]($mainModal);
-        });
-
         // AJAX action handlers
         var responseHandler = {
             addTutorial: function ($modal, data) {
                 var messages = data['flashed_messages'];
-                tutorialAddRows(data.article);
+                tutorialTable.addRows(data.article);
                 app.displayMessages('#tutorial-table', messages);
             },
             editTutorial: function($modal, data) {
                 var messages, item, $row;
                 messages = data['flashed_messages'];
                 item = data.article;
+                tutorialTable.editRow(data.article);
                 // get item row and update its content
                 $row = $('#tutorial-' + item.id);
                 $row.find('.category').html(item.category.name);
@@ -353,20 +332,23 @@
                 var item, messages;
                 messages = data['flashed_messages'];
                 item = data.userInfo;
-                updateProfile(item);
+                profileTable.editRows(item);
                 app.displayMessages($('#profile-table'), messages);
-
             },
+
             editAvatar: function($modal, data) {
                 this.editProfile($modal, data);
             }
+
         };
-        // send AJAX request when user clicks the modal's action button
+
+        // Modal Setup
+        // send AJAX request when user clicks the modal's submit button
         $mainModal.find('.btn-submit')
         .on('click', function(e) {
             var currentAction, $form;
-            // get the current action:
-            //      [add|edit|delete]Article]
+            // find out the current action:
+            //      [add|edit|delete]Tutorial]
             //      editProfile
             //      editAvatar
             currentAction = $mainModal.data('action');
@@ -410,17 +392,42 @@
             });
         });
 
-
-        function init() {
-            if (tutorials.length > 0) {
-                tutorialAddRows(tutorials);
-            } else {
-                addEmptyRow('#tutorial-table', 'No published tutorials', 4)
+        // Dynamically create the modal's content before its shown
+        $mainModal.on('show.bs.modal', function (e) {
+            var data = $(e.relatedTarget).data(),
+                action = data.action;
+            $mainModal.data(data);
+            switch (action) {
+                case 'editTutorial': tutorialTable.modalEditTutorial($mainModal); break;
+                case 'deleteTutorial': tutorialTable.modalDeleteTutorial($mainModal); break;
+                case 'addTutorial': tutorialTable.modalAddTutorial($mainModal); break;
+                case 'editAvatar': profileTable.modalEditAvatar($mainModal); break;
+                case 'editProfile': profileTable.modalEditProfile($mainModal); break;
+                default:
+                    console.log('unknown action');
             }
-            updateProfile(userInfo);
+        });
+
+        // ensure old content gets deleted after modal closes
+        $mainModal.on('hidden.bs.modal', function () {
+            ['.modal-title', '.modal-body'].forEach(function (selector) {
+                $($mainModal).find(selector).html('');
+            });
+            // remove action button css
+            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
+            $mainModal.removeData();
+        });
+
+
+
+        profileTable.editRows(userInfo);
+
+        if (tutorials.length > 0) {
+            tutorialTable.addRows(tutorials);
+        } else {
+            tutorialTable.addEmptyRow()
         }
 
-        init();
     }(jQuery)
 </script>
 {% endblock %}
