@@ -37,11 +37,15 @@
         {% set size = 'input-group-' + size  %}
     {% endif %}
     <div class="form-group">
-        <label class="control-label sr-only">{{ placeholder }}</label>
+    {% if field.widget.input_type == 'hidden' %}
+        {{ field() }}
+    {% else %}
+        <label class="control-label sr-only">{{ field.label.text }}</label>
         <div class="input-group {{ size }}">
           <span class="input-group-addon">{{ placeholder }}</span>
           {{ field(class_='form-control', **kwargs) }}
         </div>
+    {% endif %}
     </div>
 {% endmacro %}
 

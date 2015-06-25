@@ -1,4 +1,5 @@
 import os
+import pprint
 
 from flask import session, current_app
 
@@ -10,6 +11,9 @@ from wtforms import ValidationError, StringField, FileField, HiddenField, TextAr
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import InputRequired, Length, Email
 from werkzeug.datastructures import FileStorage
+import imghdr
+import json
+
 # Article forms
 class AddArticleForm(Form):
     title = StringField('Title', validators=[InputRequired(), Length(min=1, max=250)])
@@ -42,23 +46,45 @@ class EditProfileForm(Form):
 
 class UploadAvatarForm(Form):
     avatar = FileField('Upload Image')
+    crop_data = HiddenField('crop_data', validators=[InputRequired()])
 
     def validate_avatar(self, field):
         fileStorage = field.data
 
+        # if no file was provided we will use the original image
         if not isinstance(fileStorage, FileStorage):
-            raise ValidationError("Please include a file before submission.")
+            return
+
+        # check the data signature for a valid image
+        extension = imghdr.what(fileStorage)
+        if extension not in current_app.config.get('ALLOWED_EXTENSIONS', ('',)):
+            raise ValidationError('Only images are allowed...')
+
         # check file size
         fileStorage.seek(0, os.SEEK_END)
         size = fileStorage.tell()
         if size == 0:
             raise ValidationError("You can't upload an empty file.")
-        fileStorage.seek(0, os.SEEK_SET) # reset file pointer
+        fileStorage.seek(0, os.SEEK_SET)  # reset file pointer
 
         maxByteSize = current_app.config['MAX_UPLOAD_SIZE']
-        print maxByteSize
         if size > maxByteSize:
             raise ValidationError(
-                'File size is too large... please choose an image smaller than ' + str(int(maxByteSize/1024)) +' KB')
-        if not allowed_file(fileStorage.filename):
-            raise ValidationError('Only images are allowed...')
+                'File size is too large... please choose an image smaller than ' + str(int(maxByteSize / 1024)) + ' KB')
+
+    def validate_crop_data(self, field):
+
+        data = json.loads(field.data)
+        try:
+            data = {
+                'x': int(data['x']),
+                'y': int(data['y']),
+                'width': int(data['width']),
+                'height': int(data['height'])
+            }
+
+        except Exception, e:
+            print e
+            raise ValueError('Invalid json data.')
+
+        field.data = data

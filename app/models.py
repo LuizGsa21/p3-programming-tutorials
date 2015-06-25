@@ -53,7 +53,7 @@ class User(db.Model, UserMixin):
 
     pwdhash = db.Column(db.String(255))
 
-    avatar = db.Column(db.String(255), default='default-avatar.jpg')
+    avatar = db.Column(db.String(255), default='avatar.jpg')
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
     articles = db.relationship('Article', backref='author', lazy='dynamic')

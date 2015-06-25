@@ -8,7 +8,8 @@ from app.helpers.utils import xhr_required
 from app.api.schemas import articles_serializer, article_serializer
 from .schemas import user_info_serializer
 from .forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm, UploadAvatarForm
-
+from PIL import Image
+from shutil import copyfile
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 # TODO: update all `current_user` views to use `current_user`
 
@@ -113,19 +114,44 @@ def edit_profile():
 @user_bp.route('/upload/avatar', methods=['POST'])
 @xhr_required
 def upload():
-    # there's no need to pass the form. WTF already takes care of it for file uploads
     form = UploadAvatarForm()
-
     if form.validate_on_submit():
-        avatar = form.avatar.data
+        image = form.avatar.data
+        # avatar folder directory
+        path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
 
-        # append user id to filename (creates a file namespace)
-        s = avatar.filename.rsplit('.', 1)
-        filename = s[0] + str(current_user.id) + '.' + s[1]
+        if image:
+            # get the file extension
+            s = image.filename.rsplit('.', 1)
+            # append user's id to filename
+            filename = 'avatar-' + str(current_user.id) + '.' + s[1]
 
-        # filter user input
-        filename = secure_filename(filename)
-        avatar.save(os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars', filename))
+            # file extension was checked on form validation
+            # filename = secure_filename(filename)
+
+            # get the paths used in `crop_image()`
+            originalPath = os.path.join(path, 'original-' + filename)
+            croppedPath = os.path.join(path, filename)
+
+            # save the original image
+            image.save(originalPath)
+            image.close()
+        else:
+            # since no image was provided we will use the original image
+            filename = current_user.avatar
+
+            # create a file namespace if this is the user's first time editing his avatar
+            if filename == 'avatar.jpg':
+                filename = 'avatar-' + str(current_user.id) + '.jpg'
+                copyfile(os.path.join(path, 'avatar.jpg'), os.path.join(path, filename))
+                copyfile(os.path.join(path, 'original-avatar.jpg'), os.path.join(path, 'original-' + filename))
+
+            # get the paths used in `crop_image()`
+            originalPath = os.path.join(path, 'original-' + filename)
+            croppedPath = os.path.join(path, filename)
+
+        # create the cropped image
+        crop_image(originalPath, croppedPath, form.crop_data.data)
 
         # update user avatar path
         current_user.avatar = filename
@@ -138,3 +164,16 @@ def upload():
     else:
         flash(form.errors, 'form-error')
         return {'status': 400, 'success': 0}
+
+
+def crop_image(src, dst, size):
+    original = Image.open(src)
+    left = size['x']
+    upper = size['y']
+    right = left + size['width']
+    lower = upper + size['height']
+    cropped = original.crop((left, upper, right, lower))
+    pprint.pprint(size)
+
+    cropped.save(dst)
+    cropped.close()

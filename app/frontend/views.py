@@ -26,6 +26,9 @@ def index():
 @frontend_bp.route('/<category>/')
 def category_articles(category):
     category = Category.query.filter_by(name=category).first()
+    if category is None:
+        abort(404)
+
     articles = category.articles
     # TODO: order articles by most popular
     page_articles = {
