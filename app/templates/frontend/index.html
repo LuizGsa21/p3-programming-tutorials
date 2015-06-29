@@ -42,8 +42,8 @@
                             <p class="text-justify-full">
                                 {{ m.get_social_buttons([
                                 {'google-plus':'#'},
-                                {'github':url_for('oauth.github_authorized')},
-                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                                {'github':'#'},
+                                {'facebook':'#'}]) }}
                             </p>
                         </div>
                     </div>
@@ -60,8 +60,8 @@
                             <p class="text-justify-full">
                                 {{ m.get_social_buttons([
                                 {'google-plus':'#'},
-                                {'github':url_for('oauth.github_authorized')},
-                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                                {'github':'#'},
+                                {'facebook':'#'}]) }}
                             </p>
                         </div>
                     </div>
@@ -127,24 +127,71 @@
 </div>
 </section>
 {% endblock %}
+
 {% block bodyPostfix %}
 <script>
-function onSuccessSignIn(data, provider) {
-    // when a user logs in from the index page
-    // we have to do the following things:
-    // #1 - hide the login/registration form (parent container)
+$(function($) {
+
+function onSuccessSignIn(data) {
+    // hide the login/registration form parent container
     $('#sign-registration-form').parent().attr('style', 'display: none');
-    // #2 - center the main website logo
+    // center the main website logo
     $('#main-logo-container').attr('class', 'col-xs-12');
-    // #3 - Show profile and logout navigation link
+    // Show profile and logout navigation link
     app.updateNavbar(['Profile', 'Logout']);
-    // #4 - show any messages receives from the server
-    app.displayMessages('#alert-container', data['flashed_messages'], 'append');
+    // show any messages received from the server
+    app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
 }
 
-function onFailSignIn(data, provider) {
-
+function onFailSignIn(data) {
+    if (data.responseJSON) {
+        // show any messages received from the server
+        data = data.responseJSON;
+        app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    }
 }
+
+var $loginForm = $('#sign-registration-form');
+
+// google login/registration
+$loginForm.find('.azm-google-plus').click(function(e) {
+    e.preventDefault();
+    app.google.requestOfflineAccess(onSuccessSignIn, onFailSignIn);
+});
+
+// facebook login/registration
+$loginForm.find('.azm-facebook').click(function(e) {
+    e.preventDefault();
+    app.facebook.login(onSuccessSignIn, onFailSignIn);
+});
+
+// github login/registration
+$loginForm.find('.azm-github').click(function(e) {
+    e.preventDefault();
+    app.github.login(onSuccessSignIn, onFailSignIn)
+});
+
+// Default login/registration (non-oauth)
+$loginForm
+.find('form').submit(function(e) {
+    e.preventDefault();
+    $(this).ajaxSubmit({
+        success: onSuccessSignIn,
+        error: onFailSignIn
+    });
+});
+
+
+// slow animation scroll
+$('a[href^="#community"]').on('click', function (e) {
+    e.preventDefault();
+    var $target = $(this.getAttribute('href'));
+    if ($target.length) {
+        $('html, body').stop().animate({
+            scrollTop: $target.offset().top
+        }, 900, 'swing');
+    }
+});
 
 if (bowser.msie && bowser.version <= 9) {
     // fallback for browsers that don't support viewport units
@@ -163,15 +210,6 @@ if (bowser.msie && bowser.version <= 9) {
     });
 }
 
-// slow animation scroll
-$('a[href^="#community"]').on('click', function (e) {
-    e.preventDefault();
-    var $target = $($(this).attr('href'));
-    if ($target.length) {
-        $('html, body').stop().animate({
-            scrollTop: $target.offset().top
-        }, 900, 'swing');
-    }
-});
+}, jQuery);
 </script>
 {% endblock %}

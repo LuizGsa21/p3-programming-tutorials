@@ -13,8 +13,8 @@ login_manager = LoginManager()
 from flask_oauth import OAuth
 oauth = OAuth()
 
-from flask_mail import Mail, Message
-mail = Mail()
+# from flask_mail import Mail, Message
+# mail = Mail()
 
 from flask_babel import Babel, format_datetime
 babel = Babel()

@@ -53,7 +53,7 @@
                 {% if current_user.is_authenticated() %}
                     <li {{ m.active_class('profile', active_page) }}><a href="{{ url_for('user.profile') }}">Profile</a></li>
                     <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
-                {% elif active_page != 'index' %}
+                {% elif active_page != 'login' %}
                     <li><a href="{{ url_for('frontend.login') }}">Login</a></li>
                     <li><a href="{{ url_for('frontend.register') }}">Register</a></li>
                 {% endif %}
@@ -111,75 +111,158 @@
 <!--[if lte IE 9 ]>
 <script src="{{ url_for('static', filename='js/jquery.html5-placeholder-shim.js') }}"></script>
 <![endif]-->
+
+<div id="fb-root"></div>
+
 <script>
+    "use strict";
     // Initialize app variables
-    app.isLoggedIn = {% if current_user.is_authenticated() %}true{% else %}false{% endif %}
-    app.csrfToken = '{{ csrf_token()|safe }}';
-    app.client_id = '{{ 'GOOGLE_CLIENT_ID'|os_environ|safe }}.apps.googleusercontent.com';
+    app.isLoggedIn = {{ current_user.is_authenticated()|lower }};
+    app.csrfToken = '{{ csrf_token()|safe }}'; // used for ajax requests
     app.$navbar = $('#navbar-inner');
-    app.dynamicLinks = {
+    app.navbarLinks = {
         'Profile': '{{ url_for('user.profile')|safe }}',
         'Register': '{{ url_for('frontend.register')|safe }}',
         'Login': '{{ url_for('frontend.login')|safe }}',
         'Logout': '{{ url_for('frontend.logout')|safe }}'
     };
-</script>
-
-<script>
-    function start() {
-        gapi.load('auth2', function() {
-            // Retrieve the singleton for the GoogleAuth library and set up the client.
-            app.auth2 = gapi.auth2.init({
-                // client_id <- notice the underscore. This is for Google Sign-In depend
-                client_id: app.client_id,
-                cookiepolicy: 'single_host_origin',
-                fetch_basic_profile: false,
-                scope: 'openid email'
-            });
-           var $form = $('#sign-registration-form');
-           if ($form.length) {
-               // add a listener to the googleplus button
-               $form.find('.btn-square.azm-google-plus').on('click', function(e) {
-                  app.auth2.grantOfflineAccess({redirect_uri: 'postmessage'})
-                   .then(googleSignInCallback, googleSignInCallback);
-               e.preventDefault();
-           });
-           }
-        });
-    }
-
-    // callback invoked by `auth2.grantOfflineAccess()`
-    function googleSignInCallback(authResult) {
-        if (authResult['code']) {
-            $.ajax({
-              type: 'POST',
-              url: '{{ url_for('oauth.google_authorized') }}' ,
-              data: authResult['code'],
-              contentType: 'application/octet-stream; charset=utf-8',
-              processData: false,
-              beforeSend: app.getCSRFHeader(), // csrf protection
-
-              success: function(data) {
-                // invoke onSuccessSignIn handler.
-                onSuccessSignIn(data, 'google');
-              },
-              error: function(data) {
-                // invoke onFailSignIn handler.
-                onFailSignIn(data, 'google');
-              }
-            });
-        } else {
-            // invoke onFailSignIn handler.
-            onFailSignIn(data, 'google');
+    app.google = {
+        init: function() {
+            // Retrieve the singleton from the GoogleAuth library
+            gapi.load('auth2', function() {
+                this.auth2 = gapi.auth2.init({
+                    // client_id <- notice the underscore. This is for Google Sign-In depend
+                    client_id: '{{ 'GOOGLE_CLIENT_ID'|os_environ|safe }}',
+                    cookiepolicy: 'single_host_origin',
+                    fetch_basic_profile: false,
+                    scope: 'openid email'
+                });
+            }.bind(this));
+        },
+        requestOfflineAccess: function(onSuccess, onFail) {
+            this.auth2
+                .grantOfflineAccess({'redirect_uri': 'postmessage'})
+                .then(function(authResult) {
+                      if (authResult['code']) {
+                          $.ajax({
+                            type: 'POST',
+                            url: '{{ url_for('oauth.google_authorized') }}' ,
+                            data: authResult['code'],
+                            contentType: 'application/octet-stream; charset=utf-8',
+                            processData: false,
+                            beforeSend: app.getCSRFHeader(), // csrf protection
+                            success: function(data) {
+                              onSuccess(data, 'google');
+                            },
+                            error: function(data) {
+                              onFail(data);
+                            }
+                          });
+                      } else {
+                          onFail(authResult);
+                      }
+                }, onFail);
         }
+    };
+
+    app.facebook = {
+        load: function() {
+            window.fbAsyncInit = function() {
+              FB.init({
+                appId      : '{{ 'FACEBOOK_CLIENT_ID'|os_environ|safe }}',
+                xfbml      : true,
+                version    : 'v2.3'
+              });
+            };
+
+            (function(d, s, id){
+               var js, fjs = d.getElementsByTagName(s)[0];
+               if (d.getElementById(id)) {return;}
+               js = d.createElement(s); js.id = id;
+               js.src = "//connect.facebook.net/en_US/sdk.js";
+               fjs.parentNode.insertBefore(js, fjs);
+             }(document, 'script', 'facebook-jssdk'));
+        },
+        login: function(onSuccess, onFail) {
+            FB.login(function(response) {
+                if (response.authResponse) {
+                  var accessToken = FB.getAuthResponse()['accessToken'];
+                  FB.api('/me', function(response) {
+                    $.ajax({
+                        url: '{{ url_for('oauth.facebook_authorized') }}',
+                        type: 'POST',
+                        beforeSend: app.getCSRFHeader(), // csrf protection,
+                        processData: false,
+                        contentType: 'application/octet-stream; charset=utf-8',
+                        data: accessToken,
+                        success: onSuccess,
+                        error: onFail
+                    });
+                  });
+                } else {
+                  onFail(response);
+                }
+            }, {scope: 'public_profile,email'});
+        }
+    };
+
+
+    app.github = {
+        login: function(onSuccess, onFail) {
+            // github doesn't have a javascript api like google and facebook,
+            // so we will make our own popup
+            var popupWindow   = window.open('', 'githubLogin', 'location=0,status=0,width=800,height=400');
+
+            var form = this.createForm();
+            $('body', popupWindow.document).append(form);
+            $(form, popupWindow.document).submit();
+
+            // keeping checking if the popup is open every .5 seconds
+            var popupInterval = setInterval(function(){
+
+                if (popupWindow.closed) {
+                    clearInterval(popupInterval); // clear this interval
+
+                    // when the popup window closes get the response object from `window.popupResult`
+                    if (window.popupResult) {
+                        // save result then set `popupResult` back to undefined
+                        var data = window.popupResult;
+                        window.popupResult = undefined;
+
+                        // call the appropriate callback
+                        if (data['success']) onSuccess(data);
+                        else onFail(data);
+
+                    } else {
+                        // code reaches here when the user manually closes the popup window
+                        onFail();
+                    }
+                }
+            }, 500);
+        },
+        createForm: function() {
+            return [
+                '<form id="myForm" method="post" action="{{ url_for("oauth.github_login", _external=True) }}">',
+                    '<input type="hidden" name="csrf_token" value="', app.csrfToken, '"/>',
+                '</form>'
+            ].join('')
+        }
+    };
+
+    // Load facebook SDK
+    app.facebook.load();
+    // initialize google plus callback
+    function googleInit() {
+        app.google.init()
     }
+
     // Let the users know we don't care about IE8
     if (bowser.msie && bowser.version <= 8) {
         alert('It seems like you are using Internet Explorer '
             + bowser.version + '. If you care about the internet please update your web browser.');
     }
 </script>
-<script src="https://apis.google.com/js/api:client.js?onload=start" async defer></script>
+<script src="https://apis.google.com/js/api:client.js?onload=googleInit"></script>
 {% block bodyPostfix %}{% endblock %}
 </body>
 </html>

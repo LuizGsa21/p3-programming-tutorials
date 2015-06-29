@@ -5,7 +5,6 @@ from flask import session, current_app
 
 # from app.extensions import Form, current_user
 from app.extensions import current_user, Form
-from app.helpers.utils import allowed_file
 from app.models import User, Category
 from wtforms import ValidationError, StringField, FileField, HiddenField, TextAreaField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField

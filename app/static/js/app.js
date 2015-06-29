@@ -2,9 +2,8 @@ var app = {
     // variables to be initialized in `layout.html`
     isLoggedIn: null,
     csrfToken: null,
-    client_id: '',
     $navbar: null,
-    dynamicLinks: null,
+    navbarLinks: null,
 
     getCSRFHeader: function () {
         var token = this.csrfToken;
@@ -22,25 +21,22 @@ var app = {
         return $outerDiv.append($innerDiv.append($a).append(message))
     },
 
-    displayFormErrors: function ($form, formErrors) {
-        var $field,
-            prefix;
+    displayFormErrors: function ($form, formErrors, prefix) {
+        var $field;
+
+        if (prefix == undefined) prefix = '#';
 
         // clear any previous errors
         $form.find('.form-group').removeClass('has-error');
         $form.find('.help-block').remove();
 
-        // form configurations
-        prefix = formErrors.hasOwnProperty('_prefix') ? '#' + formErrors['_prefix'] : '#';
-
         for (var labelID in formErrors) {
-            if (labelID.indexOf('_') == 0) continue; // ignore object configurations
 
             if (formErrors.hasOwnProperty(labelID)) {
                 $field = $form.find(prefix + labelID);
 
                 formErrors[labelID].forEach(function (errorMessage) {
-                    var $element,// a help-block gets appended "after" this element
+                    var $element,// a help-block gets appended after this element
                         $parent;
                     this.closest('.form-group').addClass('has-error');
 
@@ -53,6 +49,28 @@ var app = {
                 }, $field);
             }
         }
+    },
+
+    formErrorsToAlertMessage: function (messages) {
+        var msg = messages.message;
+        if (typeof msg == 'object') {
+            var items = Object.keys(msg).map(function (key) {
+                var string = msg[key][0];
+                // customize error message
+                // if the message starts with the word `This` replace it with its label name
+                if (string.indexOf('This') == 0) {
+                    var label = key.charAt(0).toUpperCase() + key.substr(1);
+                    string = string.replace('This', label);
+                }
+                // make the first word of the message bold
+                var temp = string.split(' ');
+                temp[0] = '<strong>' + temp[0] + '</strong>';
+                string = temp.join(' ');
+                return '<li>' + string + '</li>';
+            }).join('');
+            msg = '<ul>' + items + '</ul>';
+        }
+        return app.createAlertMessage(msg, messages.category);
     },
 
     displayMessages: function ($element, flashedMessages, action) {
@@ -69,14 +87,19 @@ var app = {
                 this.displayFormErrors($element, message.message);
 
             } else {
-                // default message
-                $element[action](this.createAlertMessage(message.message, message.category));
+                // display the message in an alert box
+                if (typeof message.message == 'object') {
+                    // code reaches here when a form error is categorized as a normal alert message
+                    $element[action](this.formErrorsToAlertMessage(message));
+                } else {
+                    $element[action](this.createAlertMessage(message.message, message.category));
+                }
             }
         }, this);
     },
 
     updateNavbar: function (links) {
-        var dynamicLinks = this.dynamicLinks;
+        var dynamicLinks = this.navbarLinks;
         var $navbar = this.$navbar;
         links.forEach(function (link) {
             var $li = $('<li>')
@@ -84,16 +107,17 @@ var app = {
             $navbar.append($li);
         });
     },
+
     populateForm: function ($form, item, filter) {
         var id, $input;
         for (id in item) {
-            if ( ! item.hasOwnProperty(id)) continue;
+            if (!item.hasOwnProperty(id)) continue;
 
             $input = $form.find('#' + id);
 
             if ($input.length == 0) continue;
 
-            if ( ! filter || $input.attr('type') == filter ) {
+            if (!filter || $input.attr('type') == filter) {
 
                 if ($input.is('select')) {
                     // select items have to go 1 level deeper to get its value
@@ -104,6 +128,10 @@ var app = {
             }
 
         }
+    },
+
+    initGoogleLogin: function () {
+
     }
 
 };

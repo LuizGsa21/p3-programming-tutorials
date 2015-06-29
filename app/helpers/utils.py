@@ -1,9 +1,10 @@
+import pprint
+import re
 from functools import wraps
-import re
-import re
 from unidecode import unidecode
 from flask import request, jsonify, render_template, redirect, json, get_flashed_messages, current_app, url_for, abort
 from app.extensions import format_datetime as b_datetime, login_manager
+
 
 def template_or_json(template=None):
     """"Return a dict from your view and this will either
@@ -14,13 +15,13 @@ def template_or_json(template=None):
         def decorated_fn(*args, **kwargs):
             ctx = f(*args, **kwargs)
             if request.is_xhr or not template:
-                ctx['flashed_messages'] = \
-                    [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
+                ctx['flashed_messages'] = format_flashed_messages()
                 return jsonify(ctx)
             else:
                 return render_template(template, **ctx)
         return decorated_fn
     return decorated
+
 
 def xhr_required(f):
     @wraps(f)
@@ -28,10 +29,13 @@ def xhr_required(f):
         if not request.is_xhr:
             abort(404)
         ctx = f(*args, **kwargs)
-        ctx['flashed_messages'] = \
-            [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
+        ctx['flashed_messages'] = format_flashed_messages()
         return jsonify(ctx), ctx['status']
     return decorator
+
+
+def format_flashed_messages():
+    return [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
 
 def format_datetime(value, format='default'):
     if format == 'default':
@@ -56,8 +60,3 @@ def slugify(text, delim=u'-'):
     for word in _punct_re.split(text.lower()):
         result.extend(unidecode(word).split())
     return unicode(delim.join(result))
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in current_app.config.get('ALLOWED_EXTENSIONS', ('',))
