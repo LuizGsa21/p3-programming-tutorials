@@ -140,16 +140,17 @@ app.navbar = {
     },
 
     // action should be either `show` or `hide`
-    updateLinks: function (links, action) {
+    updateLinks: function (links, action, duration) {
 
         if ( ! action ) action = 'show';
+        if (duration === undefined) duration = 0;
 
         var $navbar = this.$navbar;
         links.forEach(function (value) {
             // find the anchor that contains
             var $a = $navbar.find(['a:textEquals("', value, '")'].join(''));
             // apply the action to its parent container.
-            if ($a.length) $a.parent()[action]();
+            if ($a.length) $a.stop()[action](duration);
         });
     }
 };

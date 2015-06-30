@@ -2,6 +2,9 @@
 {% import 'macros.html' as m -%}
 {% block metaTags %}{% endblock -%}
 
+{# Links to hide in the navbar #}
+{% set hidden_links = ['Login', 'Register'] if isLoggedIn else ['Login', 'Register', 'Profile', 'Logout'] %}
+
 {%- block bodyID %}page-index{% endblock -%}
 {% block body %}
 <section class="header">
@@ -130,13 +133,15 @@
 
 {% block bodyPostfix %}
 <script>
+"use strict";
 $(function($) {
 
 function onSuccessSignIn(data) {
     // hide the login/registration form parent container
-    $('#sign-registration-form').parent().attr('style', 'display: none');
-    // center the main website logo
-    $('#main-logo-container').attr('class', 'col-xs-12');
+    $('#sign-registration-form').parent().fadeOut(500, function() {
+      // center the main website logo
+      $('#main-logo-container').animate({width:'100%'}, 500).attr('class', 'col-xs-12');
+    });
     // Show profile and logout navigation link
     app.navbar.loginState();
     // show any messages received from the server
@@ -154,36 +159,33 @@ function onFailSignIn(data) {
 
 var $loginForm = $('#sign-registration-form');
 
-// google login/registration
-$loginForm.find('.azm-google-plus').click(function(e) {
+// OAuth login/registration
+$loginForm.on('click', 'a[class|="azm"], button', function(e) {
     e.preventDefault();
-    app.google.requestOfflineAccess(onSuccessSignIn, onFailSignIn);
+    var provider = $(this).classList()[0].replace('azm-', '');
+    switch (provider) {
+        // oauth providers login/register
+        case 'google-plus': app.google.requestOfflineAccess(onSuccessSignIn, onFailSignIn); break;
+        case 'github': app.github.login(onSuccessSignIn, onFailSignIn); break;
+        case 'facebook': app.facebook.login(onSuccessSignIn, onFailSignIn); break;
+        default:
+            // default login/register
+            $(this).parent().ajaxSubmit({success: onSuccessSignIn,error: onFailSignIn});
+    }
 });
 
-// facebook login/registration
-$loginForm.find('.azm-facebook').click(function(e) {
+// Scrolls to and display login/register form when
+// the user clicks on the navbar `Login` or `Register` link.
+$('.nav-login, .nav-register').on('click', function(e) {
     e.preventDefault();
-    app.facebook.login(onSuccessSignIn, onFailSignIn);
+    var $tab = $loginForm.find('a[href='+ $(this).attr('href') + ']');
+    $tab.click();
+    $('html, body').stop().animate({
+            scrollTop: 0
+        }, 900, 'swing');
 });
 
-// github login/registration
-$loginForm.find('.azm-github').click(function(e) {
-    e.preventDefault();
-    app.github.login(onSuccessSignIn, onFailSignIn)
-});
-
-// Default login/registration (non-oauth)
-$loginForm
-.find('form').submit(function(e) {
-    e.preventDefault();
-    $(this).ajaxSubmit({
-        success: onSuccessSignIn,
-        error: onFailSignIn
-    });
-});
-
-
-// slow animation scroll
+// Scroll to the 2nd section on the page.
 $('a[href^="#community"]').on('click', function (e) {
     e.preventDefault();
     var $target = $(this.getAttribute('href'));
@@ -217,7 +219,8 @@ if (bowser.msie && bowser.version <= 9) {
 
 
 <script>
-// Hide login/register links when the login form is visible.
+"use strict";
+// Hide `Login` and `Register` link when the login form is visible.
 // Display them otherwise.
 function toggleLoginAndRegisterLinks() {
     if (app.isLoggedIn) return; // early break
@@ -235,7 +238,7 @@ function toggleLoginAndRegisterLinks() {
 
     if (isVisible != f.isVisible) {
         f.isVisible = isVisible;
-        app.navbar.updateLinks(['Login', 'Register'], isVisible ? 'hide': 'show')
+        app.navbar.updateLinks(['Login', 'Register'], isVisible ? 'hide': 'show', 500)
     }
 }
 // Hide/show the navbar login/register links.

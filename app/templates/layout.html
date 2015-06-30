@@ -24,19 +24,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.min.js"></script>
 </head>
 <body id="{% block bodyID %}{% endblock %}">
-{% set active_page = active_page|default('index') -%}
-
-{%- macro active_class(page, active_page) -%}
-     {%- if page ==  active_page -%}active{%- endif -%}
-{%- endmacro %}
-
-{%- macro hide_if(state) -%}
-    {% if state == 'loggedIn' and isLoggedIn -%}
-        style="display: none;"
-    {% elif state == 'loggedOut' and not isLoggedIn -%}
-        style="display: none;"
-    {%- endif %}
-{%- endmacro -%}
+{% set active_page = active_page|default('Home') -%}
+{% set hidden_links = hidden_links|default(['Login', 'Register'] if isLoggedIn else ['Profile', 'Logout']) -%}
 
 {# Main navbar #}
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -53,23 +42,45 @@
         <div class="collapse navbar-collapse navbar-main-collapse">
             <ul id="navbar-inner" class="nav navbar-nav navbar-right">
                 {# Home page #}
-                <li class="{{ active_class('index', active_page) }}"><a href="{{ url_for('frontend.index') }}">Home</a></li>
+                <li><a href="{{ url_for('frontend.index') }}">Home</a></li>
                 {# Dropdown containing all categories page #}
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                          {% for category in categories -%}
-                             <li class="{{ active_class(category.name, active_page) -}}"><a href="{{ url_for('frontend.category_articles', category=category.name) }}">{{ category.name }}</a></li>
+                             <li><a href="{{ url_for('frontend.category_articles', category=category.name) }}">{{ category.name }}</a></li>
                         {% endfor -%}
                         </ul>
                     </li>
-                    {# Hide the links instead of not rendering them.
-                    This makes it more convenient when updating the navbar dynamically with javascript. #}
-                    <li {{ hide_if('loggedOut') }} class="{{ active_class('profile', active_page) }}"><a href="{{ url_for('user.profile') }}">Profile</a></li>
-                    <li {{ hide_if('loggedOut') }} ><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
-                    <li {{ hide_if('loggedIn') }}><a href="{{ url_for('frontend.index') }}">Login</a></li>
-                    <li {{ hide_if('loggedIn') }}><a href="{{ url_for('frontend.index') }}">Register</a></li>
+                    <li><a href="{{ url_for('user.profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
+                    <li><a class="nav-login" href="#tab-login">Login</a></li>
+                    <li><a class="nav-register" href="#tab-register">Register</a></li>
             </ul>
+            <script>
+            +function() {
+                var links = document.querySelectorAll('#navbar-inner a'),
+                    length = links.length,
+                    hidden = {{ hidden_links|safe }},
+                    hiddenLength = hidden.length,
+                    activePage = '{{ active_page }}';
+                for (var i = 0; i < length; i++) {
+                    var text = links[i].innerHTML;
+                    if (text == activePage) {
+                        links[i].parentNode.className = 'active';
+                    }
+                    var updated = false;
+                    for (var j = 0; j < hiddenLength; j++) {
+                        if (text == hidden[j]) {
+                            links[i].style.display = 'none';
+                            updated = true;
+                            break;
+                        }
+                    }
+                    if (!updated) links[i].style.display = 'block';
+                }
+            }();
+            </script>
         </div><!-- /.navbar-collapse -->
     </div>
 </nav>

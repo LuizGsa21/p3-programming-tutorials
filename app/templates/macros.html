@@ -2,7 +2,7 @@
 {% macro get_social_buttons(providers) -%}
     {% for provider in providers %}
         {% for name, url in provider.items() %}
-        <a class="btn-square hvr-grow azm-{{ name }}" href="{{ url }}"><i class="fa fa-{{ name }}"> </i></a>
+        <a class="azm-{{ name }} btn-square hvr-grow" href="{{ url }}"><i class="fa fa-{{ name }}"> </i></a>
         {% endfor %}
     {%- endfor -%}
 {%- endmacro %}

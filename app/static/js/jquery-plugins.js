@@ -25,3 +25,5 @@ $.fn.visibilityToggle = function() {
 $.expr[':'].textEquals = function(a, i, m) {
     return $(a).text().match("^" + m[3] + "$");
 };
+
+$.fn.classList = function() {return this[0].className.split(/\s+/);};

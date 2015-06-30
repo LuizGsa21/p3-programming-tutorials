@@ -288,14 +288,14 @@
     var carouselIndicator = $(".carousel-progress-indicator");
     var currentPosition = 0;
 
-    $(window).resize(function(){
-        var indicatorWidth = $('.carousel-progress').width() / numItems;
-        // reset the indicator to it's initial position
-        var offset = currentPosition < 0 ? 0 : (currentPosition * indicatorWidth);
-        carouselIndicator.css({'margin-left': offset + 'px',
-                                     'width': indicatorWidth + 'px'});
-    });
-    $(window).trigger('resize');
+    //$(window).resize(function(){
+    //    var indicatorWidth = $('.carousel-progress').width() / numItems;
+    //    // reset the indicator to it's initial position
+    //    var offset = currentPosition < 0 ? 0 : (currentPosition * indicatorWidth);
+    //    carouselIndicator.css({'margin-left': offset + 'px',
+    //                                 'width': indicatorWidth + 'px'});
+    //});
+    //$(window).trigger('resize');
 
     function moveIndicator(itemIndex){
         if ($(".carousel-progress") == null){

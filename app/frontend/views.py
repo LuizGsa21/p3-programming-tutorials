@@ -21,7 +21,7 @@ login_manager.login_view = 'frontend.login'
 def index():
     forms = {'register': RegisterForm(prefix='r'), 'login': LoginForm(prefix='l')}
 
-    return render_template('frontend/index.html', active_page='index', forms=forms)
+    return render_template('frontend/index.html', forms=forms)
 
 
 @frontend_bp.route('/<category>/')
@@ -153,6 +153,7 @@ def register():
         return redirect(url_for('frontend.index'))
 
     form = RegisterForm(request.form, prefix='r')
+    print 'here'
     if form.validate_on_submit():
         # register and login user
         user = User(
