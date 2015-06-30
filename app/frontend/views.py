@@ -170,19 +170,15 @@ def register():
         return {'status': 400, 'success': 0}
 
 
-@frontend_bp.route('/logout/')
-@login_required
+@frontend_bp.route('/logout/', methods=['POST'])
+@xhr_required
 def logout():
-    # provider = current_user.oauth_provider
-    # if provider == 'google-plus' and not google_logout():
-    #     flash('Failed to revoke token.', 'danger')
-    # elif provider == 'facebook':
-    #     pass
-
+    if not current_user.is_authenticated():
+        flash('You must be logged in to logout...')
+        return {'status': 401, 'success': 0}
     logout_user()
-    # session.clear()
     flash('You have successfully logged out.', 'success')
-    return redirect(url_for('frontend.index'))
+    return {'status': 200, 'success': 1}
 
 
 @login_manager.user_loader

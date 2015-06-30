@@ -96,6 +96,17 @@ var app = {
         }, this);
     },
 
+    displayGenericErrors: function ($container, data) {
+        var message;
+        if (data.responseText) {
+            // extract error message from returned html
+            var $response = $(data.responseText);
+            message = ['<strong>', $response.filter('h1').html(), '</strong>: ',  $response.filter('p').html()].join('');
+        } else {
+            message = 'Unknown Server Error.';
+        }
+        $container.html(app.createAlertMessage(message, 'danger'));
+    },
     populateForm: function ($form, item, filter) {
         var id, $input;
         for (id in item) {
@@ -140,17 +151,22 @@ app.navbar = {
     },
 
     // action should be either `show` or `hide`
-    updateLinks: function (links, action, duration) {
+    updateLinks: function updateLinks(links, action, duration) {
+
+        if ( ! updateLinks.cache) updateLinks.cache = {};
+
+        var cache = updateLinks.cache;
 
         if ( ! action ) action = 'show';
+
         if (duration === undefined) duration = 0;
 
         var $navbar = this.$navbar;
         links.forEach(function (value) {
-            // find the anchor that contains
-            var $a = $navbar.find(['a:textEquals("', value, '")'].join(''));
-            // apply the action to its parent container.
-            if ($a.length) $a.stop()[action](duration);
+            cache[value] = cache[value] || $navbar.find(['a:textEquals("', value, '")'].join(''));
+
+            if (cache[value].length)
+                cache[value].stop()[action](duration);
         });
     }
 };

@@ -15,15 +15,14 @@
         </div>
         {#  bring the owl to the center of the page if the user is logged in #}
         {%- if isLoggedIn -%}
-        <div class="col-sm-12">
+            <div id="main-logo-container" class="col-sm-12">
         {% else -%}
             <div id="main-logo-container" class="col-sm-6 hidden-xs">
         {% endif -%}
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo"/>
         </div>
         {#  hide login/registration forms #}
-        {% if not isLoggedIn -%}
-        <div class="col-sm-6">
+        <div {{ 'style="display:none;"' if isLoggedIn else ''}} class="col-sm-6">
             <div id="sign-registration-form" class="nav-tabs-container">
                 <!-- TAB NAVIGATION -->
                 <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
@@ -72,7 +71,6 @@
 
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
@@ -136,11 +134,13 @@
 "use strict";
 $(function($) {
 
-function onSuccessSignIn(data) {
+function onSuccessLogin(data) {
     // hide the login/registration form parent container
     $('#sign-registration-form').parent().fadeOut(500, function() {
       // center the main website logo
-      $('#main-logo-container').animate({width:'100%'}, 500).attr('class', 'col-xs-12');
+      $('#main-logo-container').animate({width:'100%'}, 500, function() {
+            $(this).attr('class', 'col-xs-12');
+      });
     });
     // Show profile and logout navigation link
     app.navbar.loginState();
@@ -148,14 +148,41 @@ function onSuccessSignIn(data) {
     app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
 }
 
-function onFailSignIn(data) {
+function onFailLogin(data) {
     if (data.responseJSON) {
         // show any messages received from the server
         data = data.responseJSON;
         app.navbar.logoutState();
         app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    } else {
+        app.displayGenericErrors($('#alert-container'), data);
     }
 }
+
+function onSuccessLogout(data) {
+    app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    app.navbar.logoutState();
+    $('#main-logo-container').animate({width:'50%'}, 500, function() {
+        $(this).attr('class', 'col-sm-6 hidden-xs');
+        $('#sign-registration-form').parent().fadeIn(500, function() {
+            toggleNavbarLinks.isVisible = false;
+            toggleNavbarLinks();
+        });
+    });
+}
+
+function onFailLogout(data) {
+    if (data.responseJSON) {
+        app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    } else {
+        app.displayGenericErrors($('#alert-container'), data);
+    }
+}
+
+$('.nav-logout').click(function(e) {
+    e.preventDefault();
+    app.logout(onSuccessLogout, onFailLogout);
+});
 
 var $loginForm = $('#sign-registration-form');
 
@@ -165,18 +192,18 @@ $loginForm.on('click', 'a[class|="azm"], button', function(e) {
     var provider = $(this).classList()[0].replace('azm-', '');
     switch (provider) {
         // oauth providers login/register
-        case 'google-plus': app.google.requestOfflineAccess(onSuccessSignIn, onFailSignIn); break;
-        case 'github': app.github.login(onSuccessSignIn, onFailSignIn); break;
-        case 'facebook': app.facebook.login(onSuccessSignIn, onFailSignIn); break;
+        case 'google-plus': app.google.requestOfflineAccess(onSuccessLogin, onFailLogin); break;
+        case 'github': app.github.login(onSuccessLogin, onFailLogin); break;
+        case 'facebook': app.facebook.login(onSuccessLogin, onFailLogin); break;
         default:
             // default login/register
-            $(this).parent().ajaxSubmit({success: onSuccessSignIn,error: onFailSignIn});
+            $(this).parent().ajaxSubmit({success: onSuccessLogin,error: onFailLogin});
     }
 });
 
 // Scrolls to and display login/register form when
 // the user clicks on the navbar `Login` or `Register` link.
-$('.nav-login, .nav-register').on('click', function(e) {
+$('#navbar-inner').on('click', '.nav-login, .nav-register',function(e) {
     e.preventDefault();
     var $tab = $loginForm.find('a[href='+ $(this).attr('href') + ']');
     $tab.click();
@@ -220,29 +247,27 @@ if (bowser.msie && bowser.version <= 9) {
 
 <script>
 "use strict";
-// Hide `Login` and `Register` link when the login form is visible.
-// Display them otherwise.
-function toggleLoginAndRegisterLinks() {
+// Hide the navbar login and register link when whe the login form is visible, otherwise display them.
+// if the user is logged in this method will do nothing
+function toggleNavbarLinks() {
+
     if (app.isLoggedIn) return; // early break
 
-    // use this function to keep track of the current state
-    var f = toggleLoginAndRegisterLinks;
-    // initialize
-    if (f.$tab === undefined) {
+    var f = toggleNavbarLinks; // use this function to keep track of the current state
+    if (f.$tab === undefined) { // initialize
         f.$tab = $('#form-tabs').find('a');
         f.isElementInViewport = app.helpers.isElementInViewport;
     }
 
     // check if the form TAB is visible
     var isVisible = f.$tab.is(':visible') && f.isElementInViewport(f.$tab[0]);
-
-    if (isVisible != f.isVisible) {
+    if (isVisible !== f.isVisible) {
         f.isVisible = isVisible;
         app.navbar.updateLinks(['Login', 'Register'], isVisible ? 'hide': 'show', 500)
     }
 }
 // Hide/show the navbar login/register links.
-$(window).on('DOMContentLoaded resize scroll', toggleLoginAndRegisterLinks);
+$(window).on('DOMContentLoaded resize scroll', toggleNavbarLinks);
 </script>
 
 {% endblock %}
