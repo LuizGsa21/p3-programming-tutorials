@@ -11,7 +11,7 @@
             {{ m.alert_messages(get_flashed_messages(with_categories=true)) -}}
         </div>
         {#  bring the owl to the center of the page if the user is logged in #}
-        {%- if current_user.is_authenticated() -%}
+        {%- if isLoggedIn -%}
         <div class="col-sm-12">
         {% else -%}
             <div id="main-logo-container" class="col-sm-6 hidden-xs">
@@ -19,7 +19,7 @@
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo"/>
         </div>
         {#  hide login/registration forms #}
-        {% if not current_user.is_authenticated() -%}
+        {% if not isLoggedIn -%}
         <div class="col-sm-6">
             <div id="sign-registration-form" class="nav-tabs-container">
                 <!-- TAB NAVIGATION -->
@@ -138,7 +138,7 @@ function onSuccessSignIn(data) {
     // center the main website logo
     $('#main-logo-container').attr('class', 'col-xs-12');
     // Show profile and logout navigation link
-    app.updateNavbar(['Profile', 'Logout']);
+    app.navbar.loginState();
     // show any messages received from the server
     app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
 }
@@ -147,6 +147,7 @@ function onFailSignIn(data) {
     if (data.responseJSON) {
         // show any messages received from the server
         data = data.responseJSON;
+        app.navbar.logoutState();
         app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
     }
 }
@@ -212,4 +213,33 @@ if (bowser.msie && bowser.version <= 9) {
 
 }, jQuery);
 </script>
+
+
+
+<script>
+// Hide login/register links when the login form is visible.
+// Display them otherwise.
+function toggleLoginAndRegisterLinks() {
+    if (app.isLoggedIn) return; // early break
+
+    // use this function to keep track of the current state
+    var f = toggleLoginAndRegisterLinks;
+    // initialize
+    if (f.$tab === undefined) {
+        f.$tab = $('#form-tabs').find('a');
+        f.isElementInViewport = app.helpers.isElementInViewport;
+    }
+
+    // check if the form TAB is visible
+    var isVisible = f.$tab.is(':visible') && f.isElementInViewport(f.$tab[0]);
+
+    if (isVisible != f.isVisible) {
+        f.isVisible = isVisible;
+        app.navbar.updateLinks(['Login', 'Register'], isVisible ? 'hide': 'show')
+    }
+}
+// Hide/show the navbar login/register links.
+$(window).on('DOMContentLoaded resize scroll', toggleLoginAndRegisterLinks);
+</script>
+
 {% endblock %}

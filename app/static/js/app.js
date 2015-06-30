@@ -2,8 +2,6 @@ var app = {
     // variables to be initialized in `layout.html`
     isLoggedIn: null,
     csrfToken: null,
-    $navbar: null,
-    navbarLinks: null,
 
     getCSRFHeader: function () {
         var token = this.csrfToken;
@@ -98,16 +96,6 @@ var app = {
         }, this);
     },
 
-    updateNavbar: function (links) {
-        var dynamicLinks = this.navbarLinks;
-        var $navbar = this.$navbar;
-        links.forEach(function (link) {
-            var $li = $('<li>')
-                .append($('<a>', {href: dynamicLinks[link], html: link}));
-            $navbar.append($li);
-        });
-    },
-
     populateForm: function ($form, item, filter) {
         var id, $input;
         for (id in item) {
@@ -128,10 +116,52 @@ var app = {
             }
 
         }
+    }
+};
+
+app.navbar = {
+
+    $navbar: $('#navbar-inner'),
+
+    // Links to display only when a user is logged in
+    loginRequiredLinks: ['Logout', 'Profile'],
+
+    // Links to display only when a user is logged out
+    logoutRequiredLinks: ['Login', 'Register'],
+
+    loginState: function () {
+        this.updateLinks(this.logoutRequiredLinks, 'hide');
+        this.updateLinks(this.loginRequiredLinks, 'show');
     },
 
-    initGoogleLogin: function () {
+    logoutState: function () {
+        this.updateLinks(this.loginRequiredLinks, 'hide');
+        this.updateLinks(this.logoutRequiredLinks, 'show');
+    },
 
+    // action should be either `show` or `hide`
+    updateLinks: function (links, action) {
+
+        if ( ! action ) action = 'show';
+
+        var $navbar = this.$navbar;
+        links.forEach(function (value) {
+            // find the anchor that contains
+            var $a = $navbar.find(['a:textEquals("', value, '")'].join(''));
+            // apply the action to its parent container.
+            if ($a.length) $a.parent()[action]();
+        });
     }
-
 };
+
+app.helpers = {
+    isElementInViewport: function (el) {
+        // taken from:
+        // http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport/7557433#7557433
+        var rect = el.getBoundingClientRect();
+        return (rect.top >= 0 && rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth));
+    }
+};
+

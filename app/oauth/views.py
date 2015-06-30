@@ -196,7 +196,7 @@ def github_authorized(resp):
 
     session['github_oauth_token'] = (resp['access_token'], '')
     login_user(user)
-    flash('Logged in as github handle=%s' % user.username, 'success')
+    flash('Logged in as %s' % user.username, 'success')
     result = {
         'flashed_messages': format_flashed_messages(),
         'success': 1

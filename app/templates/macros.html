@@ -1,10 +1,4 @@
 
-{% macro active_class(page, active_page) -%}
-     {% if page ==  active_page -%}
-        class="active"
-     {%- endif %}
-{%- endmacro %}
-
 {% macro get_social_buttons(providers) -%}
     {% for provider in providers %}
         {% for name, url in provider.items() %}

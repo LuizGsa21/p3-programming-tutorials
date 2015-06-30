@@ -51,7 +51,7 @@ def configure_hook(app):
 
     @app.context_processor
     def jinja_globals():
-        return dict(categories=Category.query.all())
+        return dict(categories=Category.query.all(), isLoggedIn=current_user.is_authenticated())
 
 
 def configure_extensions(app):

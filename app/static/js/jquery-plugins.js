@@ -19,3 +19,9 @@ $.fn.visibilityToggle = function() {
         return (visibility == 'visible') ? 'hidden' : 'visible';
     });
 };
+
+// http://stackoverflow.com/questions/6673777/select-link-by-text-exact-match
+// Usage: $('div:textEquals("someText")')
+$.expr[':'].textEquals = function(a, i, m) {
+    return $(a).text().match("^" + m[3] + "$");
+};

@@ -25,6 +25,19 @@
 </head>
 <body id="{% block bodyID %}{% endblock %}">
 {% set active_page = active_page|default('index') -%}
+
+{%- macro active_class(page, active_page) -%}
+     {%- if page ==  active_page -%}active{%- endif -%}
+{%- endmacro %}
+
+{%- macro hide_if(state) -%}
+    {% if state == 'loggedIn' and isLoggedIn -%}
+        style="display: none;"
+    {% elif state == 'loggedOut' and not isLoggedIn -%}
+        style="display: none;"
+    {%- endif %}
+{%- endmacro -%}
+
 {# Main navbar #}
 <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
@@ -40,23 +53,22 @@
         <div class="collapse navbar-collapse navbar-main-collapse">
             <ul id="navbar-inner" class="nav navbar-nav navbar-right">
                 {# Home page #}
-                <li {{ m.active_class('index', active_page) }}><a href="{{ url_for('frontend.index') }}">Home</a></li>
+                <li class="{{ active_class('index', active_page) }}"><a href="{{ url_for('frontend.index') }}">Home</a></li>
                 {# Dropdown containing all categories page #}
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
                         <ul class="dropdown-menu">
                          {% for category in categories -%}
-                             <li {{ m.active_class(category.name, active_page) -}}><a href="{{ url_for('frontend.category_articles', category=category.name) }}">{{ category.name }}</a></li>
+                             <li class="{{ active_class(category.name, active_page) -}}"><a href="{{ url_for('frontend.category_articles', category=category.name) }}">{{ category.name }}</a></li>
                         {% endfor -%}
                         </ul>
                     </li>
-                {% if current_user.is_authenticated() %}
-                    <li {{ m.active_class('profile', active_page) }}><a href="{{ url_for('user.profile') }}">Profile</a></li>
-                    <li><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
-                {% elif active_page != 'login' %}
-                    <li><a href="{{ url_for('frontend.login') }}">Login</a></li>
-                    <li><a href="{{ url_for('frontend.register') }}">Register</a></li>
-                {% endif %}
+                    {# Hide the links instead of not rendering them.
+                    This makes it more convenient when updating the navbar dynamically with javascript. #}
+                    <li {{ hide_if('loggedOut') }} class="{{ active_class('profile', active_page) }}"><a href="{{ url_for('user.profile') }}">Profile</a></li>
+                    <li {{ hide_if('loggedOut') }} ><a href="{{ url_for('frontend.logout') }}">Logout</a></li>
+                    <li {{ hide_if('loggedIn') }}><a href="{{ url_for('frontend.index') }}">Login</a></li>
+                    <li {{ hide_if('loggedIn') }}><a href="{{ url_for('frontend.index') }}">Register</a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
     </div>
@@ -117,15 +129,10 @@
 <script>
     "use strict";
     // Initialize app variables
-    app.isLoggedIn = {{ current_user.is_authenticated()|lower }};
+    app.isLoggedIn = {{ isLoggedIn|lower }};
     app.csrfToken = '{{ csrf_token()|safe }}'; // used for ajax requests
-    app.$navbar = $('#navbar-inner');
-    app.navbarLinks = {
-        'Profile': '{{ url_for('user.profile')|safe }}',
-        'Register': '{{ url_for('frontend.register')|safe }}',
-        'Login': '{{ url_for('frontend.login')|safe }}',
-        'Logout': '{{ url_for('frontend.logout')|safe }}'
-    };
+
+    // Setup google oauth
     app.google = {
         init: function() {
             // Retrieve the singleton from the GoogleAuth library
@@ -152,11 +159,10 @@
                             processData: false,
                             beforeSend: app.getCSRFHeader(), // csrf protection
                             success: function(data) {
-                              onSuccess(data, 'google');
+                              app.isLoggedIn = true; // update login status
+                              onSuccess(data);
                             },
-                            error: function(data) {
-                              onFail(data);
-                            }
+                            error: onFail
                           });
                       } else {
                           onFail(authResult);
@@ -195,7 +201,10 @@
                         processData: false,
                         contentType: 'application/octet-stream; charset=utf-8',
                         data: accessToken,
-                        success: onSuccess,
+                        success: function(data) {
+                           app.isLoggedIn = true; // update login status
+                           onSuccess(data)
+                        },
                         error: onFail
                     });
                   });
@@ -230,8 +239,12 @@
                         window.popupResult = undefined;
 
                         // call the appropriate callback
-                        if (data['success']) onSuccess(data);
-                        else onFail(data);
+                        if (data['success']) {
+                            app.isLoggedIn = true; // update login status
+                            onSuccess(data);
+                        } else {
+                            onFail(data)
+                        }
 
                     } else {
                         // code reaches here when the user manually closes the popup window
