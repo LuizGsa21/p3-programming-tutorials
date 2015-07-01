@@ -11,10 +11,12 @@
         <div class="row"><div class="col-xs-12 alert-box"></div></div>
         <div class="row row-table-md">
             <div class="col-xs-12 col-md-4">
-                <div><img class="avatar img-responsive" src="" alt=""/></div>
+                <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="" alt=""/></div>
                 <div class="more-info">
                     <div class="profile-name"></div>
-                    <div class="settings"><a data-toggle="modal" data-action="editAvatar" href="#main-modal">Edit Avatar</a></div>
+                    <div class="settings">
+                        <a data-toggle="modal" data-action="editAvatar" href="#main-modal">Edit Avatar</a>
+                    </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
@@ -226,7 +228,7 @@
             editRows: function (data) {
                 var $table, $avatar;
                 $table = $('#profile-table');
-                $avatar = $('.avatar');
+                $avatar = $('.avatar-thumbnail-lg');
                 $table.find('.btn-profile-edit').data('item', data);
                 for (var key in data) {
                     if ( ! data.hasOwnProperty(key)) continue;
@@ -358,8 +360,8 @@
             $modal.find('.modal-title').html('Avatar');
 
             $body = templates.avatarModalBody();
-            // setup the main image (used in the canvas)
-            imgUrl = $('.avatar').attr('src');
+            // setup the main image used in the canvas
+            imgUrl = $('.avatar-thumbnail-lg').attr('src');
 
             // use the original image
             var temp = imgUrl.split('/');
@@ -420,7 +422,7 @@
             },
 
             editAvatar: function($modal, data) {
-                $('.avatar').attr('src', data.userInfo.avatar + '?time=' + new Date().getTime());
+                $('.avatar-thumbnail-lg').attr('src', data.userInfo.avatar + '?time=' + new Date().getTime());
             }
 
         };

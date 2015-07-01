@@ -6,7 +6,7 @@
 {% block body %}
 <main class="container">
 <div class="row">
-    <div class="col-xs-12 col-md-7">
+    <div class="col-xs-12 col-md-8">
         <section class="tutorial">
             <h1 class="page-header">{{ article.title }}</h1>
             <div class="tutorial-body">
@@ -14,7 +14,7 @@
             </div>
             <footer class="tutorial-footer">
                 By <a href="#" class="author">{{ article.author.username }}</a><br/>
-                <span class="date-created">{{ article.date_created|fromnow }}</span><br/>
+                <span class="date-created">Published {{ article.date_created|fromnow }}</span><br/>
 {#                <span class="last-modified">Last modified 3 days ago</span>#}
             </footer>
         </section>
@@ -37,7 +37,7 @@
                 <div class="col-xs-12">
                 <div id="comment-article-form" class="add-comment media collapse">
                         <a class="media-left" href="#">
-                             <img class="avatar" src="">
+                             <div class="avatar-container"><img class="avatar-thumbnail" src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"></div>
                         </a>
                         <div class="media-body">
                             {{ forms['commentForm'].hidden_tag() }}
@@ -71,7 +71,7 @@
                             <div class="reply media depth-1" id="comment-{{ comment.id }}">
                         {% endif %}
                         <a class="media-left" href="#">
-                            <img class="avatar" src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}">
+                            <div class="avatar-container"><img class="avatar-thumbnail" src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}"></div>
                         </a>
                         <div class="media-body">
                             <h4 class="media-heading">{{ comment.subject }}</h4>
@@ -101,11 +101,12 @@
             </div>
         </div>
     </div>
-        <section class="right-panel col-md-4 col-md-offset-1">
+        <section class="right-panel col-md-4">
             {% if current_user.is_authenticated() -%}
             <div class="is-logged-in">
                 <div class="profile">
-                    <div class="avatar"></div>
+{#                    <div class="avatar"></div>#}
+                    <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}" alt=""/></div>
                     <div class="more-info">
                         <div class="profile-name">{{ current_user.full_name }}</div>
                         <div class="settings"><a href="#">Settings</a></div>
