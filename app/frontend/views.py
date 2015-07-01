@@ -4,7 +4,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.dialects.postgresql import array
 from app.extensions import db, login_manager, current_user, login_user, \
     logout_user, login_required, oauth
-from app.helpers.utils import xhr_required, format_flashed_messages
+from app.helpers.utils import xhr_required, format_flashed_messages, xhr_or_redirect
 from forms import LoginForm, RegisterForm, CommentForm
 from sqlalchemy.dialects.postgresql import ARRAY
 from app.models import User, Article, Category, Comment
@@ -134,14 +134,14 @@ def login():
         user = User.query.filter(User.email_insensitive == email).first()
         if not user or not user.check_password(password):
             flash('Invalid email or password. Please try again.', 'danger')
-            return {'status': 400, 'success': 0}
+            return {'status': 400, 'success': 0, 'form-error': 1}
         else:
             login_user(user)
             flash('You have successfully logged in.', 'success')
             return {'status': 200, 'success': 1}
 
     flash(form.errors, 'danger')
-    return {'status': 400, 'success': 0}
+    return {'status': 400, 'success': 0, 'form-error': 1}
 
 
 @frontend_bp.route('/register/', methods=['POST'])
@@ -167,11 +167,11 @@ def register():
         return {'status': 200, 'success': 1}
     else:
         flash(form.errors, 'danger')
-        return {'status': 400, 'success': 0}
+        return {'status': 400, 'success': 0, 'form-error': 1}
 
 
-@frontend_bp.route('/logout/', methods=['POST'])
-@xhr_required
+@frontend_bp.route('/logout/', methods=['GET', 'POST'])
+@xhr_or_redirect('.index')
 def logout():
     if not current_user.is_authenticated():
         flash('You must be logged in to logout...')

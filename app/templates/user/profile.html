@@ -451,19 +451,9 @@
                        app.displayMessages($mainModal.find('form'), data.responseJSON['flashed_messages']);
                    } else {
                        // else dynamically create an alert message and append to '.alert-box'
-                       var message;
-                       if (data.status == 400) {
-                           // extract error message from returned html
-                           var $response = $(data.responseText);
-                           message = ['<strong>', $response.filter('h1').html(), '</strong>: ',
-                                       $response.filter('p').html()].join('');
-                       } else {
-                           message = 'Unknown Server Error.';
-                       }
+                       app.displayGenericError($('.alert-box'), data);
                        $mainModal.modal('hide');
-                       // add alert message to top of page
-                       $('.alert-box').html(app.createAlertMessage(message, 'danger'));
-                       $('body').scrollTop(0); // scroll to top of window
+                       $('body').scrollTop(0);
                    }
 
                 }

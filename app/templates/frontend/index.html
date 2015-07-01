@@ -10,9 +10,9 @@
 <section class="header">
 <div class="container">
     <div class="row">
-        <div id="alert-container">
-            {{ m.alert_messages(get_flashed_messages(with_categories=true)) -}}
-        </div>
+    <div id="general-alert" class="alert-container">
+        {{ m.alert_messages(get_flashed_messages(with_categories=true)) -}}
+    </div>
         {#  bring the owl to the center of the page if the user is logged in #}
         {%- if isLoggedIn -%}
             <div id="main-logo-container" class="col-sm-12">
@@ -23,6 +23,8 @@
         </div>
         {#  hide login/registration forms #}
         <div {{ 'style="display:none;"' if isLoggedIn else ''}} class="col-sm-6">
+            <div id="form-alert" class="alert-container">
+            </div>
             <div id="sign-registration-form" class="nav-tabs-container">
                 <!-- TAB NAVIGATION -->
                 <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
@@ -145,22 +147,21 @@ function onSuccessLogin(data) {
     // Show profile and logout navigation link
     app.navbar.loginState();
     // show any messages received from the server
-    app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    showMessages(data);
 }
 
 function onFailLogin(data) {
     if (data.responseJSON) {
         // show any messages received from the server
-        data = data.responseJSON;
-        app.navbar.logoutState();
-        app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+        showMessages(data.responseJSON);
     } else {
-        app.displayGenericErrors($('#alert-container'), data);
+        // unknown error. convert the html response into an alert box and display it
+        app.displayGenericError($('.alert-container'), data);
     }
 }
 
 function onSuccessLogout(data) {
-    app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+    showMessages(data);
     app.navbar.logoutState();
     $('#main-logo-container').animate({width:'50%'}, 500, function() {
         $(this).attr('class', 'col-sm-6 hidden-xs');
@@ -173,10 +174,18 @@ function onSuccessLogout(data) {
 
 function onFailLogout(data) {
     if (data.responseJSON) {
-        app.displayMessages($('#alert-container').empty(), data['flashed_messages'], 'append');
+        showMessages(data.responseJSON);
     } else {
-        app.displayGenericErrors($('#alert-container'), data);
+        app.displayGenericError($('#general-alert'), data);
     }
+}
+
+function showMessages(data) {
+    var $container = $('.alert-container');
+    app.clearAlerts($container, function() {
+        var selector = data.hasOwnProperty('form-error') && data['form-error'] ? '#form-alert' : '#general-alert';
+        app.displayMessages($container.filter(selector), data['flashed_messages'], 'append');
+    });
 }
 
 $('.nav-logout').click(function(e) {
@@ -186,7 +195,7 @@ $('.nav-logout').click(function(e) {
 
 var $loginForm = $('#sign-registration-form');
 
-// OAuth login/registration
+// Login/Register listeners
 $loginForm.on('click', 'a[class|="azm"], button', function(e) {
     e.preventDefault();
     var provider = $(this).classList()[0].replace('azm-', '');
@@ -197,7 +206,7 @@ $loginForm.on('click', 'a[class|="azm"], button', function(e) {
         case 'facebook': app.facebook.login(onSuccessLogin, onFailLogin); break;
         default:
             // default login/register
-            $(this).parent().ajaxSubmit({success: onSuccessLogin,error: onFailLogin});
+            $(this).blur().parent().ajaxSubmit({success: onSuccessLogin,error: onFailLogin});
     }
 });
 

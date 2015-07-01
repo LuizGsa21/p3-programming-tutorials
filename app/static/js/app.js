@@ -49,7 +49,7 @@ var app = {
         }
     },
 
-    formErrorsToAlertMessage: function (messages) {
+    formErrorToAlertMessage: function (messages) {
         var msg = messages.message;
         if (typeof msg == 'object') {
             var items = Object.keys(msg).map(function (key) {
@@ -83,23 +83,27 @@ var app = {
             if (message.category == 'form-error') {
                 // populate the form with the given errors
                 this.displayFormErrors($element, message.message);
-
+                console.log('here');
             } else {
                 // display the message in an alert box
+                var $msg;
                 if (typeof message.message == 'object') {
                     // code reaches here when a form error is categorized as a normal alert message
-                    $element[action](this.formErrorsToAlertMessage(message));
+                    $msg = this.formErrorToAlertMessage(message).hide();
                 } else {
-                    $element[action](this.createAlertMessage(message.message, message.category));
+                    $msg = this.createAlertMessage(message.message, message.category).hide();
                 }
+                $element[action]($msg);
+                $msg.slideDown(500);
             }
         }, this);
     },
 
-    displayGenericErrors: function ($container, data) {
+    // converts an html response into and alert box and displays in the given `$container`
+    displayGenericError: function ($container, data) {
         var message;
         if (data.responseText) {
-            // extract error message from returned html
+            // extract error message
             var $response = $(data.responseText);
             message = ['<strong>', $response.filter('h1').html(), '</strong>: ',  $response.filter('p').html()].join('');
         } else {
@@ -126,6 +130,17 @@ var app = {
                 }
             }
 
+        }
+    },
+    clearAlerts: function ($container, callback) {
+        var $alerts = $container.find('.alert-messages');
+        if ($alerts.length) {
+            $alerts.slideUp().promise().done(function() {
+                $container.empty();
+                callback();
+            });
+        } else {
+            callback();
         }
     }
 };

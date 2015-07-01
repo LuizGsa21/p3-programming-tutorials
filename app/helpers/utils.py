@@ -23,6 +23,19 @@ def template_or_json(template=None):
     return decorated
 
 
+def xhr_or_redirect(route_path):
+    def decorated(f):
+        @wraps(f)
+        def decorated_fn(*args, **kwargs):
+            ctx = f(*args, **kwargs)
+            if not request.is_xhr:
+                return redirect(url_for(route_path))
+            ctx['flashed_messages'] = format_flashed_messages()
+            return jsonify(ctx), ctx['status']
+        return decorated_fn
+    return decorated
+
+
 def xhr_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
