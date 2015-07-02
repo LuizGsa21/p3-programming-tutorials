@@ -25,7 +25,7 @@
         <div {{ 'style="display:none;"' if isLoggedIn else ''}} class="col-sm-6">
             <div id="form-alert" class="alert-container">
             </div>
-            <div id="sign-registration-form" class="nav-tabs-container">
+            <div id="login-form" class="nav-tabs-container">
                 <!-- TAB NAVIGATION -->
                 <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
                     <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
@@ -138,7 +138,7 @@ $(function($) {
 
 function onSuccessLogin(data) {
     // hide the login/registration form parent container
-    $('#sign-registration-form').parent().fadeOut(500, function() {
+    $('#login-form').parent().fadeOut(500, function() {
       // center the main website logo
       $('#main-logo-container').animate({width:'100%'}, 500, function() {
             $(this).attr('class', 'col-xs-12');
@@ -165,7 +165,7 @@ function onSuccessLogout(data) {
     app.navbar.logoutState();
     $('#main-logo-container').animate({width:'50%'}, 500, function() {
         $(this).attr('class', 'col-sm-6 hidden-xs');
-        $('#sign-registration-form').parent().fadeIn(500, function() {
+        $('#login-form').parent().fadeIn(500, function() {
             toggleNavbarLinks.isVisible = false;
             toggleNavbarLinks();
         });
@@ -193,7 +193,7 @@ $('.nav-logout').click(function(e) {
     app.logout(onSuccessLogout, onFailLogout);
 });
 
-var $loginForm = $('#sign-registration-form');
+var $loginForm = $('#login-form');
 
 // Login/Register listeners
 $loginForm.on('click', 'a[class|="azm"], button', function(e) {

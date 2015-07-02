@@ -1,9 +1,14 @@
 {% extends 'layout.html' %}
-{% import 'macros.html' as m %}
 {% block bodyID %}page-tutorial{% endblock %}
-{% block header %}
-{% endblock %}
 {% block body %}
+{% import 'macros.html' as m with context %}
+{% if isLoggedIn %}
+    {% set user_avatar = url_for('static', filename='uploads/avatar/' + current_user.avatar) %}
+    {% set user_fullname = current_user.full_name %}
+{% else %}
+    {% set user_avatar = '' %}
+    {% set user_fullname = '' %}
+{% endif %}
 <main class="container">
 <div class="row">
     <div class="col-xs-12 col-md-8">
@@ -15,7 +20,6 @@
             <footer class="tutorial-footer">
                 By <a href="#" class="author">{{ article.author.username }}</a><br/>
                 <span class="date-created">Published {{ article.date_created|fromnow }}</span><br/>
-{#                <span class="last-modified">Last modified 3 days ago</span>#}
             </footer>
         </section>
         <div class="comment-container">
@@ -24,24 +28,19 @@
                     <h1>Comments</h1>
                 </div>
                 <div class="col-xs-4">
-                    <a  data-toggle="collapse"
-                        href="#comment-article-form"
-                        aria-expanded="false"
-                        id="btn-add-comment"
-                        onclick="$(this).fadeOut();"
-                        class="btn btn-primary pull-right">Add Comment</a>
+                    <a  href="#" id="btn-add-comment" class="btn btn-primary pull-right">Add Comment</a>
                 </div>
             </div>
-
             <div class="row">
                 <div class="col-xs-12">
-                <div id="comment-article-form" class="add-comment media collapse">
+                <div class="alert-box"></div>
+                <div style="display: none" id="add-comment-form" class="media">
                         <a class="media-left" href="#">
-                             <div class="avatar-container"><img class="avatar-thumbnail" src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"></div>
+                             <div class="avatar-container"><img class="avatar-thumbnail" src="{{ user_avatar }}"></div>
                         </a>
                         <div class="media-body">
-                            {{ forms['commentForm'].hidden_tag() }}
-                            {% for field in forms['commentForm'] if field.widget.input_type != 'hidden' %}
+                            {{ forms['addCommentForm'].hidden_tag() }}
+                            {% for field in forms['addCommentForm'] if field.widget.input_type != 'hidden' %}
                                 {% if field.type == 'TextAreaField' %}
                                     {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
                                 {% else %}
@@ -49,12 +48,7 @@
                                 {% endif %}
                             {% endfor %}
                             <div class="actionbar text-right">
-                                <a
-                                 data-toggle="collapse"
-                                 href="#comment-article-form"
-                                 aria-expanded="false"
-                                 onclick="$('#btn-add-comment').fadeIn()"
-                                 class="btn btn-danger">Cancel</a>
+                                <a href="#" class="btn btn-danger">Cancel</a>
                                 <a href="#" class="btn btn-primary">Submit</a>
                             </div>
                         </div>
@@ -71,20 +65,25 @@
                             <div class="reply media depth-1" id="comment-{{ comment.id }}">
                         {% endif %}
                         <a class="media-left" href="#">
-                            <div class="avatar-container"><img class="avatar-thumbnail" src="{{ url_for('static', filename='uploads/avatars/' + comment.user.avatar) }}"></div>
+                            <div class="avatar-container"><img class="avatar-thumbnail" src="{{ url_for('static', filename='uploads/avatar/' + comment.user.avatar) }}"></div>
+                            <div class="username">{{ comment.user.username }}</div>
                         </a>
                         <div class="media-body">
-                            <h4 class="media-heading">{{ comment.subject }}</h4>
-                            <div class="comment-info"><a class="reply-to" href="#">@{{ comment.user.username }}</a>
-
+                            <div class="comment-info">
+                            {% if depth == 0 %}
+                                <h4 class="media-heading">{{ comment.subject }}</h4>
+                            {% else %}
+                                <a class="reply-to" href="#comment-{{ comment.parent_id }}">@{{ comment.user.username }}</a>
+                            {% endif %}
                             {% set lastmodified = comment.last_modified|default(comment.date_created, true) %}
                             <span data-lastmodified="{{ lastmodified }}" class="comment-date">{{lastmodified|fromnow}}</span></div>
                             <div class="content">
-                            {{ comment.message }}
+                            {{- comment.message -}}
                             </div>
                             <div class="actionbar text-right">
                                 <a href="#" class="btn btn-reply btn-primary">Reply</a>
-                                <a href="#" style="display: none" data-id="{{ comment.id }}" class="btn btn-submit btn-primary">Submit</a>
+                                <a href="#" style="display: none" class="btn btn-cancel btn-danger">Cancel</a>
+                                <a href="#" style="display: none" class="btn btn-submit btn-primary">Submit</a>
                             </div>
                         </div>
                         {% if depth == 0 %} {# if is a parent container #}
@@ -102,19 +101,14 @@
         </div>
     </div>
         <section class="right-panel col-md-4">
-            {% if current_user.is_authenticated() -%}
-            <div class="is-logged-in">
-                <div class="profile">
-{#                    <div class="avatar"></div>#}
-                    <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}" alt=""/></div>
-                    <div class="more-info">
-                        <div class="profile-name">{{ current_user.full_name }}</div>
-                        <div class="settings"><a href="#">Settings</a></div>
-                    </div>
+            <div {{ m.hide_if('loggedOut') }} class="profile">
+                <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="{{ user_avatar }}" alt=""/></div>
+                <div class="more-info">
+                    <div class="username">{{ user_fullname }}</div>
+                    <div class="settings"><a href="#">Settings</a></div>
                 </div>
             </div>
-            {% else %}
-            <div id="login-form" class="animated fadeIn nav-tabs-container">
+            <div {{ m.hide_if('loggedIn') }} id="login-form" class="animated fadeIn nav-tabs-container">
                 <!-- TAB NAVIGATION -->
                 <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
                     <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
@@ -135,8 +129,8 @@
                             <p class="text-justify-full">
                                 {{ m.get_social_buttons([
                                 {'google-plus':'#'},
-                                {'github':url_for('oauth.github_authorized')},
-                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                                {'github':'#'},
+                                {'facebook':'#'}]) }}
                             </p>
                         </div>
                     </div>
@@ -153,14 +147,13 @@
                             <p class="text-justify-full">
                                 {{ m.get_social_buttons([
                                 {'google-plus':'#'},
-                                {'github':url_for('oauth.github_authorized')},
-                                {'facebook':url_for('oauth.facebook_authorized')}]) }}
+                                {'github':'#'},
+                                {'facebook':'#'}]) }}
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-            {% endif %}
         </section>
     </div>
 </main>
@@ -168,27 +161,31 @@
 
 {% block bodyPostfix %}
 <script id="comment-template" type="text/html">
-<li class="media" id="comment-">
-    <a class="media-left" href="#"><img class="avatar" src=""></a>
+<li class="media" id="">
+    <a class="media-left" href="#">
+        <div class="avatar-container"><img class="avatar-thumbnail" src=""></div>
+        <div class="username"></div>
+    </a>
     <div class="media-body">
-        <h4 class="media-heading"></h4>
         <div class="comment-info">
-            <a class="reply-to" href="#">@larantessa@gmail.com</a>
+            <h4 class="media-heading"></h4>
+            <a class="reply-to" href="#"></a>
             <span data-lastmodified="" class="comment-date"></span>
         </div>
         <div class="content"></div>
         <div class="actionbar text-right">
-            <a href="#" data-id="" class="btn btn-reply btn-primary">Reply</a>
-            <a href="#" style="display: none" data-id="" class="btn btn-submit btn-primary">Submit</a>
+            <a href="#" class="btn btn-reply btn-primary">Reply</a>
+            <a href="#" style="display: none" class="btn btn-cancel btn-danger">Cancel</a>
+            <a href="#" style="display: none" class="btn btn-submit btn-primary">Submit</a>
         </div>
     </div>
 </li>
 </script>
 
-<script id="comment-form" type="text/html">
-    <form class="comment-form collapse" aria-expanded="false" action="">
-    {{ forms['commentForm'].hidden_tag() }}
-    {% for field in forms['commentForm'] if field.widget.input_type != 'hidden' %}
+<script id="reply-form-template" type="text/html">
+    <form class="reply-form" action="">
+    {{ forms['replyForm'].hidden_tag() }}
+    {% for field in forms['replyForm'] if field.widget.input_type != 'hidden' %}
         {% if field.type == 'TextAreaField' %}
             {{ m.render_input_group(field, cols=30, rows=4, placeholder=field.label.text) }}
         {% else %}
@@ -202,7 +199,7 @@
 $(function($) {
 
     var $commentContainer,
-        $commentArticleForm;
+        $addCommentForm;
 
     function getLastModified() {
         var $e = $('.media-list').find('[data-lastmodified]'),
@@ -230,123 +227,261 @@ $(function($) {
             beforeSend: app.getCSRFHeader(),
             type: 'POST',
             dataType: 'json',
-            data: $form.find('input, textarea').serialize() + '&'+$.param({lastmodified:getLastModified()}),
+            data: $form.find('input, textarea').serialize() + '&' + $.param({lastmodified:getLastModified()}),
             success: callback.success,
             error: callback.error
         });
     }
 
+
     function updateComments(comments) {
-        var $parentTemplate = $($('#comment-template').html()).filter('li'),
-            $childTemplate = $('<div></div>', {'class': 'reply media depth-1'})
-                                .append($parentTemplate.html());
+        var $parentTemplate, // a parent is a reply to the article
+            $childTemplate; //  a child is a reply to other comments
+
+        // initialize templates
+        if ( ! updateComments.cache ) {
+            var $temp = $($('#comment-template').html());
+
+            // create parent template
+            $parentTemplate = $temp.clone();
+            $parentTemplate.find('.reply-to').remove(); // .reply-to is only for child comments
+
+            // create child template
+            $temp.find('.media-heading').remove(); // .media-heading is only for parent comments
+            $childTemplate = $('<div></div>', {'class': 'reply media depth-1'}).append($temp.html());
+            $childTemplate.remove('.media-heading');
+
+            // save templates to cache
+            updateComments.cache = {parent: $parentTemplate, child: $childTemplate};
+        } else {
+            $parentTemplate = updateComments.cache['parent'];
+            $childTemplate = updateComments.cache['child'];
+        }
 
         comments.forEach(function(item, i) {
             var $e,
-                $container,
+                $recipient,
                 isParent = item.parent_id == null;
 
-            $e = isParent ? $parentTemplate.clone() : $childTemplate.clone();
+            // check if this comment already exists on page
+            $e = $('comment-'+item.id);
+            if ($e.length == 0) {
+                // create a new comment
+                $e = isParent ? $parentTemplate.clone() : $childTemplate.clone();
+                $e.attr('id', 'comment-'+item.id);
+            }
 
             $e.data('item', item);
-            $e.attr('id', 'comment-'+item.id);
-            $e.find('.media-heading').html(item.subject);
             $e.find('.content').html(item.message);
-            $e.find('.reply-to');
-            $e.find('.comment-date')
-                .attr('data-lastmodified', item.last_modified ? item.last_modified : item.date_created);
-            $e.find('.btn-submit').attr('data-id', item.id);
+            $e.find('.comment-date').attr('data-lastmodified', item.last_modified ? item.last_modified : item.date_created);
+            $e.find('.avatar-thumbnail').attr('src', item.user.avatar);
+            $e.find('.username').html(item.user.username);
+
             if (isParent) {
+                $e.find('.media-heading').html(item.subject);
                 // start a new comment list
                 $('.media-list').append($e);
             } else {
-                // append it below the parent id
-                $container = $('#comment-' + item.parent_id);
-                if ($container.is('li')) {
-                    $container.append($e);
+                $recipient = $('#comment-' + item.parent_id);
+                var $replyTo = $e.find('.reply-to');
+                $replyTo.attr('href', '#comment-' + item.parent_id);
+                $replyTo.html('@' +$recipient.find('.username').html());
+                // append it below its parent_id
+
+                if ($recipient.is('li')) {
+                    $recipient.append($e);
                 } else {
-                    $container.parent().append($e);
+                    $recipient.parent().append($e);
                 }
             }
         });
     }
 
-    $commentArticleForm = $('#comment-article-form');
-    $commentArticleForm.find('.btn-primary').on('click',function(e) {
-        submitComment($commentArticleForm, {
+    $addCommentForm = $('#add-comment-form');
+    // display `#add-comment-form` and hide `#btn-add-comment`
+    $('#btn-add-comment').click(function(e) {
+        e.preventDefault();
+        $addCommentForm.slideDown();
+        $(this).fadeOut();
+    });
+    // hide `#add-comment-form` and show `#btn-add-comment`
+    $addCommentForm.on('click', '.btn-danger', function(e) {
+        e.preventDefault();
+        $addCommentForm.slideUp();
+        $('#btn-add-comment').fadeIn(); //
+    });
+    // submit `#add-comment-form`
+    $addCommentForm.find('.btn-primary').on('click',function(e) {
+        e.preventDefault();
+        submitComment($addCommentForm, {
             success: function(data) {
+                // update the page with the new comments
                 updateComments(data.comments);
-                $commentArticleForm
-                    .find('.form-group')
-                    .find('input, textarea').val('');
-                $commentArticleForm.collapse('hide');
+                // reset form values
+                $addCommentForm.find('.form-group').find('input, textarea').val('');
+                // hide this form and show `#btn-add-comment`
+                $addCommentForm.slideUp();
+                $('#btn-add-comment').fadeIn();
+
             },
             error: function(data) {
-                app.displayMessages($commentArticleForm, data.responseJSON['flashed_messages'])
+                // display errors
+                if (data.responseJSON && data.responseJSON['flashed_messages']) {
+                    app.displayMessages($addCommentForm, data.responseJSON['flashed_messages']);
+                } else {
+                    app.displayGenericError($('.alert-box'), data);
+                }
             }
         });
-        $('#btn-add-comment').show();
-        $commentArticleForm.collapse('show');
-        e.preventDefault();
     });
 
+    // media list contains all the comments on the page
     $commentContainer = $('.media-list');
+
+    // Instantiate and show the reply form
     $commentContainer.on('click', '.btn-reply', function(e) {
+        e.preventDefault();
         var $btnReply = $(this),
             $form = $btnReply.closest('.media-body').find('form');
-
+        // initialize form
         if ($form.length == 0) {
             // create a form using the provided template
-            $form = $($('#comment-form').html()).clone();
+            $form = $($('#reply-form-template').html()).clone().hide();
+            // find out the parent id
+            var parentId = $btnReply.closest('.media').id().replace('comment-', '');
+            $form.find('#parent_id').val(parentId);
             // insert the form after `.content`
-            $btnReply.closest('.media-body')
-                .find('.content').after($form);
+            $btnReply.closest('.media-body').find('.content').after($form);
         }
-
-        $form.collapse('toggle');
-        e.preventDefault()
+        $form.slideDown(function() {
+            $btnReply.next().fadeIn().next().fadeIn();
+            $btnReply.fadeOut(0);
+        });
     });
 
-    $commentContainer.on('shown.bs.collapse', 'form', function(e) {
-        // update this form's parent_id input field
-        var $form = $(this),
-            $btnSubmit = $form.closest('.media-body').find('.btn-submit'),
-            $btnReply = $btnSubmit.prev();
-        $form.find('#parent_id').val($btnSubmit.data('id'));
-        // position the submit button
-        $btnSubmit.show();
-        // toggle button states
-        $btnReply.html('Cancel');
-        $btnReply.toggleClass('btn-primary btn-danger');
+    // Cancel reply form
+    $commentContainer.on('click', '.btn-cancel', function(e) {
+        e.preventDefault();
+        var $btnCancel = $(this),
+            $btnReply = $btnCancel.prev(),
+            $form = $btnCancel.parent().prev();
+        // hide the cancel and submit button
+        $btnCancel.fadeOut(0).next().fadeOut(0);
+        // show the reply btn then hide the form
+        $btnReply.fadeIn();
+        $form.slideUp();
     });
 
-    $commentContainer.on('hide.bs.collapse', 'form',function(e) {
-        // update this form's parent_id input field
-        var $btnSubmit = $(this).closest('.media-body').find('.btn-submit'),
-            $btnReply = $btnSubmit.prev();
-        // update this form's parent_id input field
-        $btnSubmit.hide();
-        // toggle button states
-        $btnReply.html('Reply');
-        $btnReply.toggleClass('btn-primary btn-danger');
-    });
-
-
+    // Submit reply form
     $commentContainer.on('click', '.btn-submit', function(e) {
-        var $form = $(this).closest('.media-body').find('form');
+        var $btnSubmit = $(this),
+            $form = $btnSubmit.closest('.media-body').find('form');
         submitComment($form, {
             success: function(data) {
+                // reset user input
                 $form.find('input, textarea').val('');
-                $form.collapse('toggle');
+                // trigger the cancel button to hide this form
+                $btnSubmit.prev().trigger('click');
                 updateComments(data.comments);
             },
             error: function(data) {
+                app.clearAlerts($form.parent(), function() {
+                    if (data.responseJSON && data.responseJSON['flashed_messages']) {
+                        app.displayMessages($form, data.responseJSON['flashed_messages']);
+                    } else {
+                        app.displayGenericError($('.alert-box'), data);
+                    }
+                });
             }
         });
         e.preventDefault();
     });
 
+    // Scroll animation
+    $('body').on('click', 'a[href^="#comment-"]', function (e) {
+        e.preventDefault();
+        var $target = $(this.getAttribute('href'));
+          if ( ! $target.hasClass('reply') ) {
+            $target = $target.children().filter('.media-left, .media-body');
+          }
+
+        var blink = function($target) {
+              for(var i=0; i < 2; i++) {
+                $target.fadeTo('slow', 0.5).fadeTo('slow', 1.0);
+              }
+        };
+        if ($target.length) {
+            if (app.helpers.isElementInViewport($target[0])) {
+                blink($target);
+            } else {
+                $('body').stop().animate({scrollTop: $target.offset().top - 200}, 1000, 'swing', function() {
+                    blink($target);
+                });
+
+            }
+        }
+    });
 }, jQuery)
+</script>
+
+<script>
+// User login
+$(function() {
+
+function onSuccessLogin(data) {
+
+    // hide login form
+    var $profile = $('.profile');
+    var user = data.user;
+    console.log(data);
+    $profile.find('.avatar-thumbnail-lg').attr('src', user.avatar);
+    $profile.find('.username').html(user.username);
+    $loginForm.fadeOut(function() {
+      $profile.fadeIn();
+    });
+    app.navbar.loginState(400);
+}
+
+function onFailLogin(data) {
+
+}
+
+function onSuccessLogout(data) {
+    var $profile = $('.profile');
+    $profile.fadeOut(function() {
+      $loginForm.fadeIn();
+      $profile.find('.avatar-thumbnail-lg').attr('src', '');
+      $profile.find('.username').empty();
+    });
+    app.navbar.logoutState(400);
+}
+
+function onFailLogout(data) {
+
+}
+
+// Login/Register listeners
+var $loginForm = $('#login-form');
+$loginForm.on('click', 'a[class|="azm"], button', function(e) {
+    e.preventDefault();
+    var provider = $(this).classList()[0].replace('azm-', '');
+    switch (provider) {
+        // oauth providers login/register
+        case 'google-plus': app.google.requestOfflineAccess(onSuccessLogin, onFailLogin); break;
+        case 'github': app.github.login(onSuccessLogin, onFailLogin); break;
+        case 'facebook': app.facebook.login(onSuccessLogin, onFailLogin); break;
+        default:
+            // default login/register
+            $(this).blur().parent().ajaxSubmit({success: onSuccessLogin,error: onFailLogin});
+    }
+});
+
+$('.nav-logout').click(function(e) {
+    e.preventDefault();
+    app.logout(onSuccessLogout, onFailLogout);
+});
+
+}, jQuery);
 </script>
 
 <script>

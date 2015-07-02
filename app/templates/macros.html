@@ -7,6 +7,14 @@
     {%- endfor -%}
 {%- endmacro %}
 
+{% macro hide_if(state) %}
+    {% if state == 'loggedIn' and isLoggedIn %}
+        style="display:none;"
+    {% elif state == 'loggedOut' and not isLoggedIn %}
+        style="display:none;"
+    {% endif %}
+{% endmacro %}
+
 {% macro alert_messages(messages) -%}
     {% for category, message in messages -%}
     <div class="alert-messages">

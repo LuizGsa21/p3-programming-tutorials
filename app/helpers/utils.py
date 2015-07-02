@@ -30,6 +30,8 @@ def xhr_or_redirect(route_path):
             ctx = f(*args, **kwargs)
             if not request.is_xhr:
                 return redirect(url_for(route_path))
+            pprint.pprint(ctx)
+
             ctx['flashed_messages'] = format_flashed_messages()
             return jsonify(ctx), ctx['status']
         return decorated_fn
@@ -48,7 +50,7 @@ def xhr_required(f):
 
 
 def format_flashed_messages():
-    return [{'category':c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
+    return [{'category': c, 'message': m} for c, m in get_flashed_messages(with_categories=True)]
 
 def format_datetime(value, format='default'):
     if format == 'default':

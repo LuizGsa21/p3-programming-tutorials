@@ -4,6 +4,7 @@ import requests
 
 from os.path import join as joinpath
 from flask import Blueprint, request, redirect, url_for, flash, session, g, abort, render_template
+from app.api.schemas import user_serializer
 from app.extensions import db, login_user, oauth, current_user, login_required
 from app.models import User
 from app.helpers.utils import xhr_required, format_flashed_messages
@@ -83,7 +84,7 @@ def google_authorized():
         msg = 'You have successfully registered!'
     flash(msg + 'You are logged in as %s' % user.username, 'success')
 
-    return {'status': 200, 'success': 1}
+    return {'status': 200, 'success': 1, 'user': user_serializer.dump(user)[0]}
 
 
 @oauth_bp.route('/facebook-login/authorized', methods=['POST'])
@@ -136,7 +137,7 @@ def facebook_authorized():
     session['facebook_oauth_token'] = accessToken
     flash('Logged in as id=%s name=%s' % (data['id'], data['name']), 'success')
 
-    return {'success': 1, 'status': 200}
+    return {'success': 1, 'status': 200, 'user': user_serializer.dump(user)[0]}
 
 
 github = oauth.remote_app('github', **{
@@ -199,7 +200,8 @@ def github_authorized(resp):
     flash('Logged in as %s' % user.username, 'success')
     result = {
         'flashed_messages': format_flashed_messages(),
-        'success': 1
+        'success': 1,
+        'user': user_serializer.dump(user)[0]
     }
     return render_template('close-popup.html', result=result)
 

@@ -13,7 +13,7 @@
             <div class="col-xs-12 col-md-4">
                 <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="" alt=""/></div>
                 <div class="more-info">
-                    <div class="profile-name"></div>
+                    <div class="username"></div>
                     <div class="settings">
                         <a data-toggle="modal" data-action="editAvatar" href="#main-modal">Edit Avatar</a>
                     </div>
@@ -137,6 +137,7 @@
 <script src="{{ url_for('static', filename='js/cropper.min.js') }}"></script>
 <script>
 
+    // TODO: fix profile page - delete tutorial css
     +function ($) {
         'use strict';
 
@@ -238,7 +239,7 @@
                         $table.find('.' + key).html(data[key] || 'Not available');
                     }
                 }
-                $('.profile-name').html(data['username']);
+                $('.username').html(data['username']);
             }
         };
 
@@ -454,6 +455,8 @@
                    } else {
                        // else dynamically create an alert message and append to '.alert-box'
                        app.displayGenericError($('.alert-box'), data);
+                       console.log(data);
+
                        $mainModal.modal('hide');
                        $('body').scrollTop(0);
                    }

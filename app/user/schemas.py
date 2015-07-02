@@ -11,7 +11,7 @@ class UserSettingSchema(UserSchema):
 
     def avatar_url(self, obj):
 
-        return url_for('static', filename='uploads/avatars/' + str(obj.avatar))
+        return url_for('static', filename='uploads/avatar/' + str(obj.avatar))
 
     def format_date(self, obj):
         return format_datetime(obj.date_joined)

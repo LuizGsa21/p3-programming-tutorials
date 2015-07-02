@@ -118,7 +118,7 @@ def upload():
     if form.validate_on_submit():
         image = form.avatar.data
         # avatar folder directory
-        path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatars')
+        path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'avatar')
 
         if image:
             # get the file extension

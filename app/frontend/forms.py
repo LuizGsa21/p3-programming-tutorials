@@ -1,7 +1,9 @@
+import pprint
 from app.models import User, Category
 from flask_wtf import Form
 from wtforms import StringField, PasswordField, ValidationError, HiddenField, TextAreaField, IntegerField
 from wtforms.validators import InputRequired, EqualTo, Length, Email, Regexp
+from collections import OrderedDict
 
 
 def length_validator(name, min, max):
@@ -36,16 +38,22 @@ class LoginForm(Form):
     password = PasswordField('Password', validators=[InputRequired()])
 
 
-class CommentForm(Form):
+class ReplyForm(Form):
     article_id = HiddenField('id', validators=[InputRequired()])
-    subject = StringField('Subject', validators=[InputRequired()])
     message = TextAreaField('Message', validators=[InputRequired()])
     parent_id = HiddenField('id')
 
     def validate_parent_id(self, field):
+        # parent_id must be an int type
         data = field.data
         try:
             data = int(data)
         except ValueError:
-            data = None
+            raise ValidationError('Unknown recipient.')
         field.data = data
+
+
+class AddCommentForm(Form):
+    article_id = HiddenField('id', validators=[InputRequired()])
+    subject = StringField('Subject', validators=[InputRequired()])
+    message = TextAreaField('Message', validators=[InputRequired()])

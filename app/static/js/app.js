@@ -94,7 +94,7 @@ var app = {
                     $msg = this.createAlertMessage(message.message, message.category).hide();
                 }
                 $element[action]($msg);
-                $msg.slideDown(500);
+                $msg.slideDown();
             }
         }, this);
     },
@@ -102,7 +102,10 @@ var app = {
     // converts an html response into and alert box and displays in the given `$container`
     displayGenericError: function ($container, data) {
         var message;
-        if (data.responseText) {
+        console.log(data);
+        if (data.status && data.status == 500) {
+            message = 'Internal server error :('
+        } else if (data.responseText && $(data.responseText).find('h1').length) {
             // extract error message
             var $response = $(data.responseText);
             message = ['<strong>', $response.filter('h1').html(), '</strong>: ',  $response.filter('p').html()].join('');
@@ -136,7 +139,7 @@ var app = {
         var $alerts = $container.find('.alert-messages');
         if ($alerts.length) {
             $alerts.slideUp().promise().done(function() {
-                $container.empty();
+                $alerts.remove();
                 callback();
             });
         } else {
@@ -155,14 +158,16 @@ app.navbar = {
     // Links to display only when a user is logged out
     logoutRequiredLinks: ['Login', 'Register'],
 
-    loginState: function () {
-        this.updateLinks(this.logoutRequiredLinks, 'hide');
-        this.updateLinks(this.loginRequiredLinks, 'show');
+    loginState: function (duration) {
+        if (duration === undefined) duration = 0;
+        this.updateLinks(this.logoutRequiredLinks, 'hide', duration);
+        this.updateLinks(this.loginRequiredLinks, 'show', duration);
     },
 
-    logoutState: function () {
-        this.updateLinks(this.loginRequiredLinks, 'hide');
-        this.updateLinks(this.logoutRequiredLinks, 'show');
+    logoutState: function (duration) {
+        if (duration === undefined) duration = 0;
+        this.updateLinks(this.loginRequiredLinks, 'hide', duration);
+        this.updateLinks(this.logoutRequiredLinks, 'show', duration);
     },
 
     // action should be either `show` or `hide`

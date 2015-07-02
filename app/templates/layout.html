@@ -149,10 +149,14 @@
             type: 'POST',
             beforeSend: app.getCSRFHeader(), // csrf protection
             success: function(data) {
+              console.log('logout success:', data);
               app.isLoggedIn = false;
               onSuccess(data)
             },
-            error: onFail
+            error: function(data) {
+              console.log('logout success:', data);
+              onFail(data);
+            }
         });
     };
     // Setup google oauth
@@ -170,11 +174,9 @@
             }.bind(this));
         },
         requestOfflineAccess: function(onSuccess, onFail) {
-            console.log(this.auth2);
             this.auth2
                 .grantOfflineAccess({'redirect_uri': 'postmessage'})
                 .then(function(authResult) {
-                    console.log('here');
                       if (authResult['code']) {
                           $.ajax({
                             type: 'POST',
@@ -192,7 +194,7 @@
                       } else {
                           onFail(authResult);
                       }
-                });
+                }, onFail);
         }
     };
 

@@ -20,6 +20,10 @@ $.fn.visibilityToggle = function() {
     });
 };
 
+$.fn.id = function () {
+    return this[0].id;
+};
+
 // http://stackoverflow.com/questions/6673777/select-link-by-text-exact-match
 // Usage: $('div:textEquals("someText")')
 $.expr[':'].textEquals = function(a, i, m) {
