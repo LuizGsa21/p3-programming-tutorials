@@ -172,7 +172,7 @@ define([
 	CommentViewModel.prototype._onFail = function (data) {
 		//console.log(data);
 		if (data.responseJSON) {
-			data = data.responseJSON;
+			data = data.responseJSON.result;
 			Utils.remove.allMessages(function () {
 				Utils.show.messages(this.$form, data['flashed_messages'], { action: 'before' });
 			}.bind(this));

@@ -61,7 +61,7 @@ requirejs([
 				},
 				error: function (data) {
 					if (data.responseJSON) {
-						data = data.responseJSON;
+						data = data.responseJSON.result;
 						Utils.show.messages('#general-alert', data['flashed_messages']);
 					}
 				}
