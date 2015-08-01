@@ -1,0 +1,65 @@
+{% extends 'layout.html' %}
+{#{% from 'macros/login-form.html' import render_login_form with context %}#}
+{% from 'macros/form-components.html' import render_form %}
+
+{% set json_response = result|tojson %}
+
+{% block header %}
+    <script> requirejs(['frontend-article']); </script>
+{% endblock %}
+{% block bodyID %}page-article{% endblock %}
+
+{% block body %}
+<div id="general-alert"></div>
+<div class="container">
+<div class="row">
+    <div class="col-xs-12 col-md-8">
+        <section class="article" data-bind="with: article">
+            <h1 class="page-header" data-bind="text: title"></h1>
+            <div class="article-body" data-bind="text: body"></div>
+            <footer class="article-footer">
+                By <a href="#" class="author" data-bind="text: author.username"></a><br/>
+                <span class="date-created">Published <span data-bind="attr: { 'data-time': dateCreated }"></span></span><br/>
+            </footer>
+        </section>
+        <div class="comment-container">
+            <div class="comment-header row row-table-xs">
+                <div class="col-xs-8">
+                    <h1>Comments</h1>
+                </div>
+                <div class="col-xs-4" data-bind="with: addComment">
+                    <a  href="#" id="btn-add-comment" data-bind="click: showForm, fadeVisible: !isFormVisible()">Add Comment</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12"><div class="alert-box"></div></div>
+                <div class="col-xs-12">
+                <ul class="media-list">
+                    {# The first `<li>` element displays the add comment form. #}
+                    <li style="display: none;" data-bind="with: addComment, storeElement: slideVisible addComment.isFormVisible" id="add-comment-media" class="media">
+                        <a class="media-left" href="#">
+                            <div class="avatar-container">
+                                <img class="avatar-thumbnail" data-bind="attr: { 'src': user.avatar }" src="">
+                            </div>
+                        </a>
+                        <div class="media-body">
+                            <div class="content" data-bind="template: { name: 'template-' + formName, if: renderForm() }">
+                            </div>
+                            <div class="actionbar">
+                                <a  href="#" class="btn btn-danger" data-bind="click: hideForm">Cancel</a>
+                                <a  href="#" class="btn btn-primary" data-bind="click: submitForm">Submit</a>
+                            </div>
+                        </div>
+                    </li>
+                    <!-- ko template: { name: 'template-media', foreach: comments, as: 'comment' } --> <!-- /ko -->
+                </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <sidebar></sidebar>
+    </div>
+</div>
+
+{% include 'frontend/article-templates.html' %}
+{% endblock %}

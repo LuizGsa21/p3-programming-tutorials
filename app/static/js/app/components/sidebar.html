@@ -1,0 +1,10 @@
+<section class="hidden-xs hidden-sm col-xs-12 col-md-4">
+    <div data-bind="fadeVisible: profile.isVisible" id="profile-container" style="display: none;" class="profile">
+        <div class="avatar-container lg"><img class="avatar-thumbnail-lg" data-bind="attr: { src: user.avatar }" src="" alt="" /></div>
+        <div class="more-info">
+            <div class="username" data-bind="text: user.fullname"></div>
+            <div class="settings"><a data-bind="attr: { href: user.profile }" href="">View Profile</a></div>
+        </div>
+    </div>
+    <login-form></login-form>
+</section>

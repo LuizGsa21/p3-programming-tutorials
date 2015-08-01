@@ -1,0 +1,52 @@
+{% from 'macros/form-components.html' import render_form %}
+<script id="template-tutorial-row" type="text/html">
+    <!-- ko foreach: articles -->
+    <tr data-bind="click: $parent.goToPage">
+        <td class="title" data-bind="text: title"></td>
+        <td class="category" data-bind="text: category.name"></td>
+        <td class="date" data-bind="attr: { 'data-time': dateCreated }"></td>
+        <td class="action">
+            <a data-bind="click: $parent.showModal" class="btn-tutorial-edit btn btn-sm btn-warning" data-method="editArticle">Edit</a>
+            <a data-bind="click: $parent.showModal" class="btn-tutorial-delete btn btn-sm btn-danger" data-method="deleteArticle">Delete</a>
+        </td>
+    </tr>
+    <!-- /ko -->
+    <!-- ko if: articles().length == 0 -->
+        <tr class="empty-table"><td colspan="4" class="text-center">No published tutorials</td></tr>
+    <!-- /ko -->
+</script>
+<script id="template-addArticle" type="template">
+    {{ render_form(get_form('AddArticle'), action=url_for('user.add_article'), type='field', with_databind=false) }}
+</script>
+
+<script id="template-editArticle" type="template">
+    {{ render_form(get_form('EditArticle'), action=url_for('user.edit_article'), type='field') }}
+</script>
+
+<script id="template-editProfile" type="template">
+    {{ render_form(get_form('EditProfile'), action=url_for('user.edit_profile'), type='field') }}
+</script>
+
+<script id="template-deleteArticle" type="template">
+    <p>Are you sure you want to delete <strong class="text-danger-inverse" data-bind="text: articleTitle"></strong> permanently?</p>
+    {{ render_form(get_form('DeleteArticle'), action=url_for('user.delete_article'), type='field') }}
+</script>
+
+<script id="template-editAvatar" type="text/html">
+<div id="form-avatar" class="container-fluid">
+    <div class="row">
+        <div class="col-xs-12">
+            {{ render_form(get_form('UploadAvatar'), action=url_for('user.upload'), enctype="multipart/form-data", type='field', with_databind=false) }}
+        </div>
+        <div class="col-md-8">
+            <h3 class="text-center">Canvas</h3>
+            <div class="avatar-wrapper"><img data-bind="attr: { src: avatar }" src="" alt="avatar"/></div>
+        </div>
+        <div class="col-md-4">
+            <h3 class="text-center">Preview</h3>
+            <div class="avatar-preview preview-lg"></div>
+            <div class="avatar-preview preview-md"></div>
+        </div>
+    </div>
+</div>
+</script>

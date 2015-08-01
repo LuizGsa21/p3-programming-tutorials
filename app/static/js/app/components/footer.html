@@ -1,0 +1,32 @@
+<footer data-bind="storeElement: footer" class="footer footer-default footer-sticky animated fadeIn">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-4 col-md-4">
+                <h4 class="title">Navigation</h4>
+                <!-- ko foreach: urlChunks -->
+                    <ul data-bind="foreach: $data" class="nav footer-nav pull-left">
+                        <li><a data-bind="click: $component.onClick, text: name, attr: { href: url }" href=""></a></li>
+                    </ul>
+                <!-- /ko -->
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 valign">
+                <div class="quote">"Programming is a lifestyle."</div>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-3 col-lg-offset-1">
+                <div class="stay-connected">
+                    <h4 class="title">Stay Connected</h4>
+                    <p class="text-justify-full">
+                        <a class="azm-google-plus btn-square hvr-grow" href="https://plus.google.com/103499838655205368925/posts"><i class="fa fa-google-plus"> </i></a>
+                        <a class="azm-twitter btn-square hvr-grow" href="https://twitter.com/LArantesSa"><i class="fa fa-twitter"> </i></a>
+                        <a class="azm-github btn-square hvr-grow" href="https://github.com/LuizGsa21"><i class="fa fa-github"> </i></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="copyright text-center">Copyright &copy; All Rights Reserved</div>
+            </div>
+        </div>
+    </div>
+</footer>

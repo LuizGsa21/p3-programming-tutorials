@@ -1,0 +1,18 @@
+{% macro alert_messages(messages) -%}
+    {% for category, message in messages -%}
+    <div class="alert-messages">
+        <div class="alert alert-{{ category }}">
+            <a href="#" class="close" data-dismiss="alert">&times;</a>
+            {% if message is mapping %}
+            <ul class="nav">
+                {% for key, value in message.items() %}
+                <li><strong>{{ key }}</strong>: {{ value|join(' ') }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+                {{ message }}
+            {% endif %}
+        </div>
+    </div>
+    {%- endfor %}
+{%- endmacro %}

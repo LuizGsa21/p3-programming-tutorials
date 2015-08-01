@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% set json_response = result|tojson %}
+
+{% block header %}
+    <script> requirejs(['frontend-category-articles']); </script>
+{% endblock %}
+{% block bodyID %}page-articles{% endblock %}
+
+{% block body %}
+    <div id="general-alert"></div>
+    <div class="articles container">
+        <div class="tiles row">
+            <div class="col-xs-12 col-md-8">
+                <h1 class="page-header text-center"><span data-bind="text: category"></span> Tutorials</h1>
+                <div data-bind="template: template" class="articles-main"></div>
+            </div>
+            <sidebar></sidebar>
+        </div>
+    </div>
+    {% include 'frontend/articles-templates.html' %}
+{% endblock %}

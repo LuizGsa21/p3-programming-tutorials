@@ -1,0 +1,49 @@
+{%- macro render_login_form() -%}
+
+{%- from 'macros/form-components.html' import render_field -%}
+{%- from 'macros/social-buttons.html' import get_social_buttons -%}
+
+{%- set registerForm = get_form('Register', prefix='r') -%}
+{%- set loginForm = get_form('Login', prefix='l') -%}
+{%- set social_buttons = get_social_buttons([ {'google-plus':'#'}, {'github':'#'}, {'facebook':'#'}], data_bind='click: oAuthLogin') -%}
+{#<div data-bind="fadeVisible: " style="display: none;" id="login-form-container" class="nav-tabs-container">#}
+<div id="login-form-container" class="nav-tabs-container">
+  <!-- TAB NAVIGATION -->
+  <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
+      <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+      <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
+  </ul>
+  <!-- TAB CONTENT -->
+  <div class="tab-content">
+      <div class="active tab-pane fade in" id="tab-register">
+          <form data-prefix="{{ registerForm._prefix }}" action="{{ url_for('frontend.register') }}" method="post" role="form">
+              <div class="mobile-popover"></div>
+              {% for field in registerForm if field.widget.input_type != 'hidden' -%}
+                      {{ render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+              {% endfor %}
+              <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
+          </form>
+          <div class="social-media">
+              <p class="info">Or register with:</p>
+              <p class="text-justify-full">
+                  {{ social_buttons }}
+              </p>
+          </div>
+      </div>
+      <div class="tab-pane fade" id="tab-login">
+          <form data-prefix="{{ loginForm._prefix }}" action="{{ url_for('frontend.login') }}" method="post" role="form">
+              {% for field in loginForm if field.widget.input_type != 'hidden' -%}
+                      {{ render_field(field, label_class='sr-only', placeholder=field.label.text) }}
+              {% endfor %}
+              <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
+          </form>
+          <div class="social-media">
+              <p class="info">Or login with:</p>
+              <p class="text-justify-full">
+                  {{ social_buttons }}
+              </p>
+          </div>
+      </div>
+  </div>
+</div>
+{%- endmacro -%}

@@ -1,0 +1,7 @@
+{% macro get_social_buttons(providers, data_bind='') -%}
+    {% for provider in providers %}
+        {% for name, url in provider.items() %}
+        <a  data-bind="{{ data_bind }}" data-provider="{{ name }}" class="azm-{{ name }} btn-square hvr-grow" href="{{ url }}"><i class="fa fa-{{ name }}"> </i></a>
+        {% endfor %}
+    {%- endfor -%}
+{%- endmacro %}

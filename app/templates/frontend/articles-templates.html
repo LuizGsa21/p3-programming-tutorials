@@ -1,0 +1,15 @@
+<script id="template-articles" type="text/html">
+    <article class="tile">
+       <h3 class="title"><a data-bind="attr: { href: url }, text: title" href=""></a></h3>
+       <footer class="tile-footer row">
+           <div class="col-xs-12">
+               <div class="author">By <a data-bind="text: author.username" href="#"></a></div>
+               <div class="published-date">Published <span data-bind="attr: { 'data-time': dateCreated }"></span></div>
+           </div>
+       </footer>
+    </article>
+</script>
+
+<script id="template-empty" type="text/html">
+    <h1 class="page-header text-center" style="border: none; white-space: nowrap">No articles listed.<br/><small>Why not contribute?</small></h1>
+</script>

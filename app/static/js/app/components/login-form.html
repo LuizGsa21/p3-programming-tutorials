@@ -1,0 +1,61 @@
+<div id="login-form-container" data-bind="fadeVisible: isVisible" class="nav-tabs-container">
+    <!-- TAB NAVIGATION -->
+    <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
+        <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
+        <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
+    </ul>
+    <!-- TAB CONTENT -->
+    <div class="tab-content">
+        <div class="active tab-pane fade in" id="tab-register">
+            <form data-prefix="#r-" action="/register/" method="post" role="form">
+                <div class="mobile-popover"></div>
+                <div class="form-group ">
+                    <label class="control-label sr-only" for="r-username">Username</label>
+                    <input class="form-control" id="r-username" name="r-username" placeholder="Username" type="text" value="">
+                </div>
+                <div class="form-group ">
+                    <label class="control-label sr-only" for="r-email">Email</label>
+                    <input class="form-control" id="r-email" name="r-email" placeholder="Email" type="text" value="">
+                </div>
+                <div class="form-group ">
+                    <label class="control-label sr-only" for="r-password">Password</label>
+                    <input class="form-control" id="r-password" name="r-password" placeholder="Password" type="password" value="">
+                </div>
+                <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
+            </form>
+            <div class="social-media">
+                <p class="info">Or register with:</p>
+                <p class="text-justify-full">
+                    <a data-bind="click: oAuthLogin" data-provider="google-plus" class="azm-google-plus btn-square hvr-grow" href="#"><i class="fa fa-google-plus"> </i></a>
+                    <a data-bind="click: oAuthLogin" data-provider="github" class="azm-github btn-square hvr-grow" href="#"><i class="fa fa-github"> </i></a>
+                    <a data-bind="click: oAuthLogin" data-provider="facebook" class="azm-facebook btn-square hvr-grow" href="#"><i class="fa fa-facebook"> </i></a>
+                </p>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-login">
+            <form data-prefix="#l-" action="/login/" method="post" role="form">
+                <div class="mobile-popover"></div>
+                <div class="form-group ">
+                    <label class="control-label sr-only" for="l-email">Email or Username</label>
+                    <input class="form-control" id="l-email" name="l-email" placeholder="Email or Username" type="text" value="">
+                </div>
+                <div class="form-group ">
+                    <label class="control-label sr-only" for="l-password">Password</label>
+                    <input class="form-control" id="l-password" name="l-password" placeholder="Password" type="password" value="">
+                </div>
+                <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
+            </form>
+            <div class="social-media">
+                <p class="info">Or login with:</p>
+                <p class="text-justify-full">
+                    <a data-bind="click: oAuthLogin" data-provider="google-plus" class="azm-google-plus btn-square hvr-grow" href="#"><i class="fa fa-google-plus"> </i></a>
+                    <a data-bind="click: oAuthLogin" data-provider="github" class="azm-github btn-square hvr-grow" href="#"><i class="fa fa-github"> </i></a>
+                    <a data-bind="click: oAuthLogin" data-provider="facebook" class="azm-facebook btn-square hvr-grow" href="#"><i class="fa fa-facebook"> </i></a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="login-form-modal modal fade" id="login-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog"></div>
+</div>

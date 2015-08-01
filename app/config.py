@@ -12,18 +12,17 @@ class Config(object):
     # SQLALCHEMY_ECHO = True
 
     ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif')
-    UPLOAD_FOLDER =  os.path.join(STATIC_FOLDER, 'uploads')
-    MAX_UPLOAD_SIZE = 500*1024^2 # about 500KB
+    UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
+    MAX_UPLOAD_SIZE = 500 * 1024 ^ 2  # about 500KB
 
     LOGIN_DISABLED = False
     DEBUG = False
     TESTING = False
 
 
-
 class DevelopmentConfig(Config):
     DEBUG = True
-    SECRET_KEY = 'how-to-tutorials-development'
+    SECRET_KEY = 'how-to-articles-development'
     SQLALCHEMY_DATABASE_URI = 'postgresql://vagrant:vagrant@localhost:5432/test'
 
     GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
@@ -48,7 +47,7 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    SECRET_KEY = 'how-to-tutorials-development'
+    SECRET_KEY = 'how-to-articles-development'
     TESTING = True
     # WTF_CSRF_ENABLED = False
     # SQLALCHEMY_ECHO = True

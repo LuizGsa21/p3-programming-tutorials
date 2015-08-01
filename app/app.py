@@ -1,20 +1,21 @@
 import os
+import pprint
 
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, flash
+from flask_login import current_user, AnonymousUserMixin
+from .utils import xhr_or_template
 
+from extensions import db, csrf, login_manager
 from config import DevelopmentConfig
-from extensions import db, csrf, login_manager, current_user, babel
-from .admin import admin_bp
-from .api import api_bp
-from .frontend import frontend_bp
-from .user import user_bp
-from .oauth import oauth_bp
-from .models import Category, init_database
-from .helpers.utils import format_datetime, slugify
-from .helpers.momentjs import momentjs
+from views import api_bp, frontend_bp, user_bp, oauth_bp
+from models import Category
 
 
-DEFAULT_BLUEPRINTS = (admin_bp, api_bp, frontend_bp, user_bp, oauth_bp)
+# TODO: fix avatar upload, sometimes it overwrites original image
+# TODO: fix username registration
+# TODO: fix popover. change `This` to field name
+
+DEFAULT_BLUEPRINTS = (api_bp, frontend_bp, user_bp, oauth_bp)
 
 
 def create_app(app_name=None, blueprints=None, config=None):
@@ -37,10 +38,6 @@ def create_app(app_name=None, blueprints=None, config=None):
     configure_error_handlers(app)
     configure_jinja_filters(app)
 
-    # from .models import init_database
-    with app.app_context():
-        init_database()
-
     return app
 
 
@@ -51,20 +48,42 @@ def configure_hook(app):
 
     @app.context_processor
     def jinja_globals():
-        return dict(categories=Category.query.all(), isLoggedIn=current_user.is_authenticated())
+        return dict(categories=Category.query.order_by(Category.name).all(), isLoggedIn=current_user.is_authenticated())
 
 
 def configure_extensions(app):
+    # flask SQLAlchemy
     db.init_app(app)
     db.create_all(app=app)
 
+    # CSRF Protection
     csrf.init_app(app)
 
-    login_manager.init_app(app)
-    login_manager.login_view = 'frontend.index'
+    @csrf.error_handler
+    @xhr_or_template('errors/forbidden-page.html')
+    def csrf_error(message):
+        flash(message, 'danger')
+        return {'status': 400}
+
 
     # mail.init_app(app)
-    babel.init_app(app)
+
+    # Login Manger
+    login_manager.init_app(app)
+    login_manager.login_view = 'frontend.login'
+
+    # Setup login manager anonymous class.
+    class DefaultAnonymousUserMixin(AnonymousUserMixin):
+        id = None
+        firstName = None
+        lastName = None
+        username = 'Guest'
+        email = None
+        dateJoined = None
+        avatar = 'avatar.jpg'
+        # TODO: find an avatar for guest users
+
+    login_manager.anonymous_user = DefaultAnonymousUserMixin
 
 
 def configure_blueprints(app, blueprints):
@@ -87,19 +106,17 @@ def configure_error_handlers(app):
 
 
 def configure_jinja_filters(app):
-    @app.template_filter('datetime')
-    def datetime(*args, **kwargs):
-        return format_datetime(*args, **kwargs)
 
-    @app.template_filter('slug')
-    def slug(url, delim=u'-'):
-        return slugify(url, delim=u'-')
+    import schemas
+    import forms
 
     @app.template_filter('custom_json')
-    def custom_json(obj, serializer):
-        import json
-        result, error = serializer.dump(obj)
-        return json.dumps(result)
+    def custom_json(obj, serializer, **kwargs):
+        if isinstance(serializer, basestring):
+            serializer = getattr(schemas, serializer + '_serializer')
+            if serializer is None:
+                raise ValueError('Invalid serializer')
+        return serializer.dumps(obj, **kwargs).data
 
     @app.template_filter('os_environ')
     def os_environ(key):
@@ -110,8 +127,23 @@ def configure_jinja_filters(app):
         n = max(1, n)
         return [l[i:i + n] for i in range(0, len(l), n)]
 
-    # TODO: replace this with the current datetime filter
-    @app.template_filter('fromnow')
-    def fromnow(timestamp):
+    @app.template_filter('capitalize')
+    def to_camelcase(word):
+        # http://stackoverflow.com/questions/4303492/how-can-i-simplify-this-conversion-from-underscore-to-camelcase-in-python
+        def camelcase():
+            t = type(word)
+            yield t.lower
+            while True:
+                yield t.capitalize
+        c = camelcase()
+        return "".join(c.next()(x) if x else '_' for x in word.split("_"))
 
-        return momentjs(timestamp).fromNow()
+    def get_form(name, **kwargs):
+        form = getattr(forms, name + 'Form')
+        if form is None:
+            raise ValueError('Invalid form name.')
+        return form(**kwargs)
+
+    app.jinja_env.globals['get_form'] = get_form
+    # app.jinja_env.trim_blocks = True
+    # app.jinja_env.lstrip_blocks = True

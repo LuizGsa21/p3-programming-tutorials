@@ -1,48 +1,50 @@
 {% extends 'layout.html' %}
-{% from 'macros.html' import render_field, alert_messages, render_input_group %}
+
 {% block metaTags -%}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/0.9.1/cropper.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/0.9.1/cropper.min.css"/>
 {%- endblock %}
+
+{% set json_response = result|tojson %}
+
+{% block header %}
+    <script> requirejs(['user-profile']); </script>
+{% endblock %}
+
 {% block bodyID %}page-profile{% endblock %}
-{% set active_page = 'Profile' %}
+
 {% block body %}
 <section class="profile">
     <div class="container">
         <div class="row"><div class="col-xs-12 alert-box"></div></div>
         <div class="row row-table-md">
             <div class="col-xs-12 col-md-4">
-                <div class="avatar-container lg"><img class="avatar-thumbnail-lg" src="" alt=""/></div>
+                <div class="avatar-container lg"><img class="avatar-thumbnail-lg" data-bind="attr: { src: user.avatar }" src="" alt=""/></div>
                 <div class="more-info">
                     <div class="username"></div>
                     <div class="settings">
-                        <a data-toggle="modal" data-action="editAvatar" href="#main-modal">Edit Avatar</a>
+                        <a data-bind="click: showModal" href="#" data-method="editAvatar">Edit Avatar</a>
                     </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
-                {{ alert_messages(get_flashed_messages(with_categories=true)) }}
                 <table id="profile-table" class="table table-hover profile-table">
                     <thead><tr>
                             <th class="title">General Info</th>
                             <th class="text-right">
-                                <a href="#main-modal" class="btn-profile-edit" data-toggle="modal" data-action="editProfile">Edit</a>
+                                <a data-bind="click: showModal" data-method="editProfile" class="btn-profile-edit">Edit</a>
                             </th>
                     </tr></thead>
                     <tbody>
                         <tr><th>Username</th>
-                            <td class="username"></td></tr>
-
+                            <td data-bind="text: user.username"></td></tr>
                         <tr><th>Email</th>
-                        <td class="email"></td></tr>
-
+                        <td data-bind="text: user.email"></td></tr>
                         <tr><th>First Name</th>
-                            <td class="first_name"></td></tr>
-
+                            <td data-bind="text: user.firstName"></td></tr>
                         <tr><th>Last Name</th>
-                            <td class="last_name"></td></tr>
-
+                            <td data-bind="text: user.lastName"></td></tr>
                         <tr><th>Date Joined</th>
-                            <td class="date_joined"></td>
+                            <td data-bind="attr: { 'data-time': user.dateJoined }"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -52,467 +54,48 @@
     </div>
 </section>
 
-<section class="published-tutorials">
+<section class="published-articles">
     <div class="container">
         <div class="row row-table-sm">
             <div class="col-xs-12 col-sm-8">
                 <h1 class="main-title">Published Tutorials</h1>
             </div>
             <div class="col-xs-12 col-sm-4 add-btn-container">
-                <a href="#main-modal" data-toggle="modal" data-action="addTutorial" class="btn btn-primary">
+                <a data-bind="click: showModal" data-method="addArticle" class="btn btn-primary">
                     Add New <span class="glyphicon glyphicon-plus-sign"></span></a>
             </div>
         </div>
         <div class="row">
             <div class="col-xs-12 table-container">
-                <table id="tutorial-table" class="table table-hover published-tutorials-table">
+                <table id="article-table" class="table table-hover published-articles-table">
                     <thead><tr><th>Title</th><th>Category</th><th>Date Created</th><th>Action</th></tr></thead>
-                    <tbody>
-
+                    <tbody data-bind="template: { name: 'template-tutorial-row' }">
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </section>
-<div id="main-modal" class="modal fade">
-    <div class="modal-dialog">
+
+<div id="main-modal" class="modal fade" data-bind="with: modal">
+    <div data-bind="attr: { class: modalCSS }, if: initialized">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title"></h4>
+                <h4 class="modal-title" data-bind="text: title"></h4>
             </div>
-            <div class="modal-body"></div>
+            <div class="modal-body" data-bind="template: { name: bodyTemplate }">
+
+            </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary btn-submit">Submit</button>
+                <button type="button" data-bind="text: btnCancel, attr: { class: btnCancelCSS }" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" data-bind="click: submitForm, text: btnSubmit, attr: { class: btnSubmitCSS }" class="btn btn-primary">Submit</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div>
-{% endblock %}
-
-{% block bodyPostfix %}
-<!-- Templates
-========================================================  -->
-<script id="templates" type="text/html">
-    <form id="form-tutorial" method="post">
-        {% for field in forms.addArticle if field.widget.input_type != 'hidden' -%}
-            {%- if field.name == 'body' %}
-                {{ render_field(field, cols=30, rows=4) }}
-            {% else %}
-                {{ render_field(field) }}
-            {% endif %}
-        {% endfor %}
-    </form>
-    <form id="form-profile" action="{{ url_for('user.edit_profile') }}" method="post">
-        {{ forms.editProfile.hidden_tag() }}
-        {% for field in forms.editProfile if field.widget.input_type != 'hidden' %}
-            {{ render_field(field) }}
-        {% endfor %}
-    </form>
-
-<div id="form-avatar-upload" class="container-fluid">
-    <div class="row">
-        <div class="col-xs-12">
-            <form action="{{ url_for('user.upload') }}" method="post" enctype="multipart/form-data">
-                {% for field in forms.uploadAvatarForm if field.type != 'CSRFTokenField' %}
-                    {{ render_input_group(field, placeholder=field.label.text) }}
-                {% endfor %}
-            </form>
-        </div>
-        <div class="col-md-8">
-            <h3 class="text-center">Canvas</h3>
-            <div class="avatar-wrapper"><img src="" alt="avatar"/></div>
-        </div>
-        <div class="col-md-4">
-            <h3 class="text-center">Preview</h3>
-            <div class="avatar-preview preview-lg"></div>
-            <div class="avatar-preview preview-md"></div>
-        </div>
-    </div>
-</div>
-</script>
-<!-- END templates ========================================================  -->
-<script src="{{ url_for('static', filename='js/cropper.min.js') }}"></script>
-<script>
-
-    // TODO: fix profile page - delete tutorial css
-    +function ($) {
-        'use strict';
-
-        function initTemplates() {
-            var temp = $($('#templates').html());
-            // create a clone wrapper to ensure the templates return a new instance
-            var clone = function() {return this.clone()};
-            return {
-                tutorialForm: clone.bind(temp.filter('#form-tutorial')),
-                profileForm: clone.bind(temp.filter('#form-profile')),
-                avatarModalBody: clone.bind(temp.filter('#form-avatar-upload'))
-            };
-        }
-
-        // inner-global variables
-        var tutorials = {{ current_user.articles|custom_json(serializers['article'])|safe }},
-            userInfo = {{ current_user|custom_json(serializers['userInfo'])|safe }},
-            $mainModal = $('#main-modal'),
-            templates = initTemplates();
-
-        var tutorialTable = {
-            addRows: function (rows) {
-                var $row,
-                    item,
-                    templateBuffer = [],
-                    $table = $('#tutorial-table'),
-                    // if a single row was given make it compatible
-                    dataArray = (rows instanceof Array) ? rows : [rows],
-                    length = dataArray.length,
-                    template =  [
-                        '<tr><td class="title"></td><td class="category"></td><td class="date"></td><td class="action">',
-                        '<a href="#main-modal" class="btn-tutorial-edit btn btn-sm btn-warning" data-toggle="modal" data-action="editTutorial">Edit</a>',
-                        '<a href="#main-modal" class="btn-tutorial-delete btn btn-sm btn-danger" data-toggle="modal" data-action="deleteTutorial">Delete</a>',
-                        '</td></tr>'
-                    ].join('');
-
-                $('.empty-table').remove(); // remove empty table cell
-
-                for (var i = 0; i < length; i++) {
-                    item = dataArray[i];
-                    $row = $(template);
-                    $row.attr('id', ['tutorial-', item.id].join(''));
-                    $row.find('.title').html(item.title);
-                    $row.find('.category').html(item.category.name);
-                    $row.find('.date').html(item.date_created);
-                    $row.find('.date').attr('data-time', item.date_created);
-                    $row.find('.action a').data('item', item);
-                    templateBuffer.push($row)
-                }
-                // add rows to DOM
-                $table.find('tbody').append(templateBuffer);
-            },
-            deleteRows: function (rows) {
-                var $table, $tableBody, item;
-                $table = $('#tutorial-table');
-                $tableBody = $table.find('tbody');
-                // if a single row was given turn it to an array
-                rows = (rows instanceof Array) ? rows : [rows];
-
-                for (var i = 0; i < rows.length; i++) {
-                    item = rows[i];
-                    $('#tutorial-' + item.id).remove();
-                }
-                // If all items were deleted give the table a better look
-                if ($tableBody.find('tr').length == 0) {
-                    tutorialTable.addEmptyRow()
-                }
-            },
-            editRow: function(item) {
-                var $row;
-                $row = $('#tutorial-' + item.id);
-                $row.find('.category').html(item.category.name);
-                $row.find('.title').html(item.title);
-                $row.find('a').data('item', item);
-            },
-            addEmptyRow: function () {
-                $('#tutorial-table')
-                    .find('tbody')
-                    .html([
-                        '<tr class="empty-table">',
-                        '<td colspan="4" class="text-center">',
-                        'No published tutorials',
-                        '</td></tr>'].join(''));
-            }
-        };
-
-
-        var profileTable = {
-            editRows: function (data) {
-                var $table, $avatar;
-                $table = $('#profile-table');
-                $avatar = $('.avatar-thumbnail-lg');
-                $table.find('.btn-profile-edit').data('item', data);
-                for (var key in data) {
-                    if ( ! data.hasOwnProperty(key)) continue;
-                    if (key == 'avatar') {
-                        $avatar.attr('src', data[key]);
-                    } else {
-                        $table.find('.' + key).html(data[key] || 'Not available');
-                    }
-                }
-                $('.username').html(data['username']);
-            }
-        };
-
-        var avatar = {
-            setupCropper: function($modal) {
-                var $image = $modal.find('.avatar-wrapper > img'),
-                    $cropData = $modal.find('#crop_data');
-
-                $image.cropper({
-                    aspectRatio: 1,
-                    preview: '.avatar-preview',
-                    strict: true,
-                    crop: function (data) {
-                      var json = [
-                            '{"x":', data.x,
-                            ',"y":', data.y,
-                            ',"height":', data.height,
-                            ',"width":', data.width, '}'
-                          ].join('');
-                        $cropData.val(json);
-                    }
-                });
-
-                // update canvas image when a file is added
-                $modal.find('input[type="file"]').on('change', function () {
-                    var $this = $(this);
-                    var files = $this.prop('files');
-                    if (files.length > 0) {
-                        var file = files[0];
-                        console.log(file);
-                        var url = URL.createObjectURL(file);
-                        $image.cropper('replace', url);
-                    }
-                    $modal.find('.btn-submit').html('Upload Avatar');
-                });
-
-            }
-        };
-
-    var modalBuilder = {
-        addTutorial: function ($modal) {
-            var $form = templates.tutorialForm();
-            // set form url
-            $form.attr('action', '{{ url_for("user.add_article") }}');
-
-            // Update modal title
-            $modal.find('.modal-title').append('Add Tutorial');
-            $modal.find('.modal-body').append($form);
-
-            // update action button css
-            var $actionBtn = $modal.find('.btn-submit');
-            $actionBtn.addClass('btn-primary').html('Add Tutorial');
-        },
-        editTutorial: function ($modal) {
-            var $form = templates.tutorialForm(),
-                item = $modal.data('item');
-            // set form url
-            $form.attr('action', '{{ url_for("user.edit_article") }}');
-
-            // Update modal title
-            $modal.find('.modal-title').append('Edit Tutorial');
-
-            // populate form fields
-            $.each(item, function (key, value) {
-                if (key == 'category') {
-                    value = value.id;
-                }
-                $form.find(['#', key].join('')).val(value);
-            });
-
-            // add input field with the item's id attached
-            $form.append('<input id="id" name="id" type="hidden" value="' + item.id + '"/>');
-
-            // append hidden form to body
-            $modal.find('.modal-body').append($form);
-
-            // update action button css
-            var $actionBtn = $modal.find('.btn-submit');
-            $actionBtn.addClass('btn-primary').html('Save Tutorial');
-        },
-        deleteTutorial: function ($modal) {
-            var item = $modal.data('item'),
-                title = item.title,
-                $form = $('<form/>', {
-                    action: '{{ url_for("user.delete_article") }}',
-                    method: 'POST'
-                });
-            $form.append('<input id="id" name="id" type="hidden" value="' + item.id + '"/>');
-
-            // create title
-            $modal.find('.modal-title')
-                .append('<span class="text-danger">Warning!!!</span>');
-
-            var $modalBody = $modal.find('.modal-body');
-            // append hidden form and the dialog message to the modal's body
-            $modalBody.append($form)
-                .append(['<p>Are you sure you want to delete <strong class="text-danger">', title,
-                    '</strong> permanently?</p>'].join(''));
-            // update action button css
-            var $actionBtn = $modal.find('.btn-submit');
-            $actionBtn.addClass('btn-danger').html('Delete Tutorial');
-        },
-        editProfile: function ($modal) {
-            var item, title, $form;
-            item = $modal.data('item');
-            $form = templates.profileForm();
-            $form.find(':input').each(function () {
-                if (this.type == 'hidden') return; // ignore hidden fields
-                $(this).val(item[this.id]);
-            });
-            $modal.find('.modal-title').html('General Info');
-            $modal.find('.modal-body').append($form);
-            $modal.find('.btn-submit').addClass('btn-primary').html('Save Profile')
-        },
-        editAvatar: function ($modal) {
-            var title, $body, imgUrl, $image;
-            // make this modal larger to display the canvas
-            $modal.find('.modal-dialog').addClass('modal-lg');
-            $modal.find('.modal-title').html('Avatar');
-
-            $body = templates.avatarModalBody();
-            // setup the main image used in the canvas
-            imgUrl = $('.avatar-thumbnail-lg').attr('src');
-
-            // use the original image
-            var temp = imgUrl.split('/');
-            temp.push('original-' + temp.pop()); // pop the filename, add 'original-' as prefix
-            imgUrl = temp.join('/');
-
-            $image = $body.find('.avatar-wrapper > img');
-            $image.attr('src', imgUrl);
-
-            // setup image previews ( md, lg )
-            $body.find('.avatar-preview').html('<img src="' + imgUrl + '" />');
-            $modal.find('.modal-body').append($body);
-            $modal.find('.btn-submit').addClass('btn-primary').html('Update Avatar');
-
-            // hide the images to prevent any flickering while the cropper initializes
-            $modal.find('img').css('opacity', 0);
-
-            // initialize the cropper when its container is visible
-            $modal.one('shown.bs.modal', function (e) {
-                avatar.setupCropper($(this));
-            });
-        }
-    };
-
-        // AJAX action handlers
-        var responseHandler = {
-            addTutorial: function ($modal, data) {
-                var messages = data['flashed_messages'];
-                tutorialTable.addRows(data.article);
-                updateTime();
-                app.displayMessages('#tutorial-table', messages);
-            },
-            editTutorial: function($modal, data) {
-                var messages, item, $row;
-                messages = data['flashed_messages'];
-                item = data.article;
-                tutorialTable.editRow(data.article);
-                // get item row and update its content
-                $row = $('#tutorial-' + item.id);
-                $row.find('.category').html(item.category.name);
-                $row.find('.title').html(item.title);
-                $row.find('a').data('item', item);
-                app.displayMessages('#tutorial-table', messages);
-            },
-            deleteTutorial: function($modal, data) {
-                var item;
-                item = $modal.data('item');
-                tutorialTable.deleteRows(item);
-                $modal.modal('hide');
-                app.displayMessages('#tutorial-table', data['flashed_messages']);
-            },
-            editProfile: function($modal, data) {
-                var item, messages;
-                messages = data['flashed_messages'];
-                item = data.userInfo;
-                profileTable.editRows(item);
-                app.displayMessages($('#profile-table'), messages);
-            },
-
-            editAvatar: function($modal, data) {
-                $('.avatar-thumbnail-lg').attr('src', data.userInfo.avatar + '?time=' + new Date().getTime());
-            }
-
-        };
-
-        // Modal Setup
-        // send AJAX request when user clicks the modal's submit button
-        $mainModal.on('click', '.btn-submit',  function(e) {
-            var $form,
-                data = $mainModal.data(),
-                action = data.action;
-            var options = data.options;
-            $form = $mainModal.find('form');
-
-            $form.ajaxSubmit({
-               dataType: 'json',
-               beforeSend: app.getCSRFHeader(),
-               success: function(data) {
-                   $('.alert-messages').remove(); // remove any previous alerts
-                   responseHandler[action]($mainModal, data);
-                   $mainModal.modal('hide');
-               },
-               error: function(data) {
-                   $('.alert-messages').remove();
-
-                   // If the server returned a JSON on error.
-                   // display the errors inside the modal
-                   if (data.responseJSON) {
-                       app.displayMessages($mainModal.find('form'), data.responseJSON['flashed_messages']);
-                   } else {
-                       // else dynamically create an alert message and append to '.alert-box'
-                       app.displayGenericError($('.alert-box'), data);
-                       console.log(data);
-
-                       $mainModal.modal('hide');
-                       $('body').scrollTop(0);
-                   }
-
-                }
-           });
-        });
-
-        // Dynamically create the modal's content before its shown
-        $mainModal.on('show.bs.modal', function (e) {
-            var data = $(e.relatedTarget).data(),
-                action = data.action;
-            $mainModal.data(data);
-            modalBuilder[action]($mainModal);
-        });
-
-        // ensure old content gets deleted after modal closes
-        $mainModal.on('hidden.bs.modal', function () {
-            $mainModal.find('.modal-dialog').removeClass('modal-lg');
-            $mainModal.find('.modal-title').html('');
-            $mainModal.find('.modal-body').html('');
-            $mainModal.find('.btn-submit').removeClass('btn-primary btn-danger btn-warning');
-            $mainModal.removeData();
-        });
-
-        profileTable.editRows(userInfo);
-
-        if (tutorials.length > 0) {
-            tutorialTable.addRows(tutorials);
-            updateTime();
-        } else {
-            tutorialTable.addEmptyRow()
-        }
-
-        function updateTime($elements) {
-            // update the entire page if no arguments were given
-            if ( ! $elements )
-                $elements = $('[data-time]');
-
-            $elements.each(function(i) {
-               var $this = $(this), localTime, message;
-               // parse utc time to local time
-               localTime = moment.utc($this.data('time'));
-               message = moment(localTime).fromNow();
-               // if the time difference is less than a second it will display the wrong message.
-               // I'm probably using momentjs wrong but this will do for now.
-               message = (message == 'in a few seconds') ? 'a few seconds ago' : message;
-               this.innerHTML = message;
-            });
-        }
-
-        // init time updater
-        updateTime();
-        // update time every min
-        setInterval(updateTime, 60 * 1000);
-    }(jQuery)
-</script>
+{# add page templates #}
+{# TODO: fix logout page to redirect to homepage #}
+{% include 'user/profile-templates.html' %}
 
 {% endblock %}

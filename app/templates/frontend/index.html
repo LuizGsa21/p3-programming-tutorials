@@ -1,84 +1,35 @@
 {% extends 'layout.html' -%}
-{% import 'macros.html' as m -%}
+
+{% from 'macros/alert-messages.html' import alert_messages %}
+{% from 'macros/login-form.html' import render_login_form with context %}
+
+{% set json_response = result|tojson %}
+{% block header %}
+    <script> requirejs(['frontend-index']); </script>
+{% endblock %}
+
 {% block metaTags %}{% endblock -%}
 
-{# Links to hide in the navbar #}
-{% set hidden_links = ['Login', 'Register'] if isLoggedIn else ['Login', 'Register', 'Profile', 'Logout'] %}
-
 {%- block bodyID %}page-index{% endblock -%}
+
 {% block body %}
 <section class="header">
 <div class="container">
     <div class="row">
-    <div id="general-alert" class="alert-container">
-        {{ m.alert_messages(get_flashed_messages(with_categories=true)) -}}
+    <div id="general-alert">
+        {{ alert_messages(get_flashed_messages(with_categories=true)) -}}
     </div>
-        {#  bring the owl to the center of the page if the user is logged in #}
-        {%- if isLoggedIn -%}
-            <div id="main-logo-container" class="col-sm-12">
-        {% else -%}
-            <div id="main-logo-container" class="col-sm-6 hidden-xs">
-        {% endif -%}
+        {#  center the owl on the page if the user is logged in #}
+        <div id="main-logo-container" class="{{ 'col-xs-12' if isLoggedIn else 'col-sm-6 hidden-xs' }}">
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo"/>
         </div>
-        {#  hide login/registration forms #}
-        <div {{ 'style="display:none;"' if isLoggedIn else ''}} class="col-sm-6">
-            <div id="form-alert" class="alert-container">
-            </div>
-            <div id="login-form" class="nav-tabs-container">
-                <!-- TAB NAVIGATION -->
-                <ul id="form-tabs" class="nav nav-tabs nav-justified no-collapse" role="tablist">
-                    <li class="active"><a href="#tab-register" role="tab" data-toggle="tab">Register</a></li>
-                    <li><a href="#tab-login" role="tab" data-toggle="tab">Login</a></li>
-                </ul>
-                <!-- TAB CONTENT -->
-                <div class="tab-content">
-                    <div class="active tab-pane fade in" id="tab-register">
-                        <form action="{{ url_for('frontend.register') }}" method="post" role="form">
-                            {{ forms['register'].csrf_token }}
-                            {% for field in forms['register'] if field.widget.input_type != 'hidden' -%}
-                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
-                            {% endfor %}
-                            <button type="submit" class="btn btn-block btn-lg btn-danger">Get Started</button>
-                        </form>
-                        <div class="social-media">
-                            <p class="info">Or register with:</p>
-                            <p class="text-justify-full">
-                                {{ m.get_social_buttons([
-                                {'google-plus':'#'},
-                                {'github':'#'},
-                                {'facebook':'#'}]) }}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="tab-login">
-                        <form action="{{ url_for('frontend.login') }}" method="post" role="form">
-                            {{ forms['login'].csrf_token }}
-                            {% for field in forms['login'] if field.widget.input_type != 'hidden' -%}
-                                    {{ m.render_field(field, label_class='sr-only', placeholder=field.label.text) }}
-                            {% endfor %}
-                            <button type="submit" class="btn btn-block btn-lg btn-danger">Login</button>
-                        </form>
-                        <div class="social-media">
-                            <p class="info">Or login with:</p>
-                            <p class="text-justify-full">
-                                {{ m.get_social_buttons([
-                                {'google-plus':'#'},
-                                {'github':'#'},
-                                {'facebook':'#'}]) }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        <div id="login-form" class="col-sm-6" data-bind="component: 'login-form'"></div>
     </div>
 </div>
 
 <div class="bottom-panel">
     <div class="learn-more">
-        <a href="#community" data-slowscroll="#community">Learn More <br/><span class="glyphicon glyphicon-chevron-down"></span></a>
+        <a href="#community">Learn More <br/><span class="glyphicon glyphicon-chevron-down"></span></a>
     </div>
 </div>
 </section>
@@ -132,107 +83,9 @@
 {% endblock %}
 
 {% block bodyPostfix %}
+{% endblock %}
+{% block lteIE9 %}
 <script>
-"use strict";
-$(function($) {
-
-function onSuccessLogin(data) {
-    // hide the login/registration form parent container
-    $('#login-form').parent().fadeOut(500, function() {
-      // center the main website logo
-      $('#main-logo-container').animate({width:'100%'}, 500, function() {
-            $(this).attr('class', 'col-xs-12');
-      });
-    });
-    // Show profile and logout navigation link
-    app.navbar.loginState();
-    // show any messages received from the server
-    showMessages(data);
-}
-
-function onFailLogin(data) {
-    if (data.responseJSON) {
-        // show any messages received from the server
-        showMessages(data.responseJSON);
-    } else {
-        // unknown error. convert the html response into an alert box and display it
-        app.displayGenericError($('.alert-container'), data);
-    }
-}
-
-function onSuccessLogout(data) {
-    showMessages(data);
-    app.navbar.logoutState();
-    $('#main-logo-container').animate({width:'50%'}, 500, function() {
-        $(this).attr('class', 'col-sm-6 hidden-xs');
-        $('#login-form').parent().fadeIn(500, function() {
-            toggleNavbarLinks.isVisible = false;
-            toggleNavbarLinks();
-        });
-    });
-}
-
-function onFailLogout(data) {
-    if (data.responseJSON) {
-        showMessages(data.responseJSON);
-    } else {
-        app.displayGenericError($('#general-alert'), data);
-    }
-}
-
-function showMessages(data) {
-    var $container = $('.alert-container');
-    app.clearAlerts($container, function() {
-        var selector = data.hasOwnProperty('form-error') && data['form-error'] ? '#form-alert' : '#general-alert';
-        app.displayMessages($container.filter(selector), data['flashed_messages'], 'append');
-    });
-}
-
-$('.nav-logout').click(function(e) {
-    e.preventDefault();
-    app.logout(onSuccessLogout, onFailLogout);
-});
-
-var $loginForm = $('#login-form');
-
-// Login/Register listeners
-$loginForm.on('click', 'a[class|="azm"], button', function(e) {
-    e.preventDefault();
-    var provider = $(this).classList()[0].replace('azm-', '');
-    switch (provider) {
-        // oauth providers login/register
-        case 'google-plus': app.google.requestOfflineAccess(onSuccessLogin, onFailLogin); break;
-        case 'github': app.github.login(onSuccessLogin, onFailLogin); break;
-        case 'facebook': app.facebook.login(onSuccessLogin, onFailLogin); break;
-        default:
-            // default login/register
-            $(this).blur().parent().ajaxSubmit({success: onSuccessLogin,error: onFailLogin});
-    }
-});
-
-// Scrolls to and display login/register form when
-// the user clicks on the navbar `Login` or `Register` link.
-$('#navbar-inner').on('click', '.nav-login, .nav-register',function(e) {
-    e.preventDefault();
-    var $tab = $loginForm.find('a[href='+ $(this).attr('href') + ']');
-    $tab.click();
-    $('html, body').stop().animate({
-            scrollTop: 0
-        }, 900, 'swing');
-});
-
-// Scroll to the 2nd section on the page.
-$('a[href^="#community"]').on('click', function (e) {
-    e.preventDefault();
-    var $target = $(this.getAttribute('href'));
-    if ($target.length) {
-        $('html, body').stop().animate({
-            scrollTop: $target.offset().top
-        }, 900, 'swing');
-    }
-});
-
-if (bowser.msie && bowser.version <= 9) {
     // fallback for browsers that don't support viewport units
     $(window).resize(function () {
         $('.header').css('height', $(window).height() + 'px');
@@ -247,36 +100,5 @@ if (bowser.msie && bowser.version <= 9) {
             jQuery.placeholder.shim();
         }
     });
-}
-
-}, jQuery);
 </script>
-
-
-
-<script>
-"use strict";
-// Hide the navbar login and register link when whe the login form is visible, otherwise display them.
-// if the user is logged in this method will do nothing
-function toggleNavbarLinks() {
-
-    if (app.isLoggedIn) return; // early break
-
-    var f = toggleNavbarLinks; // use this function to keep track of the current state
-    if (f.$tab === undefined) { // initialize
-        f.$tab = $('#form-tabs').find('a');
-        f.isElementInViewport = app.helpers.isElementInViewport;
-    }
-
-    // check if the form TAB is visible
-    var isVisible = f.$tab.is(':visible') && f.isElementInViewport(f.$tab[0]);
-    if (isVisible !== f.isVisible) {
-        f.isVisible = isVisible;
-        app.navbar.updateLinks(['Login', 'Register'], isVisible ? 'hide': 'show', 500)
-    }
-}
-// Hide/show the navbar login/register links.
-$(window).on('DOMContentLoaded resize scroll', toggleNavbarLinks);
-</script>
-
 {% endblock %}

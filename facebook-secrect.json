@@ -1,0 +1,8 @@
+{
+  "web": {
+    "auth_uri": "https://graph.facebook.com/",
+    "token_uri": "https://graph.facebook.com/oauth/access_token",
+    "client_id": "1613608855542270",
+    "client_secret": "6f5c138bf1d18e14993a4a5263228ff4"
+  }
+}
