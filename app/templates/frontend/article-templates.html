@@ -15,7 +15,7 @@
                     <h4 class="media-heading" data-bind="text: subject"></h4>
                 <!-- /ko -->
                 <!-- ko ifnot: isComment -->
-                    <a class="reply-to" data-bind="text: recipientUsername" href="#"></a>
+                    <a class="reply-to" data-bind="text: '@' + recipientUsername" href="#"></a>
                 <!-- /ko -->
                 <span data-bind="attr: { 'data-time': dateCreated }" class="comment-date"></span>
             </div>
