@@ -30,7 +30,7 @@ define(['jquery'], function () {
 	LoginManager.prototype._setData = function _setData(data) {
 		var requiredKeys = [
 			'googleClientId', 'googleLoginUrl', 'facebookClientId',
-			'facebookLoginUrl', 'githubLoginUrl', 'logoutUrl', 'loginUrl'
+			'facebookLoginUrl', 'githubLoginUrl', 'logoutUrl', 'loginUrl', 'csrfToken'
 		];
 		for (var i = 0; i < requiredKeys.length; i++) {
 			var key = requiredKeys[i];
@@ -121,15 +121,50 @@ define(['jquery'], function () {
 				this.FB.api('/me', function () {
 					this._oAuthAjax(this._facebookLoginUrl, accessToken, callbacks);
 				}.bind(this));
-
 			} else {
 				callbacks.onFail(response);
 			}
 		}.bind(this), {scope: 'public_profile,email'});
 
 	};
-	LoginManager.prototype._githubInit = function _githubInit() {};
-	LoginManager.prototype._githubLogin = function _githubLogin() {};
+	// we will use full server-side flow when logging in with github accounts
+	//LoginManager.prototype._githubInit = function _githubInit() {};
+
+	LoginManager.prototype._githubLogin = function _githubLogin(callbacks) {
+		// github doesn't have a javascript api like google and facebook,
+		// so we will make our own popup
+		var popupWindow = window.open('', 'githubLogin', 'location=0,status=0,width=800,height=400');
+		// dynamically create a form and insert it in the popup
+		var $form = $('<form></form>', { method: 'post', action: this._githubLoginUrl });
+		// don't forget csrf token
+		$form.append($('<input></input>', {type: 'hidden', name: 'csrf_token', value: this._csrfToken}));
+		$('body', popupWindow.document).append($form);
+		$($form, popupWindow.document).submit();
+
+		// keeping checking if the popup is open every .5 seconds
+		var popupInterval = setInterval(function () {
+			if (popupWindow.closed) {
+				clearInterval(popupInterval); // clear this interval
+				// when the popup window closes get the response object from `window.popupResult`
+				if (window.popupResult) {
+					// save result then set `popupResult` back to undefined
+					var data = window.popupResult;
+					window.popupResult = undefined;
+					// call the appropriate callback
+					if (data && data.result['success']) {
+						callbacks.onSuccess(data);
+					} else {
+						callbacks.onFail(data)
+					}
+
+				} else {
+					// code reaches here when the user manually closes the popup window
+					callbacks.error();
+				}
+			}
+		}, 500);
+		callbacks.beforeSubmit();
+	};
 	LoginManager.prototype._oAuthAjax = function _oAuthAjax(url, accessToken, callbacks) {
 		var options = {
 			url: url,

@@ -81,6 +81,7 @@
             console.log({{ json_response|safe }});
             // Initialize the model data
             Model.initData({{ json_response|safe }}.result);
+            Model.getData('loginManager').csrfToken = "{{ csrf_token() }}";
 
             // Make sure we provide the CSRF token when `options.csrfHeader` is set to true
             $.ajaxPrefilter(function (options) {

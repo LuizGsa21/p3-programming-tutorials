@@ -10,7 +10,7 @@ from oauth2client.client import FlowExchangeError, flow_from_clientsecrets
 from app.extensions import db, oauth
 from app.models import User
 from app.utils import xhr_required, format_flashed_messages
-from app.schemas import user_serializer
+from app.schemas import user_info_serializer
 
 
 oauth_bp = Blueprint('oauth', __name__, url_prefix='/oauth')
@@ -87,7 +87,7 @@ def google_authorized():
         msg = 'You have successfully registered!'
     flash(msg + 'You are logged in as %s' % user.username, 'success')
 
-    return {'status': 200, 'user': user_serializer.dump(user).data}
+    return {'status': 200, 'user': user_info_serializer.dump(user).data}
 
 
 @oauth_bp.route('/facebook-login/authorized', methods=['POST'])
@@ -140,7 +140,7 @@ def facebook_authorized():
     session['facebook_oauth_token'] = accessToken
     flash('Logged in as id=%s name=%s' % (data['id'], data['name']), 'success')
 
-    return {'success': 1, 'status': 200, 'user': user_serializer.dump(user).data}
+    return {'success': 1, 'status': 200, 'user': user_info_serializer.dump(user).data}
 
 
 github = oauth.remote_app('github', **{
@@ -169,7 +169,11 @@ def github_login():
 def github_authorized(resp):
     if resp is None:
         flash('Access denied.', 'danger')
-        return render_template('close-popup.html')
+        result = {
+            'flashed_messages': format_flashed_messages(),
+            'success': 0
+        }
+        return render_template('close-popup.html', result=result)
 
     # get user info using github's api
     userinfo = requests.get('https://api.github.com/user',
@@ -179,7 +183,6 @@ def github_authorized(resp):
     # so we use id provided by github
     user = User.query.filter_by(oauthId=str(userinfo['id']), oauthProvider='github').first()
     if not user:
-
         fullname = userinfo['name'].split(' ', 1)
         if len(fullname) != 2:
             fullname = (fullname[0], None)
@@ -203,8 +206,8 @@ def github_authorized(resp):
     flash('Logged in as %s' % user.username, 'success')
     result = {
         'flashed_messages': format_flashed_messages(),
-        'success': 1,
-        'user': user_serializer.dump(user).data
+        'user': user_info_serializer.dump(user).data,
+        'success': 1
     }
     return render_template('close-popup.html', result=result)
 

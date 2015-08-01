@@ -44,8 +44,7 @@ define([
 
 		this.oAuthLogin = function (view, event) {
 			var provider = $(event.currentTarget).data('provider');
-			var loginManager = LoginManager.getInstance();
-			loginManager.login(provider, {
+			LoginManager.getInstance().login(provider, {
 				beforeSubmit: this._beforeSubmit,
 				onSuccess: this._onSuccess,
 				onFail: this._onFail

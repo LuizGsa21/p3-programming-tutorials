@@ -7,7 +7,7 @@
 <body>
 <script>
 var parent = window.opener;
-parent.popupResult = {{ result|tojson }};
+parent.popupResult = {result: {{ result|tojson }}};
 window.close();
 </script>
 </body>
