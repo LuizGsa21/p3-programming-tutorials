@@ -25,7 +25,7 @@ def google_authorized():
 
     if g.user and current_user.is_authenticated():
         flash('You are already logged in as %s.' % current_user.username, 'warning')
-        return {'status': 401, 'success': 0}
+        return {'status': 401}
     # retrieve authorization code
     code = request.data
     try:
@@ -36,7 +36,7 @@ def google_authorized():
 
     except FlowExchangeError:
         flash('Failed to upgrade authorization code.', 'danger')
-        return {'status': 401, 'success': 0}
+        return {'status': 401}
     access_token = credentials.access_token
     result = requests.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
                           params={'access_token': access_token})
@@ -52,12 +52,12 @@ def google_authorized():
     # verify that the access token is used for the intended user
     if gplus_id != result['user_id']:
         flash("Token's user ID doesn't match given user ID.", 'danger')
-        return {'status': 401, 'success': 0}
+        return {'status': 401}
 
     # verify that the access token is valid for this app
     if result['issued_to'] != credentials.client_id:
         flash("Token's client ID does not match app's.", 'danger')
-        return {'status': 401, 'success': 0}
+        return {'status': 401}
 
 
     result = requests.get('https://www.googleapis.com/oauth2/v2/userinfo', params={'access_token': access_token})
@@ -65,12 +65,12 @@ def google_authorized():
     # abort if failed to retrieve user info
     if not result.ok:
         flash('Failed to retrieve user info.', 'danger')
-        return {'status': result.status_code, 'success': 0}
+        return {'status': result.status_code}
     userinfo = result.json()
     user = User.query.filter_by(oauthId=gplus_id, oauthProvider='google-plus').first()
-    isNewUser = user is None
 
-    if isNewUser:
+    msg = ''
+    if not user:
         user = User(username=userinfo['email'],
                     email=userinfo['email'],
                     firstName=userinfo.get('given_name', None),
@@ -80,14 +80,15 @@ def google_authorized():
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-    session['google_oauth_token'] = (access_token, '')
-    login_user(user)
-    msg = ''
-    if isNewUser:
-        msg = 'You have successfully registered!'
-    flash(msg + 'You are logged in as %s' % user.username, 'success')
+        msg = 'You have successfully registered! <br>'
 
-    return {'status': 200, 'user': user_info_serializer.dump(user).data}
+    login_user(user)
+    session['google_oauth_token'] = (access_token, '')
+    flash(msg + 'You are logged in as %s' % user.username, 'success')
+    result = {
+        'user': user_info_serializer.dump(user).data,
+    }
+    return {'status': 200, 'result': result}
 
 
 @oauth_bp.route('/facebook-login/authorized', methods=['POST'])
@@ -122,8 +123,9 @@ def facebook_authorized():
         return {'success': 0, 'status': 401}
 
     data = result.json()
-    user = User.query.filter_by(email_insensitive=data['email']).first()
+    user = User.query.filter_by(oauthId=data['id'], provider='facebook').first()
 
+    msg = ''
     if not user:
         user = User(username=data['email'],
                     email=data['email'],
@@ -134,13 +136,15 @@ def facebook_authorized():
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-
+        msg = 'You have successfully registered! <br>'
     login_user(user)
 
     session['facebook_oauth_token'] = accessToken
-    flash('Logged in as id=%s name=%s' % (data['id'], data['name']), 'success')
-
-    return {'success': 1, 'status': 200, 'user': user_info_serializer.dump(user).data}
+    flash(msg + 'You are logged in as %s' % user.username, 'success')
+    result = {
+        'user': user_info_serializer.dump(user).data,
+        }
+    return {'status': 200, 'result': result}
 
 
 github = oauth.remote_app('github', **{
@@ -182,6 +186,7 @@ def github_authorized(resp):
     # getting an email from github isn't guaranteed
     # so we use id provided by github
     user = User.query.filter_by(oauthId=str(userinfo['id']), oauthProvider='github').first()
+    msg = ''
     if not user:
         fullname = userinfo['name'].split(' ', 1)
         if len(fullname) != 2:
@@ -200,10 +205,10 @@ def github_authorized(resp):
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-
+        msg = 'You have successfully registered! <br>'
     session['github_oauth_token'] = (resp['access_token'], '')
     login_user(user)
-    flash('Logged in as %s' % user.username, 'success')
+    flash(msg + 'You are logged in as %s' % user.username, 'success')
     result = {
         'flashed_messages': format_flashed_messages(),
         'user': user_info_serializer.dump(user).data,
