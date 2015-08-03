@@ -1,11 +1,13 @@
 define([
 	'utils/showMessages',
 	'utils/removeMessages',
-	'utils/updateTime'
-], function (showMessages, removeMessages, updateTime) {
+	'utils/updateTime',
+	'utils/shareResponse'
+], function (showMessages, removeMessages, updateTime, shareResponse) {
 	return {
 		show: showMessages,
 		remove: removeMessages,
-		updateTime: updateTime
+		updateTime: updateTime,
+		shareResponse: shareResponse
 	}
 });
