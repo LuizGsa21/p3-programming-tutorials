@@ -1,71 +1,9 @@
-{%- macro render_input_group(field, placeholder='', size='') -%}
-    {% if size != '' -%}
-        {% set size = 'input-group-' + size  -%}
-    {% endif -%}
-    <div class="form-group">
-    {%- if field.widget.input_type == 'hidden' -%}
-        {{ field(**kwargs) }}
-    {% else -%}
-        <label class="control-label sr-only">{{ field.label.text }}</label>
-        <div class="input-group {{ size }}">
-          <span class="input-group-addon">{{ placeholder }}</span>
-          {{ field(class_='form-control', **kwargs) }}
-        </div>
-    {% endif -%}
-    </div>
-{% endmacro -%}
-
-{# Snippet taken from:
-    http://bear-z.com/python/render-bootstrap-3-forms-with-wtforms-and-jinja/ #}
-
-{# Renders field for bootstrap 3 standards.
-
-    Params:
-        field - WTForm field
-        kwargs - pass any arguments you want in order to put them into the html attributes.
-        There are few exceptions: for - for_, class - class_, class__ - class_
-
-    Example usage:
-        {{ macros.render_field(form.email, placeholder='Input email', type='email') }}
-#}
-{% macro render_field(field, label_visible=true, label_class='') -%}
-    <div class="form-group{% if field.errors %} has-error{% endif %} {{ kwargs.pop('class_', '') }}">
-        {% if field.type != 'HiddenField' and field.type !='CSRFTokenField' and label_visible %}
-            {{ field.label(class_='control-label ' + label_class) }}
-        {% endif %}
-            {{ field(class_='form-control', **kwargs) }}
-        {% if field.errors %}
-            {% for e in field.errors %}
-                <p class="help-block">{{ e }}</p>
-            {% endfor %}
-        {% endif %}
-    </div>
-{%- endmacro -%}
-
-{# Renders checkbox fields since they are represented differently in bootstrap
-    Params:
-        field - WTForm field (there are no check, but you should put here only BooleanField.
-        kwargs - pass any arguments you want in order to put them into the html attributes.
-        There are few exceptions: for - for_, class - class_, class__ - class_
-
-    Example usage:
-        {{ macros.render_checkbox_field(form.remember_me) }}
- #}
 {% macro render_checkbox_field(field) -%}
     <div class="checkbox">
         <label>{{ field(type='checkbox', **kwargs) }} {{ field.label }}</label>
     </div>
 {%- endmacro %}
 
-{# Renders radio field
-    Params:
-        field - WTForm field (there are no check, but you should put here only BooleanField.
-        kwargs - pass any arguments you want in order to put them into the html attributes.
-        There are few exceptions: for - for_, class - class_, class__ - class_
-
-    Example usage:
-        {{ macros.render_radio_field(form.answers) }}
- #}
 {% macro render_radio_field(field) -%}
     {% for value, label, _ in field.iter_choices() %}
         <div class="radio">
@@ -76,27 +14,51 @@
     {% endfor %}
 {%- endmacro %}
 
-{%- macro render_form(form, class_='', action='', with_placeholder=True, with_databind=true, type='input-group', enctype="application/x-www-form-urlencoded") -%}
-    {% set render = render_input_group if type == 'input-group' else render_field %}
+{% macro render_field(field, attributes=None) -%}
+    {% set attributes = attributes|default({}, true) %}
+    <div class="form-group">
+        {% if field.widget.input_type != 'hidden' %}
+            {{ field.label(class_='control-label') }}
+        {% endif %}
+        {{ field(class_='form-control', **attributes) }}
+    </div>
+{%- endmacro -%}
 
-{#    <form enctype="{{ enctype }}" method="POST" class="{{ class_ }}" action="{{ action }}">#}
-    <form enctype="{{ enctype }}" method="POST" action="{{ action }}">
-{#        {{ form.hidden_tag() }}#}
+{%- macro render_input_group(field, attributes=None) -%}
+    {% set attributes = attributes|default({}, true) %}
+    {# set size options: lg sm or leave blank for medium which has no css class #}
+    {% set size = attributes.pop('_size', '') %}
+    {% if size != '' -%} {% set size = 'input-group-' + size  -%} {% endif -%}
+
+    <div class="form-group">
+    {%- if field.widget.input_type == 'hidden' -%}
+        {{ field(**attributes) }}
+    {% else -%}
+        <label class="control-label sr-only">{{ field.label.text }}</label>
+        <div class="input-group {{ size }}">
+          <span class="input-group-addon">{{ attributes.pop('placeholder', field.label.text) }}</span>
+          {{ field(class_='form-control', **attributes) }}
+        </div>
+    {% endif -%}
+    </div>
+{% endmacro -%}
+
+{%- macro render_form(form, options, default_databind=true) -%}
+
+    {# Get which type of bootstrap field to render #}
+    {% set render = render_input_group if options.get('_fieldType', '') == 'input-group' else render_field %}
+
+    <form enctype="{{ options.get('_enctype', 'application/x-www-form-urlencoded') }}" method="{{ options.get('_method', 'POST') }}" action="{{ options.get('_action', '') }}">
         {%- for field in form -%}
-            {# keep the camelcase format while capitalizing the field id #}
-            {% set fieldName = 'value: form' + field.id[0:1:].capitalize() + field.id[1::] if with_databind else '' %}
-            {% set placeholder =  field.label.text if with_placeholder else '' %}
-            {% if field.type == 'CSRFTokenField' -%}
-                {# Do nothing. We will use the token provided on ajax request #}
-            {% elif field.widget.input_type == 'hidden' -%}
+        {# Ignore csrf token fields since we will provide it on ajax requests #}
+        {% if field.type != 'CSRFTokenField' -%}
+                {% set fieldOptions = options.get(field.id, {}) %}
+                {% if not fieldOptions.has_key('data-bind') and default_databind %}
+                    {{ fieldOptions.update({'data-bind': 'value: form' + field.id[0:1:].capitalize() + field.id[1::]} )|default('', true) }}
+                {% endif %}
+                {{ render(field, fieldOptions) }}
+        {% endif -%}
 
-                {{ render(field, **{'data-bind': fieldName }) }}
-
-            {% elif field.type == 'TextAreaField' -%}
-                {{ render(field, cols=30, rows=4, placeholder=placeholder, **{'data-bind': fieldName}) }}
-            {% else -%}
-                {{ render(field, placeholder=placeholder, **{'data-bind': fieldName}) }}
-            {% endif -%}
         {%- endfor %}
     </form>
 {%- endmacro -%}

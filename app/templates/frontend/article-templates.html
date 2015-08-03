@@ -23,7 +23,10 @@
             <div data-bind="storeElement: fadeVisible isFormVisible, template: { name: 'template-' + formName, if: renderForm() }"></div>
             <div class="actionbar">
                 <a href="#" data-bind="click: hideForm, storeElement: fadeVisible isFormVisible" class="btn btn-danger">Cancel</a>
-                <a href="#" data-bind="text: btnTriggerText, click: isFormVisible() ? submitForm : showForm" class="btn btn-primary"></a>
+                <a href="#"
+                data-bind="text: btnTriggerText,
+                           attr: { 'data-id': id, 'class': btnTriggerCSS },
+                           click: isFormVisible() ? submitForm : showForm" class="btn btn-primary"></a>
             </div>
         </div>
     </li>
@@ -32,17 +35,33 @@
 
 {# Form templates #}
 <script id="template-EditCommentForm" type="template-form">
-    {{ render_form(get_form('EditComment'), class_='EditComment', action=url_for('frontend.edit_comment')) }}
+    {{ render_form(get_form('EditComment'), {
+        '_fieldType': 'input-group',
+        '_action': url_for('frontend.edit_comment'),
+        'message': {'rows': 4, 'cols':30}
+    }) }}
 </script>
 
 <script id="template-EditReplyForm" type="template-form">
-    {{ render_form(get_form('EditReply'), class_='EditReply', action=url_for('frontend.edit_comment')) }}
+    {{ render_form(get_form('EditReply'), {
+        '_fieldType': 'input-group',
+        '_action': url_for('frontend.edit_comment'),
+        'message': {'rows': 4, 'cols':30}
+    }) }}
 </script>
 
 <script id="template-AddReplyForm" type="template-form">
-    {{ render_form(get_form('AddReply'), class_='AddReply', action=url_for('frontend.add_comment')) }}
+    {{ render_form(get_form('AddReply'), {
+        '_fieldType': 'input-group',
+        '_action': url_for('frontend.add_comment'),
+        'message': {'rows': 4, 'cols':30}
+    }) }}
 </script>
 
 <script id="template-AddCommentForm" type="template-form">
-    {{ render_form(get_form('AddComment'), class_='AddComment', action=url_for('frontend.add_comment')) }}
+        {{ render_form(get_form('AddComment'), {
+            '_fieldType': 'input-group',
+            '_action': url_for('frontend.add_comment'),
+            'message': {'rows': 4, 'cols':30}
+        }) }}
 </script>

@@ -3,7 +3,7 @@
 {% block metaTags -%}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/0.9.1/cropper.min.css"/>
 {%- endblock %}
-
+{# Set navbar links used in nav-links component #}
 {% set json_response = result|tojson %}
 
 {% block header %}
@@ -22,7 +22,7 @@
                 <div class="more-info">
                     <div class="username"></div>
                     <div class="settings">
-                        <a data-bind="click: showModal" href="#" data-method="editAvatar">Edit Avatar</a>
+                        <a data-bind="click: showModal" href="#" data-classname="ProfileModal" data-method="editAvatar">Edit Avatar</a>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                     <thead><tr>
                             <th class="title">General Info</th>
                             <th class="text-right">
-                                <a data-bind="click: showModal" data-method="editProfile" class="btn-profile-edit">Edit</a>
+                                <a data-bind="click: showModal" data-className="ProfileModal" data-method="editProfile" class="btn-profile-edit">Edit</a>
                             </th>
                     </tr></thead>
                     <tbody>
@@ -61,8 +61,8 @@
                 <h1 class="main-title">Published Tutorials</h1>
             </div>
             <div class="col-xs-12 col-sm-4 add-btn-container">
-                <a data-bind="click: showModal" data-method="addArticle" class="btn btn-primary">
-                    Add New <span class="glyphicon glyphicon-plus-sign"></span></a>
+                <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Categories </a>
+                <a data-bind="click: showModal" data-classname="ArticleModal" data-method="addArticle" class="btn btn-primary"> Add Tutorial <span class="glyphicon glyphicon-plus-sign"></span></a>
             </div>
         </div>
         <div class="row">
@@ -78,24 +78,22 @@
 </section>
 
 <div id="main-modal" class="modal fade" data-bind="with: modal">
-    <div data-bind="attr: { class: modalCSS }, if: initialized">
+    <!-- ko if: $parent.initialized -->
+    <div data-bind="attr: { class: modalCSS }">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                 <h4 class="modal-title" data-bind="text: title"></h4>
             </div>
-            <div class="modal-body" data-bind="template: { name: bodyTemplate }">
-
-            </div>
+            <div class="modal-body" data-bind="template: { name: bodyTemplate }"></div>
             <div class="modal-footer">
-                <button type="button" data-bind="text: btnCancel, attr: { class: btnCancelCSS }" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" data-bind="click: submitForm, text: btnSubmit, attr: { class: btnSubmitCSS }" class="btn btn-primary">Submit</button>
+                <button type="button" data-bind="text: btnCancel, attr: { class: btnCancelCSS }" class="btn btn-default" data-dismiss="modal"></button>
+                <button type="button" data-bind="click: submit, text: btnSubmit, attr: { class: btnSubmitCSS }" class="btn btn-primary"></button>
             </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
+        </div>
+    </div>
+    <!-- /ko -->
 </div>
 {# add page templates #}
-{# TODO: fix logout page to redirect to homepage #}
 {% include 'user/profile-templates.html' %}
-
 {% endblock %}

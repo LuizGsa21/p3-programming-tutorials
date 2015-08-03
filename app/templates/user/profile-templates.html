@@ -1,4 +1,4 @@
-{% from 'macros/form-components.html' import render_form %}
+{% from 'macros/form-components.html' import render_form, render_form %}
 <script id="template-tutorial-row" type="text/html">
     <!-- ko foreach: articles -->
     <tr data-bind="click: $parent.goToPage">
@@ -6,8 +6,8 @@
         <td class="category" data-bind="text: category.name"></td>
         <td class="date" data-bind="attr: { 'data-time': dateCreated }"></td>
         <td class="action">
-            <a data-bind="click: $parent.showModal" class="btn-tutorial-edit btn btn-sm btn-warning" data-method="editArticle">Edit</a>
-            <a data-bind="click: $parent.showModal" class="btn-tutorial-delete btn btn-sm btn-danger" data-method="deleteArticle">Delete</a>
+            <a data-bind="click: $parent.showModal" class="btn-tutorial-edit btn btn-sm btn-warning" data-classname="ArticleModal" data-method="editArticle">Edit</a>
+            <a data-bind="click: $parent.showModal" class="btn-tutorial-delete btn btn-sm btn-danger" data-classname="ArticleModal" data-method="deleteArticle">Delete</a>
         </td>
     </tr>
     <!-- /ko -->
@@ -15,37 +15,88 @@
         <tr class="empty-table"><td colspan="4" class="text-center">No published tutorials</td></tr>
     <!-- /ko -->
 </script>
+{% set defaultCategorySelect = {'data-bind': "options: categories, optionsText: 'name', optionsValue: 'id', value: selectedCategoryId"} %}
 <script id="template-addArticle" type="template">
-    {{ render_form(get_form('AddArticle'), action=url_for('user.add_article'), type='field', with_databind=false) }}
+    {{ render_form(get_form('AddArticle'), {
+        '_action': url_for('user.add_article'),
+        'category': defaultCategorySelect,
+        'body': {'rows': 6, 'cols':30}
+    }, default_databind=false) }}
 </script>
 
 <script id="template-editArticle" type="template">
-    {{ render_form(get_form('EditArticle'), action=url_for('user.edit_article'), type='field') }}
+    {{ render_form(get_form('EditArticle'), {
+         '_action': url_for('user.edit_article'),
+         'category': defaultCategorySelect,
+         'body': {'rows': 6, 'cols':30}
+     }) }}
 </script>
 
 <script id="template-editProfile" type="template">
-    {{ render_form(get_form('EditProfile'), action=url_for('user.edit_profile'), type='field') }}
+    {{ render_form(get_form('EditProfile'), {
+        '_action': url_for('user.edit_profile'),
+    }) }}
 </script>
 
 <script id="template-deleteArticle" type="template">
     <p>Are you sure you want to delete <strong class="text-danger-inverse" data-bind="text: articleTitle"></strong> permanently?</p>
-    {{ render_form(get_form('DeleteArticle'), action=url_for('user.delete_article'), type='field') }}
+    {% set deleteArticleOptions = {
+        '_action': url_for('user.delete_article')
+    } %}
+    {{ render_form(get_form('DeleteArticle'), deleteArticleOptions) }}
 </script>
 
 <script id="template-editAvatar" type="text/html">
 <div id="form-avatar" class="container-fluid">
     <div class="row">
         <div class="col-xs-12">
-            {{ render_form(get_form('UploadAvatar'), action=url_for('user.upload'), enctype="multipart/form-data", type='field', with_databind=false) }}
+            {{ render_form(get_form('UploadAvatar'), {
+              '_action': url_for('user.upload'),
+              '_enctype': 'multipart/form-data'
+          }, default_databind=false) }}
         </div>
         <div class="col-md-8">
             <h3 class="text-center">Canvas</h3>
-            <div class="avatar-wrapper"><img data-bind="attr: { src: avatar }" src="" alt="avatar"/></div>
+            <div class="avatar-wrapper"><img data-bind="attr: { src: originalImage }" src="" alt="avatar"/></div>
         </div>
         <div class="col-md-4">
             <h3 class="text-center">Preview</h3>
             <div class="avatar-preview preview-lg"></div>
             <div class="avatar-preview preview-md"></div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script id="template-manageCategories" type="text/html">
+<div id="manage-categories" class="container-fluid">
+    <div class="row">
+        <div class="col-xs-12">
+          <ul class="nav nav-tabs nav-justified no-collapse" role="tablist">
+            <li role="presentation" class="active"><a data-bind="click: addCategory" href="#addCategory" aria-controls="addCategory" role="tab" data-toggle="tab">Add</a></li>
+            <li role="presentation"><a data-bind="click: editCategory" href="#editCategory" aria-controls="editCategory" role="tab" data-toggle="tab">Edit</a></li>
+            <li role="presentation"><a data-bind="click: deleteCategory" href="#deleteCategory" aria-controls="deleteCategory" role="tab" data-toggle="tab">Delete</a></li>
+          </ul>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="addCategory">
+                    {{ render_form(get_form('AddCategory'), { '_action': url_for('user.add_category') }, default_databind=false) }}
+            </div>
+            <div role="tabpanel" class="tab-pane" id="editCategory">
+                {{ render_form(get_form('EditCategory'), {
+                      '_action': url_for('user.edit_category'),
+                      'id': {'data-bind': "value: selectedCategoryId"},
+                      'category': defaultCategorySelect,
+                      'name': {'data-bind': "value: selectedCategory() ? selectedCategory() : '' "}
+                  }, default_databind=false) }}
+            </div>
+            <div role="tabpanel" class="tab-pane" id="deleteCategory">
+                {{ render_form(get_form('DeleteCategory'), {
+                      '_action': url_for('user.delete_category'),
+                      'id': {'data-bind': 'value: selectedCategoryId'},
+                      'category': defaultCategorySelect
+                  }, default_databind=false) }}
+            </div>
+          </div>
         </div>
     </div>
 </div>
