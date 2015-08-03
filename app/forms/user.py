@@ -2,6 +2,7 @@ import os
 import imghdr
 import json
 import pprint
+from app.forms.wtf_custom_fields import strip_filter, HiddenInteger
 
 from app.models import User, Category
 
@@ -15,7 +16,7 @@ from flask_wtf import Form
 from flask_login import current_user
 
 
-# Article forms
+# Article Forms
 class AddArticleForm(Form):
     title = StringField('Title', validators=[InputRequired(), Length(min=1, max=250)])
     category = QuerySelectField('Category', query_factory=lambda: Category.query.all(), validators=[InputRequired()])
@@ -23,13 +24,34 @@ class AddArticleForm(Form):
 
 
 class EditArticleForm(AddArticleForm):
-    id = HiddenField('id', validators=[InputRequired()])
+    id = HiddenInteger('id', validators=[InputRequired()])
 
 
 class DeleteArticleForm(Form):
-    id = HiddenField('id', validators=[InputRequired()])
+    id = HiddenInteger('id', validators=[InputRequired()])
 
 
+# Category Forms
+class AddCategoryForm(Form):
+    name = StringField('Category', validators=[InputRequired(), Length(min=1)], filters=[strip_filter])
+
+    def validate_name(self, field):
+        if Category.query.filter_by(name_insensitive=field.data).first():
+            raise ValidationError('This category already exists')
+
+
+class EditCategoryForm(Form):
+    id = HiddenInteger('id', validators=[InputRequired()])
+    category = QuerySelectField('Choose Category', query_factory=lambda: Category.query.all())
+    name = StringField('Name', validators=[InputRequired(), Length(min=1)], filters=[strip_filter])
+
+
+class DeleteCategoryForm(Form):
+    category = QuerySelectField('Category', query_factory=lambda: Category.query.all(), validators=[InputRequired()])
+    id = HiddenInteger('id', validators=[InputRequired()])
+
+
+# Profile Form
 class EditProfileForm(Form):
     username = StringField('Username', validators=[InputRequired()])
     email = StringField('Email', validators=[InputRequired(), Email()])
@@ -45,6 +67,7 @@ class EditProfileForm(Form):
             raise ValidationError('Sorry this username is taken... please choose another.')
 
 
+# Avatar Form
 class UploadAvatarForm(Form):
     cropData = HiddenField('cropData')
     avatar = FileField('Upload Image')
