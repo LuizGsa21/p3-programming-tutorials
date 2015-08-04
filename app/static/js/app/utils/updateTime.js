@@ -12,7 +12,7 @@ define(['jquery', 'momentjs'], function ($, moment) {
 			// calling `fromNow()` which would sometimes change its output
 			// from "a few seconds ago" to "in a few seconds"
 			utcTime = utcTime.split('.')[0];
-			localTime = moment.utc(utcTime);
+			localTime = moment.utc(utcTime, 'YYYY-MM-DDTHH:mm:ss');
 			this.innerHTML = moment(localTime).fromNow();
 		});
 	}
