@@ -6,8 +6,9 @@ from ..model import UserSchema
 
 class UserInfoSchema(UserSchema):
     isLoggedIn = fields.Function(lambda obj: current_user.is_authenticated())
+    isAdmin = fields.Function(lambda obj: current_user.is_admin())
     avatar = fields.Function(lambda obj: url_for('static', filename='uploads/avatar/' + obj.avatar))
     dateJoined = fields.DateTime()
 
     class Meta:
-        fields = ('username', 'email', 'firstName', 'avatar', 'lastName', 'dateJoined', 'isLoggedIn')
+        fields = ('username', 'email', 'firstName', 'avatar', 'lastName', 'dateJoined', 'isLoggedIn', 'isAdmin')
