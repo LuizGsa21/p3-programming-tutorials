@@ -41,17 +41,28 @@ define([
 			else
 				return this.action;
 		}, this);
+		this.btnTriggerCSS = ko.pureComputed(function () {
+			if (this.editable && ! this.isFormVisible())
+				return 'btn btn-warning';
+			else
+				return 'btn btn-primary';
+		}, this);
 	};
 
 	CommentViewModel.usernameByCommentId = {};
 
 	CommentViewModel.prototype.lazyInit = function() {
 		// initialize form fields
-		this.formId = this.id;
+		if ( ! this.editable) {
+			this.formParentId = this.id;
+		} else {
+			this.formId = this.id;
+		}
 		this.formSubject = ko.observable('');
 		this.formMessage = ko.observable('');
 		this.formArticleId = this.articleId;
-		this.formParentId = this.parentId;
+		console.log('parent id = ', this.parentId);
+
 
 		// render the form template
 		this.renderForm(true);
@@ -62,10 +73,12 @@ define([
 		//this.$btnCancel = this.$container.find('.actionbar').find('.btn-danger');
 	};
 
-	CommentViewModel.prototype.showForm = function(callback) {
+	CommentViewModel.prototype.showForm = function(view, event) {
 		if ( ! this.renderForm()) {
 			this.lazyInit();
 		}
+		console.log(this);
+		console.log(arguments);
 		if (this.editable) {
 			// prepopulate the form fields
 			this.formSubject(this.subject());

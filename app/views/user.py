@@ -5,16 +5,20 @@ from shutil import copyfile
 
 from flask import Blueprint, render_template, request, flash, session, current_app
 from flask_login import current_user, login_required
+from sqlalchemy import func
 
 from app.extensions import db
 from app.models import User, Article
 from app.utils import xhr_required, get_login_manager_data, xhr_or_template
-from app.forms import AddArticleForm, DeleteArticleForm, EditArticleForm, EditProfileForm, UploadAvatarForm
 from app.models import Category, Article
 from app.schemas import user_profile_view_serializer as profile_view_serializer
+from app.forms import (
+    AddArticleForm, EditArticleForm, DeleteArticleForm,
+    AddCategoryForm, EditCategoryForm, DeleteCategoryForm,
+    EditProfileForm, UploadAvatarForm,
+)
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
-# TODO: update all `current_user` views to use `current_user`
 
 
 @user_bp.route('/profile/')
@@ -95,7 +99,87 @@ def delete_article():
         flash('Invalid article identification number.', 'danger')
         return {'status': 400}
 
-@user_bp.route('/profile/settings/edit', methods=['POST'])
+@user_bp.route('/profile/categories/edit', methods=['POST'])
+@xhr_required
+def edit_category():
+    if not current_user.is_admin():
+        flash('Permission denied...', 'danger')
+        return {'status': 403}
+
+    form = EditCategoryForm(request.form)
+    if form.validate_on_submit():
+        category = Category.query.get(form.id.data)
+        if not category:
+            flash("This category doesn't exist...", 'danger')
+            return {'status': 400}
+
+        category.name = form.name.data
+        db.session.commit()
+        flash('Successfully updated ' + category.name + '.', 'success')
+        result = profile_view_serializer.dump({
+            'navbar': {
+                'categories': Category.query.order_by(Category.name).all()
+            }
+        }).data
+        return {'status': 200, 'result': result}
+    else:
+        flash(form.errors, 'form-error')
+        return {'status': 400}
+
+@user_bp.route('/profile/categories/add', methods=['POST'])
+@xhr_required
+def add_category():
+    if not current_user.is_admin():
+        flash('Permission denied...', 'danger')
+        return {'status': 403}
+
+    form = AddCategoryForm(request.form)
+    if form.validate_on_submit():
+        category = Category(**form.data)
+        db.session.add(category)
+        db.session.commit()
+        flash('Successfully added ' + category.name + '.', 'success')
+        result = profile_view_serializer.dump({
+            'navbar': {
+                'categories': Category.query.order_by(Category.name).all()
+            }
+        }).data
+        return {'status': 200, 'result': result}
+    else:
+        flash(form.errors, 'form-error')
+        return {'status': 400}
+
+@user_bp.route('/profile/categories/delete', methods=['POST'])
+@xhr_required
+def delete_category():
+    if not current_user.is_admin():
+        flash('Permission denied...', 'danger')
+        return {'status': 403}
+
+    form = DeleteCategoryForm(request.form)
+
+    if form.validate_on_submit():
+        print form.id.data
+        category = Category.query.get(form.id.data)
+        if category.articles.first():
+            flash("You can't delete a category containing articles.", 'danger')
+            return {'status': 400}
+        name = category.name
+        db.session.delete(category)
+        db.session.commit()
+        flash('Successfully deleted ' + name, 'success')
+        result = profile_view_serializer.dump({
+            'navbar': {
+                'categories': Category.query.order_by(func.lower(Category.name)).all()
+            }
+        }).data
+        return {'status': 200, 'result': result}
+    else:
+        flash(form.errors, 'form-error')
+        return {'status': 400}
+
+
+@user_bp.route('/profile/edit', methods=['POST'])
 @xhr_required
 def edit_profile():
 
@@ -125,8 +209,6 @@ def edit_profile():
 @user_bp.route('/upload/avatar', methods=['POST'])
 @xhr_required
 def upload():
-    print 'form'
-    print request.form
     form = UploadAvatarForm()
     if form.validate_on_submit():
         image = form.avatar.data

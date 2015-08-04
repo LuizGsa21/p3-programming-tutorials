@@ -26,7 +26,7 @@ define([
 		} else {
 			// use the links from the navbar
 			this._links = ko.observable();
-			// First subscribe to `_links` before subscribing it to the navbar topic
+			// First subscribe to `_links` before subscribing it to the navbar `Navbar.updatedLinks`
 			// in order to capture the initial value.
 			this._links.subscribe(function (newValue) {
 				var links = [];

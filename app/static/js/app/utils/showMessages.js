@@ -144,7 +144,7 @@ define(['jquery', '_', 'bootstrap'], function ($, _) {
 		if (flashedMessages.length == 0) return;
 
 		var defaults = {
-			action: 'append',
+			action: 'append', // a jquery method used to place the messages
 			prefix: '#',
 			popover: false,
 			formFallbackContainer: null
@@ -163,9 +163,7 @@ define(['jquery', '_', 'bootstrap'], function ($, _) {
 				else
 					formErrors($container, message.message, options.prefix);
 			} else {
-				// display the message in an alert
-				// if a formFallbackContainer was set use it.
-				// this scenario happens when we want to display the error messages in a form
+
 				if (options.formFallbackContainer) {
 					alertMessage(options.formFallbackContainer, message.message, message.category, options.action);
 				} else {

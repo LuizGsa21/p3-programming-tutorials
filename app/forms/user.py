@@ -45,6 +45,10 @@ class EditCategoryForm(Form):
     category = QuerySelectField('Choose Category', query_factory=lambda: Category.query.all())
     name = StringField('Name', validators=[InputRequired(), Length(min=1)], filters=[strip_filter])
 
+    def validate_name(self, field):
+        if Category.query.filter_by(name_insensitive=field.data).first():
+            raise ValidationError('This category already exists')
+
 
 class DeleteCategoryForm(Form):
     category = QuerySelectField('Category', query_factory=lambda: Category.query.all(), validators=[InputRequired()])

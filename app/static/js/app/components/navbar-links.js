@@ -15,11 +15,9 @@ define([
 		links: {
 			create: function (options) {
 				// The navbar data is an array of objects that contain 2 properties
-				// `name` and `url`. We will iterate through each item and add a isVisible observable
-				// if the url is flagged.
+				// `name` and `url`. We will iterate through each item and add a isVisible observable.
 				var link = options.data;
 				var view = options.parent;
-				//console.log(options);
 				if (_.contains(view.registeredUserLinks, link.name)) {
 					// only visible when user is logged in
 					link.isVisible = view.user.isLoggedIn;
@@ -38,60 +36,68 @@ define([
 					});
 				}
 				return link;
+			},
+			key: function (link) {
+				link = ko.unwrap(link);
+				if (_.isArray(link.url)) {
+					// join all the link names
+					return _.map(link.url, function (link) {
+						return ko.unwrap(link.name);
+					}).join('');
+
+				} else return ko.unwrap(link.name);
 			}
 		}
 	};
 
 	var NavbarViewModel = function () {
-		this.user = {
+		var self = this;
+		self.user = {
 			isLoggedIn: ko.observable().syncWith('User.isLoggedIn', true)
 		};
-		this.useLoginManager = ko.observable();
-		this.useLoginManager.subscribe(function (useLoginManager) {
+		self.useLoginManager = ko.observable();
+		self.useLoginManager.subscribe(function (useLoginManager) {
 			if (useLoginManager) {
-				this.loginManager = LoginManager.getInstance();
+				self.loginManager = LoginManager.getInstance();
 			} else {
-				this.loginManager = null;
+				self.loginManager = null;
 			}
-		}, this);
-		this.useLoginManager.subscribeTo('Navbar.useLoginManager', true);
-
+		}, self);
+		self.useLoginManager.subscribeTo('Navbar.useLoginManager', true);
 
 		// Flagged urls that change according to the current login state
-		this.registeredUserLinks = ['Profile', 'Logout'];
-		this.anonymousUserLinks = ['Register', 'Login'];
+		self.registeredUserLinks = ['Profile', 'Logout'];
+		self.anonymousUserLinks = ['Register', 'Login'];
 
-		this.onClick = function (link, event) {
+		self.onClick = function (link, event) {
 			switch (link.name) {
 				case 'Login':
 				case 'Register':
-					console.log('clicked');
 					// notify the login form component to display itself in a modal
 					ko.postbox.publish('LoginForm.tab', link.name.toLowerCase());
 					ko.postbox.publish('LoginForm.showModal', true);
 					break;
 				case 'Logout':
-					if (this.useLoginManager()) {
-						this.logout();
+					if (self.useLoginManager()) {
+						self.logout();
 					} else {
 						return true; // use default link behaviour
 					}
-
 					break;
 				default:
 					return true; // use default link behaviour
 			}
 
-		}.bind(this);
+		};
 
 		// load data from the model
-		this.loadData();
-		// notify other views the the navbar has been updated
-		this.links.publishOn('Navbar.updatedLinks');
-
-		ko.postbox.subscribe('Navbar.logout', function () {
-			this.logout();
-		}.bind(this));
+		self.loadData();
+		// let other views load data by publishing to `Navbar.loadData` topic
+		ko.postbox.subscribe('Navbar.loadData', function (navbar) { self.loadData(navbar); });
+		// notify other views that the navbar has been updated
+		self.links.publishOn('Navbar.updatedLinks');
+		// Allow other views to log user out by publishing to topic `Navbar.logout`
+		ko.postbox.subscribe('Navbar.logout', function () { self.logout(); });
 	};
 
 	NavbarViewModel.prototype.logout = function () {
@@ -99,19 +105,10 @@ define([
 		this.loginManager.logout({
 			onSuccess: function (data, textStatus, jqXHR) {
 				this.user.isLoggedIn(false); // update user login status
-				var response = function () {
-					return {
-						view: this,
-						data: data,
-						preventDefault: false
-					}
-				}.bind(this);
-
-				ko.postbox.publish('Navbar.onLogoutSuccess', response);
-
+				// notify topic in-case any subscribers want to handle the response
+				var response = Utils.shareResponse(data, 'Navbar.onLogoutSuccess', this);
 				if (response.preventDefault) // do nothing
 					return;
-
 				data = data.result;
 				// clear all messages on page
 				Utils.remove.allMessages(function () {
@@ -120,42 +117,23 @@ define([
 				});
 			},
 			onFail: function (data) {
-				var response = function () {
-					return {
-						view: this,
-						data: data,
-						preventDefault: false
-					}
-				}.bind(this);
-
-				ko.postbox.publish('Navbar.onLogoutFail', response);
-
+				// notify topic in-case any subscribers want to handle the response
+				var response = Utils.shareResponse(data, 'Navbar.onLogoutFail', this);
 				if (response.preventDefault) // do nothing
 					return;
-
 				// clear all messages on page
 				Utils.remove.allMessages(function () {
 					// display new messages
 					Utils.show.messages('#general-alert', data['flashed_messages']);
 				});
-				// notify global topic in-case any subscribers want to handle the response
-				ko.postbox.publish('Navbar.onLogoutFail', arguments);
 			}
 
 		}, this); // pass the current context
 	};
 
 	NavbarViewModel.prototype.loadData = function (navbar) {
-		if (!navbar) {
-			// load from Model
-			navbar = { links: Model.getData('navbar') };
-		} else {
-			// unwrap navbar key
-			if (navbar.hasOwnProperty('navbar'))
-				navbar = navbar.navbar;
-			navbar = { links: navbar };
-		}
-		koMapping.fromJS(navbar, mapping, this);
+		var links = { links: navbar || Model.getData('navbar') };
+		koMapping.fromJS(links, mapping, this);
 	};
 
 	return {
