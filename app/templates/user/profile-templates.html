@@ -1,8 +1,8 @@
 {% from 'macros/form-components.html' import render_form, render_form %}
 <script id="template-tutorialTableRow" type="text/html">
     <!-- ko foreach: articles -->
-    <tr data-bind="click: $parent.goToPage">
-        <td class="title" data-bind="text: title"></td>
+    <tr>
+        <td class="title"><a href="" data-bind="text: title, attr: { href: url }"></a></td>
         <td class="category" data-bind="text: category.name"></td>
         <td class="date" data-bind="attr: { 'data-time': dateCreated }"></td>
         <td class="action">
