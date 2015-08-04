@@ -1,5 +1,5 @@
 {% from 'macros/form-components.html' import render_form, render_form %}
-<script id="template-tutorial-row" type="text/html">
+<script id="template-tutorialTableRow" type="text/html">
     <!-- ko foreach: articles -->
     <tr data-bind="click: $parent.goToPage">
         <td class="title" data-bind="text: title"></td>
@@ -15,6 +15,18 @@
         <tr class="empty-table"><td colspan="4" class="text-center">No published tutorials</td></tr>
     <!-- /ko -->
 </script>
+
+<script id="template-adminOptions" type="text/html">
+<div class="row row-table-sm">
+    <div class="col-xs-12 text-center">
+        <h1>Admin Options</h1>
+        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Categories </a>
+{#        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Users </a>#}
+{#        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Articles </a>#}
+    </div>
+</div>
+</script>
+
 {% set defaultCategorySelect = {'data-bind': "options: categories, optionsText: 'name', optionsValue: 'id', value: selectedCategoryId"} %}
 <script id="template-addArticle" type="template">
     {{ render_form(get_form('AddArticle'), {

@@ -56,12 +56,13 @@
 
 <section class="published-articles">
     <div class="container">
+        <!-- ko template: { name: 'template-adminOptions', if: user.isAdmin } -->
+        <!-- /ko -->
         <div class="row row-table-sm">
             <div class="col-xs-12 col-sm-8">
                 <h1 class="main-title">Published Tutorials</h1>
             </div>
             <div class="col-xs-12 col-sm-4 add-btn-container">
-                <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Categories </a>
                 <a data-bind="click: showModal" data-classname="ArticleModal" data-method="addArticle" class="btn btn-primary"> Add Tutorial <span class="glyphicon glyphicon-plus-sign"></span></a>
             </div>
         </div>
@@ -69,7 +70,7 @@
             <div class="col-xs-12 table-container">
                 <table id="article-table" class="table table-hover published-articles-table">
                     <thead><tr><th>Title</th><th>Category</th><th>Date Created</th><th>Action</th></tr></thead>
-                    <tbody data-bind="template: { name: 'template-tutorial-row' }">
+                    <tbody data-bind="template: { name: 'template-tutorialTableRow' }">
                     </tbody>
                 </table>
             </div>
