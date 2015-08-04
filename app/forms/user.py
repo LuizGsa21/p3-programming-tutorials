@@ -6,7 +6,7 @@ from app.forms.wtf_custom_fields import strip_filter, HiddenInteger
 
 from app.models import User, Category
 
-from wtforms import ValidationError, StringField, FileField, HiddenField, TextAreaField
+from wtforms import ValidationError, StringField, FileField, HiddenField, TextAreaField, PasswordField
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.validators import InputRequired, Length, Email
 from werkzeug.datastructures import FileStorage
@@ -70,6 +70,15 @@ class EditProfileForm(Form):
         if existing_user and existing_user.id != current_user.id:
             raise ValidationError('Sorry this username is taken... please choose another.')
 
+
+# TODO: use `EditUserForm` in profile page
+class EditUserForm(Form):
+    id = HiddenInteger('id', validators=[InputRequired()])
+    username = StringField('Username', validators=[InputRequired()])
+    email = StringField('Email', validators=[InputRequired(), Email()])
+    firstName = StringField('First Name', validators=[InputRequired()])
+    lastName = StringField('Last Name', validators=[InputRequired()])
+    password = PasswordField('Password', validators=[InputRequired()])
 
 # Avatar Form
 class UploadAvatarForm(Form):
