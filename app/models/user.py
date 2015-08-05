@@ -23,6 +23,8 @@ class User(db.Model, DefaultUserMixin):
     avatar = db.Column(db.String(255), default='avatar.jpg')
     dateJoined = db.Column(db.DateTime(), default=datetime.utcnow)
 
+    isAdmin = db.Column(db.Boolean(), default=False)
+
     articles = db.relationship('Article', backref='author', lazy='dynamic')
 
     comments = db.relationship('Comment', backref='user', lazy='dynamic')

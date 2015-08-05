@@ -45,6 +45,11 @@ class DefaultUserMixin(UserMixin):
     def lastName(self):
         raise NotImplementedError
 
+    @property
+    def isAdmin(self):
+        raise NotImplementedError
+
+
     @hybrid_property
     def fullname(self):
         fullname = ''
@@ -70,17 +75,15 @@ class DefaultUserMixin(UserMixin):
     def email_insensitive(self):
         return CaseInsensitiveWord(self.email)
 
-    @staticmethod
-    def is_admin():
-        # Everyone is admin!!! :)
-        return True
+    def is_admin(self):
+        return self.isAdmin
 
 
 # monkey patch to db.Model. used as a convenience method for populating values from a wtform
-def populate_form(model, form):
+def populate_from_form(model, form):
     fields = form.data
     for column, value in fields.items():
         if hasattr(model, column):
             setattr(model, column, value)
 
-setattr(db.Model, 'populate_form', populate_form)
+setattr(db.Model, 'populate_from_form', populate_from_form)
