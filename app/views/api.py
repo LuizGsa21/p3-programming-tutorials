@@ -52,11 +52,13 @@ def get_categories():
     }
     return jsonify(result=result)
 
-@api_bp.route('/users/')
+@api_bp.route('/users/', methods=['POST', 'GET'])
 def get_users():
+    # csrf token validation is handled implicitly on POST requests
     users = User.query.order_by(User.id).all()
     if users:
-        if current_user.is_admin():
+        if request.method == 'POST' and current_user.is_admin():
+            # user_info_serializer contains user emails
             users = user_info_serializer.dump(users, many=True).data
         else:
             users = user_serializer.dump(users, many=True).data
