@@ -129,7 +129,7 @@ def edit_comment():
             flash('You do not have permission to edit this comment.')
             return {'success': 0, 'status': 401}
 
-        comment.populate_form(form)
+        comment.populate_from_form(form)
         comment.lastModified = datetime.utcnow()
         db.session.commit()
         result = {

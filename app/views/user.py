@@ -63,7 +63,7 @@ def edit_article():
         # ensure user has permission to edit this article
         if article.authorId == current_user.id or current_user.is_admin():
             del form.id
-            article.populate_form(form)
+            article.populate_from_form(form)
             db.session.commit()
             result = profile_view_serializer.dump({
                 'articles': Article.query.filter_by(authorId=current_user.id).all(),
