@@ -51,3 +51,16 @@ def get_categories():
         'categories': categories
     }
     return jsonify(result=result)
+
+@api_bp.route('/users/')
+def get_users():
+    users = User.query.order_by(User.id).all()
+    if users:
+        if current_user.is_admin():
+            users = user_info_serializer.dump(users, many=True).data
+        else:
+            users = user_serializer.dump(users, many=True).data
+    result = {
+        'users': users
+    }
+    return jsonify(result=result)
