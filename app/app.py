@@ -81,7 +81,10 @@ def configure_extensions(app):
         email = None
         dateJoined = None
         avatar = 'avatar.jpg'
-        # TODO: find an avatar for guest users
+        # TODO: find a better avatar img for guest users
+        @staticmethod
+        def is_admin():
+            return False
 
     login_manager.anonymous_user = DefaultAnonymousUserMixin
 
