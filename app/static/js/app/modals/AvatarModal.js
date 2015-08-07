@@ -51,7 +51,7 @@ define([
 		/**
 		 * Adds a timestamp to `avatar` so that all images using the avatar url are updated.
 		 * @override
-		 * @param data - ajax response
+		 * @param {Object} data - ajax response
 		 */
 		self.onSuccess = function (data) {
 			self.avatar(data.result.user.avatar + '?timestamp=' + new Date().getTime());

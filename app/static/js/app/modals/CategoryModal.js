@@ -78,9 +78,9 @@ define([
 		 * default behavior from `BaseModal` which hides the modal after form submission.
 		 *
 		 * @override
-		 * @param data {Object} - data received from server
-		 * @param $form {jQuery} - the submitted form
-		 * @returns {boolean} - always returns false
+		 * @param {Object} data - data received from server
+		 * @param {jQuery} $form - the submitted form
+		 * @returns {boolean} false
 		 */
 		self.onSuccess = function (data, $form) {
 			Utils.remove.allMessages(function () {

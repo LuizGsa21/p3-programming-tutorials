@@ -19,8 +19,8 @@ define([
 		/**
 		 * Updates the modals UI and shows the modal using `template-editProfile`
 		 * Uses `getTargetData` to grab the `event.target` data to populate the form.
-		 * @param view {Object} - knockout view
-		 * @param event {event} - event
+		 * @param {Object} view - knockout view
+		 * @param {event} event  - event
 		 */
 		self.editUser = function (view, event) {
 			// update UI
@@ -47,8 +47,8 @@ define([
 		/**
 		 * Updates the modals UI and shows the modal using `template-deleteUser`
 		 * Uses `getTargetData` to grab the `event.target` data to populate the form.
-		 * @param view {Object} - knockout view
-		 * @param event {event} - event
+		 * @param {Object} view - knockout view
+		 * @param {event} event  - event
 		 */
 		self.deleteUser = function (view, event) {
 			// update UI

@@ -50,8 +50,8 @@ define([
 		/**
 		 * Updates the modals UI and shows the modal using `template-editArticle`
 		 * Uses `getTargetData` to grab the `event.target` data to populate the form.
-		 * @param view {Object} - knockout view
-		 * @param event {event} - event
+		 * @param {Object} view - knockout view
+		 * @param {event} event  - event
 		 */
 		self.editArticle = function (view, event) {
 			// update UI
@@ -76,8 +76,8 @@ define([
 		/**
 		 * Updates the modals UI and shows the modal using `template-deleteArticle`
 		 * Uses `getTargetData` to grab the `event.target` data to populate the form.
-		 * @param view {Object} - knockout view
-		 * @param event {event} - event
+		 * @param {Object} view - knockout view
+		 * @param {event} event  - event
 		 */
 		self.deleteArticle = function (view, event) {
 			// update UI

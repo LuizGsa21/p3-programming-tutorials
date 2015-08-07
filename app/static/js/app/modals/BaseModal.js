@@ -24,8 +24,8 @@ define([
 		 * Sets the value of the observable. If the observable hasn't yet been initialized
 		 * it will initialize the observable with the given value.
 		 *
-		 * @param observableName {string} - an attribute name
-		 * @param value {*} - any value supported by `ko.observable`
+		 * @param {string} observableName - an attribute name
+		 * @param {*} value - any value supported by `ko.observable`
 		 */
 		self.set = function (observableName, value) {
 			if (self.hasOwnProperty(observableName))
@@ -66,8 +66,8 @@ define([
 		 * Returns the target data from a knockout event.
 		 * If only one argument is given, it will be treated as the event target
 		 *
-		 * @param view {Object} - knockout view
-		 * @param event {event} - event
+		 * @param {Object} view - knockout view
+		 * @param {event} event  - event
 		 */
 		self.getTargetData = function (view, event) {
 			var target;
