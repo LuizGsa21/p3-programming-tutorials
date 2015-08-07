@@ -10,7 +10,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 
 @api_bp.route('/articles/')
-@api_bp.route('/articles/all/')
+@api_bp.route('/articles/all/', methods=['POST', 'GET'])
 def get_articles():
     articles = Article.query.all()
     if articles:
@@ -21,7 +21,7 @@ def get_articles():
     return jsonify(result=result)
 
 
-@api_bp.route('/articles/<int:id>/')
+@api_bp.route('/articles/<int:id>/', methods=['POST', 'GET'])
 def get_article_by_id(id):
     article = Article.query.get(id)
     if article:
@@ -31,7 +31,7 @@ def get_article_by_id(id):
     }
     return jsonify(result=result)
 
-@api_bp.route('/articles/author/<int:id>/')
+@api_bp.route('/articles/author/<int:id>/', methods=['POST', 'GET'])
 def get_articles_by_author_id(id):
     articles = Article.query.filter_by(authorId=id)
     if articles:
@@ -42,9 +42,9 @@ def get_articles_by_author_id(id):
     return jsonify(result=result)
 
 
-@api_bp.route('/categories/')
+@api_bp.route('/categories/', methods=['POST', 'GET'])
 def get_categories():
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.name).all()
     if categories:
         categories = category_serializer.dump(categories).data
     result = {
