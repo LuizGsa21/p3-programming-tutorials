@@ -13,9 +13,15 @@ from ..general import (
 class CommentListSchema(CommentWithUserSchema):
     action = fields.Method('get_action')
     userId = fields.String(attribute='user.id')
-    username = fields.String(attribute='user.username')
-    userAvatar = fields.Function(lambda obj: url_for('static', filename='uploads/avatar/' + obj.user.avatar))
+    username = fields.Method('get_username')
+    userAvatar = fields.Method('get_avatar')
     formName = fields.Method('get_form')
+
+    def get_username(self, obj):
+        return obj.user.username if obj.user else 'Deleted User'
+
+    def get_avatar(self, obj):
+        return url_for('static', filename='uploads/avatar/' + (obj.user.avatar if obj.user else 'avatar.jpg'))
 
     def get_action(self, obj):
         if current_user.is_anonymous() or obj.userId != current_user.id:
