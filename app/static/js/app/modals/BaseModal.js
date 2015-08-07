@@ -102,15 +102,17 @@ define([
 
 					var response = Utils.shareResponse(data, 'Modal.onFail', self);
 
-					if (response.preventDefault || self.onFail(data, $form) === false)
+					if (response.preventDefault || self.onFail(data, textStatus, $form) === false)
 						return;
 					// display form errors
 					Utils.remove.allMessages(function () {
+						// setup options to display alert message above the form.
+						var options = { action: 'before'};
 						if (!data.responseJSON) {
-							return Utils.show.messages($form, textStatus)
+							return Utils.show.messages($form, textStatus, options)
 						}
 						data = data.responseJSON.result;
-						Utils.show.messages($form, data['flashed_messages']);
+						Utils.show.messages($form, data['flashed_messages'], options);
 					});
 				}
 			});
