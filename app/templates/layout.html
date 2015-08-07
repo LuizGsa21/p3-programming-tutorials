@@ -31,6 +31,7 @@
                     'app': app,
                     'components': app + '/components',
                     'models': app + '/models',
+                    'modals': app + '/modals',
                     'helpers': app + '/helpers',
                     'utils': app + '/utils',
                     'lib': lib,
@@ -71,9 +72,14 @@
             'models/Model',
             'helpers/LoginManager',
             'momentjs',
+            'view-models/BaseViewModel',
+            'view-models/UserViewModel',
             'ko-postbox',
             'jquery.form',
-            'bootstrap'], function ($, ko, mapping, _, Utils, Model, LoginManager, moment) {
+            'components/login-form',
+            'components/navbar-links',
+
+            'bootstrap'], function ($, ko, mapping, _, Utils, Model, LoginManager, moment, BaseViewModel, UserViewModel) {
             window.moment = moment;
 
             {% set json_response = json_response|default('{}') %}
@@ -103,20 +109,15 @@
             window.Model = Model;
             window.LoginManager = LoginManager;
             window.ko = ko;
-{#        $(document).on('show.bs.popover', function() {#}
-{#          console.log('show popover');#}
-{#          console.log(arguments);#}
-{#        });#}
-
-{#        $(document).on('hide.bs.popover', function() {#}
-{#          console.log('hide popover');#}
-{#          console.log(arguments);#}
-{#        });#}
             return {
                 jquery: $,
                 ko: ko,
                 koMapping: mapping,
                 _: _,
+                LoginManager: LoginManager,
+                BaseViewModel: BaseViewModel,
+                UserViewModel: UserViewModel,
+                moment: moment,
                 Utils: Utils,
                 Model: Model
             };
