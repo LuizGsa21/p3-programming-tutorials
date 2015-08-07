@@ -6,6 +6,11 @@ define([
 ], function ($, ko, Utils, htmlTemplate) {
 	'use strict';
 
+	/**
+	 * A base modal class used to dynamically create modals using `modal.html` as a template.
+	 *
+	 * @constructor
+	 */
 	var BaseModal = function () {
 		var self = this;
 		// All modals will share a single `modal` observable and `$modal` element
@@ -29,7 +34,7 @@ define([
 		};
 
 		/**
-		 * Displays the current modal and keeps `isVisble` status in sync.
+		 * Shows the modal and keeps `isVisible` status in sync.
 		 */
 		self.show = function () {
 			if (self.isVisible) return;
@@ -40,16 +45,19 @@ define([
 			self.modal.initialized(true);
 			// Setup on hidden events
 			self.$modal.one('hidden.bs.modal', function () {
+				self.isVisible = false;
 				// prevent the template from being rendered
 				// so knockout doesn't complain about uninitialized variables
 				// when switching modals
-				self.isVisible = false;
 				self.modal.initialized(false);
 			});
 			self.isVisible = true;
 			self.$modal.modal('show');
 		};
 
+		/**
+		 * Hides the modal
+		 */
 		self.hide = function () {
 			self.$modal.modal('hide');
 		};
@@ -58,7 +66,7 @@ define([
 		 * Returns the target data from a knockout event.
 		 * If only one argument is given, it will be treated as the event target
 		 *
-		 * @param view {object} - knockout view
+		 * @param view {Object} - knockout view
 		 * @param event {event} - event
 		 */
 		self.getTargetData = function (view, event) {
