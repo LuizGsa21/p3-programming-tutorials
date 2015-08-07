@@ -123,7 +123,7 @@ def facebook_authorized():
         return {'success': 0, 'status': 401}
 
     data = result.json()
-    user = User.query.filter_by(oauthId=data['id'], provider='facebook').first()
+    user = User.query.filter_by(oauthId=data['id'], oauthProvider='facebook').first()
 
     msg = ''
     if not user:
