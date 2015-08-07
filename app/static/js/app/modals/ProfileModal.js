@@ -22,9 +22,6 @@ define([
 		 * @param event {event} - event
 		 */
 		self.editProfile = function (view, event) {
-			var data = self.getTargetData.apply(self, arguments);
-			if (data.user) // unwrap user data
-				data = data.user;
 			// update UI
 			self.set('title', 'Profile');
 			self.set('modalCSS', 'modal-dialog');
@@ -34,6 +31,9 @@ define([
 			self.set('btnCancelCSS', 'btn btn-danger');
 
 			// Update form observables
+			var data = self.getTargetData.apply(self, arguments);
+			if (data.user) // unwrap user data
+				data = data.user;
 			self.set('formId', ko.unwrap(data.id));
 			self.set('formUsername', ko.unwrap(data.username));
 			self.set('formEmail', ko.unwrap(data.email));
