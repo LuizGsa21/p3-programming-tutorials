@@ -88,13 +88,33 @@ def article(category, articleId, title):
 @xhr_required
 def add_comment():
     # find out the form type
-    if request.form.get('parentId', None) is None:
-        form = AddCommentForm(request.form)
-    else:
-        form = AddReplyForm(request.form)
-
+    form = AddCommentForm(request.form)
     # validate the form
     if form.validate_on_submit():
+        comment = Comment(userId=current_user.id, **form.data)
+        db.session.add(comment)
+        db.session.commit()
+        result = {
+            'comments': get_comments(comment.articleId)
+        }
+        result, error = article_view_serializer.dump(result)
+        return {'status': 200, 'result': result}
+    else:
+        flash(form.errors, 'form-error')
+        return {'status': 400}
+
+@frontend_bp.route('/add/reply', methods=['POST'])
+@login_required
+@xhr_required
+def add_reply():
+    form = AddReplyForm(request.form)
+    # validate the form
+    if form.validate_on_submit():
+        recipient = Comment.query.get(form.parentId.data)
+        # Make sure the recipient isn't a deleted user
+        if recipient.user is None:
+            flash("You can't reply to a non-existing user.", 'danger')
+            return {'status': 400}
         comment = Comment(userId=current_user.id, **form.data)
         db.session.add(comment)
         db.session.commit()
@@ -227,14 +247,13 @@ def unauthorized():
     return {'status': 401}
 
 def get_comments(articleId):
-    # TODO: revert back to using 1 cte
-    # print 'start -------------------------------------'
+    # TODO: Test if using 2 CTEs is faster than 1. Revert back to 1 CTE if it isn't :/
     cte1 = db.session.query(Comment,
                             array([Comment.id]).label('path'),
                             literal(0, type_=Integer).label('depth')
                             ) \
         .filter_by(articleId=articleId, parentId=None).cte(name='cte', recursive=True)
-
+    # Get all comments by article id and save it to a cte
     cte2 = db.session.query(Comment) \
         .filter_by(articleId=articleId).cte(name='cte2', recursive=False)
 
@@ -252,7 +271,6 @@ def get_comments(articleId):
                               cte1.c.depth
                               ). \
         select_entity_from(cte1).order_by('path').all()
-    # print 'end -------------------------------------'
     comments = []
     for comment, path, depth in result:
         comments.append(comment)

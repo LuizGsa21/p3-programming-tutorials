@@ -34,13 +34,15 @@ define([
 
 		// set observables
 		koMapping.fromJS(comment, mapping, this);
-
+		//console.log(this);
+		this.deletedUser = ko.observable((comment.username == 'Deleted User'));
 		this.btnTriggerText = ko.pureComputed(function () {
 			if (this.isFormVisible())
 				return this.editable ? 'Save' : 'Submit';
 			else
 				return this.action;
 		}, this);
+
 		this.btnTriggerCSS = ko.pureComputed(function () {
 			if (this.editable && ! this.isFormVisible())
 				return 'btn btn-warning';
@@ -61,19 +63,23 @@ define([
 		this.formSubject = ko.observable('');
 		this.formMessage = ko.observable('');
 		this.formArticleId = this.articleId;
-		console.log('parent id = ', this.parentId);
-
-
 		// render the form template
 		this.renderForm(true);
-
-		//this.$container = $(this.selector);
-		//this.$header = this.$container.find('.comment-info');
-		//this.$content = this.$container.find('.content');
-		//this.$btnCancel = this.$container.find('.actionbar').find('.btn-danger');
 	};
 
+	CommentViewModel.prototype.deletedUserMessage = function () {
+		var $mediaBody = $(this.isFormVisible.elements).closest('.media-body');
+		console.log($mediaBody);
+		Utils.remove.allMessages($mediaBody, function () {
+			Utils.show.messages($mediaBody, 'This user no longer exists', 'danger');
+		});
+
+	};
 	CommentViewModel.prototype.showForm = function(view, event) {
+
+		if (this.deletedUser())
+			return this.deletedUserMessage();
+
 		if ( ! this.renderForm()) {
 			this.lazyInit();
 		}

@@ -53,7 +53,7 @@
 <script id="template-AddReplyForm" type="template-form">
     {{ render_form(get_form('AddReply'), {
         '_fieldType': 'input-group',
-        '_action': url_for('frontend.add_comment'),
+        '_action': url_for('frontend.add_reply'),
         'message': {'rows': 4, 'cols':30}
     }) }}
 </script>
