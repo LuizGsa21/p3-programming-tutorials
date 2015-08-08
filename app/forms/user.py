@@ -57,28 +57,24 @@ class DeleteCategoryForm(Form):
 
 # Profile Form
 class EditProfileForm(Form):
+    id = HiddenInteger('id', validators=[InputRequired()])
     username = StringField('Username', validators=[InputRequired()])
     email = StringField('Email', validators=[InputRequired(), Email()])
     firstName = StringField('First Name', validators=[InputRequired()])
     lastName = StringField('Last Name', validators=[InputRequired()])
 
     def validate_username(self, field):
-        if not current_user.is_admin() and not session.get('change-username'):
+        if field.data != current_user.username and not current_user.is_admin():
             raise ValidationError('You do not have permission to change your username.')
 
         existing_user = User.query.filter_by(username_insensitive=field.data).first()
-        if existing_user and existing_user.id != current_user.id:
+        if existing_user and existing_user.id != self.id.data:
             raise ValidationError('Sorry this username is taken... please choose another.')
 
 
-# TODO: use `EditUserForm` in profile page
-class EditUserForm(Form):
+class DeleteUserForm(Form):
     id = HiddenInteger('id', validators=[InputRequired()])
-    username = StringField('Username', validators=[InputRequired()])
-    email = StringField('Email', validators=[InputRequired(), Email()])
-    firstName = StringField('First Name', validators=[InputRequired()])
-    lastName = StringField('Last Name', validators=[InputRequired()])
-    password = PasswordField('Password', validators=[InputRequired()])
+
 
 # Avatar Form
 class UploadAvatarForm(Form):

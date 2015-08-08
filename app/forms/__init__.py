@@ -4,5 +4,5 @@ from frontend import (
 
 from user import (
     AddArticleForm, EditArticleForm, DeleteArticleForm, EditProfileForm, UploadAvatarForm,
-    AddCategoryForm, EditCategoryForm, DeleteCategoryForm
+    AddCategoryForm, EditCategoryForm, DeleteCategoryForm, DeleteUserForm
 )
