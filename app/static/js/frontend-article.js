@@ -102,6 +102,17 @@ requirejs([
 				Utils.updateTime();
 			}.bind(this));
 		}, this);
+
+		var self = this;
+		ko.postbox.subscribe('Global.pageRefresh', function (reason) {
+			if (reason == 'out of sync') {
+				$.ajax(window.location.href, {
+					success: function (data) {
+						self.loadData(data.result)
+					}
+				});
+			}
+		});
 	};
 
 	MainViewModel.prototype = Object.create(BaseViewModel.prototype);

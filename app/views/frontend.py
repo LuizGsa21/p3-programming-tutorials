@@ -176,7 +176,7 @@ def edit_comment():
 def login():
     if g.user and current_user.is_authenticated():
         flash('You are already logged in.', 'warning')
-        return redirect(url_for('frontend.index'))
+        return {'status': 400}
 
     form = LoginForm(request.form, prefix='l')
     if form.validate_on_submit():

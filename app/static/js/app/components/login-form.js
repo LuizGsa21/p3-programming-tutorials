@@ -160,12 +160,12 @@ define([
 		});
 	};
 
-	LoginFormViewModel.prototype._onFail = function (jqXHR, textStatus, errorThrown, form) {
+	LoginFormViewModel.prototype._onFail = function (data, textStatus, errorThrown, form) {
 		console.log('LoginForm onFail:', arguments);
 		var response = function () {
 			return {
 				view: this,
-				data: jqXHR,
+				data: data,
 				preventDefault: false
 			}
 		}.bind(this);
@@ -174,11 +174,11 @@ define([
 		if (response.preventDefault) // do nothing
 			return;
 
-		if ( ! jqXHR.responseJSON) {
+		if ( ! data.responseJSON) {
 			Utils.show.messages('#general-alert', textStatus, 'danger');
 			return;
 		}
-		var data = jqXHR.responseJSON.result;
+		data = data.responseJSON.result;
 		if (form) { // display error message in a popover
 			var options = {
 				popover: {
@@ -195,6 +195,13 @@ define([
 			});
 
 		} else {
+			_.each(data['flashed_messages'], function (obj) {
+				// notify the main view that the page needs a refresh
+				if (obj.message.indexOf('You are already logged in') > -1) {
+					ko.postbox.publish('Global.pageRefresh', 'out of sync');
+				}
+			}, this);
+
 			Utils.remove.allMessages(function () {
 				Utils.show.messages('#general-alert', data['flashed_messages']);
 			});

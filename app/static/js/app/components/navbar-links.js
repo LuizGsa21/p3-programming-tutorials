@@ -116,16 +116,35 @@ define([
 					Utils.show.messages('#general-alert', data['flashed_messages']);
 				});
 			},
-			onFail: function (data) {
+			onFail: function (data, textStatus) {
 				// notify topic in-case any subscribers want to handle the response
 				var response = Utils.shareResponse(data, 'Navbar.onLogoutFail', this);
 				if (response.preventDefault) // do nothing
 					return;
-				// clear all messages on page
-				Utils.remove.allMessages(function () {
-					// display new messages
-					Utils.show.messages('#general-alert', data['flashed_messages']);
-				});
+
+				if ( ! data.responseJSON) { // unknown error
+					// display textStatus in an alert box
+					Utils.show.messages('#general-alert', textStatus, 'danger');
+				} else {
+					data = data.responseJSON.result;
+
+					var isResyncing = false;
+					_.each(data['flashed_messages'], function (obj) {
+						// notify the main view that the page needs a refresh
+						if (obj.message.indexOf('You must be logged in to logout') > -1) {
+							ko.postbox.publish('Global.pageRefresh', 'out of sync');
+							isResyncing = true;
+						}
+					}, this);
+
+					// clear all messages on page
+					Utils.remove.allMessages(function () {
+						// Dont display the alert message if we are re-syncing the page
+						if (isResyncing) return;
+						// display new messages
+						Utils.show.messages('#general-alert', data['flashed_messages']);
+					});
+				}
 			}
 
 		}, this); // pass the current context

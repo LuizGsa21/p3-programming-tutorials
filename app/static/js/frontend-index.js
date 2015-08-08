@@ -63,6 +63,17 @@ requirejs([
 				});
 			}
 		}, this);
+
+		var self = this;
+		ko.postbox.subscribe('Global.pageRefresh', function (reason) {
+			if (reason == 'out of sync') {
+				$.ajax(window.location.href, {
+					success: function (data) {
+						self.loadData(data.result)
+					}
+				});
+			}
+		});
 	};
 
 	// Scroll to the 2nd section on the page when clicking the `Learn More` link
