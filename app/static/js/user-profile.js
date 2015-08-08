@@ -1,279 +1,309 @@
 requirejs([
 	'common',
-	'helpers/LoginManager',
-	'view-models/BaseViewModel',
-	'view-models/UserViewModel',
-	'components/login-form',
-	'components/navbar-links',
-	'jquery.form',
+	'modals/BaseModal',
+	'modals/ArticleModal',
+	'modals/AvatarModal',
+	'modals/CategoryModal',
+	'modals/ProfileModal',
+	'modals/UserModal',
 	'cropper'
-], function (common, LoginManager, BaseViewModel, UserViewModel) {
+], function (common, BaseModal, ArticleModal, AvatarModal, CategoryModal, ProfileModal, UserModal) {
 	'use strict';
 	var $         = common.jquery,
+		BaseViewModel = common.BaseViewModel,
+		UserViewModel = common.UserViewModel,
 		ko        = common.ko,
-		koMapping = common.koMapping,
-		Model     = common.Model,
-		Utils     = common.Utils;
+		Model     = common.Model;
 
 	// register navbar component
 	ko.components.register('navbar-links', {require: 'components/navbar-links'});
 	ko.components.register('app-footer', {require: 'components/footer'});
 
-	var BaseModal = function ($modal) {
+	/**
+	 * Base table class
+	 *
+	 * @constructor
+	 * @borrows {BaseViewModel.loadData}
+	 */
+	var BaseTable = function () {
 		var self = this;
-		self.$modal = $modal;
-		self.set = function (attribute, value) {
-			if (self.hasOwnProperty(attribute))
-				this[attribute](value);
-			else this[attribute] = ko.observable(value);
+		self.isVisible = ko.observable(true);
+
+		self.allowedKeys = []; // keys to filter when using koMapping
+		self.mapping = {};
+		self.loadData = BaseViewModel.prototype.loadData;
+
+		// Message to display when the table is empty
+		self.emptyTableText = ko.observable('Empty table');
+
+
+		// url used to fetch table data
+		self.fetchURL = '';
+		/**
+		 * Displays this table. If useCache is false it will fetch the table data by call `fetch()`
+		 *
+		 * @param {boolean} [useCache=false]
+		 */
+		self.show = function (useCache) {
+			self.isVisible(true);
+			// use `===` comparison in case this method is called by a knockout event
+			if (useCache === true) return;
+			self.fetch();
 		};
 
-		self.show = function () {
-			self.$modal.modal('show');
-			self.$modal.focus()
-		};
+		/**
+		 * Hides this table.
+		 */
+		self.hide = function () { self.isVisible(false); };
 
-		self.hide = function () {
-			self.$modal.modal('hide');
-		};
+		/**
+		 * Toggles this table visibility state.
+		 */
+		self.toggle = function () { self.isVisible() ? self.hide() : self.show(); };
 
-		self.submit = function () {
-			var $form = self.$modal.find('form:visible');
-			$form.ajaxSubmit({
-				csrfHeader: true,
-				success: function (data) {
-					console.log(arguments);
-					var response = Utils.shareResponse(data, 'Modal.onSuccess', self);
-					if (response.preventDefault || self.onSuccess(data, $form) === false)
-						return;
-					self.hide();
-				},
-				error: function (data, textStatus, errorThrown, form) {
-					console.log(arguments);
-					var response = Utils.shareResponse(data, 'Modal.onFail', self);
+		/**
+		 * Called by `fetch()` upon success.
+		 * Maps the server response to this table using `loadData()`.
+		 *
+		 * @param {Object} data - response from server
+		 */
+		self.onSuccess = function (data) { self.loadData(data.result); };
 
-					if (response.preventDefault || self.onFail(data, $form) === false)
-						return;
-					// display form errors
-					Utils.remove.allMessages(function () {
-						if (!data.responseJSON) {
-							return Utils.show.messages($form, textStatus)
-						}
-						data = data.responseJSON.result;
-						Utils.show.messages($form, data['flashed_messages']);
-					});
-				}
+		/**
+		 * Called by `fetch()` upon fail.
+		 *
+		 * @abstract
+		 * @param {Object} data - response from server
+		 */
+		self.onFail = function (data) {};
+
+		/**
+		 *	Fetches the table data. If 0 arguments are provided it will use
+		 *	this tables `fetchURL` `onSuccess` and `onFail`.
+		 *
+		 * @param {string} [url] - URL to use on request
+		 * @param {Function} [onSuccess] - called if request was successful
+		 * @param {Function} [onFail] - called if request failed
+		 */
+		self.fetch = function (url, onSuccess, onFail) {
+			if (arguments.length == 0) {
+				url = self.fetchURL;
+				onSuccess = self.onSuccess;
+				onFail = self.onFail;
+			}
+			$.ajax({
+				url: url,
+				type: 'GET',
+				success: onSuccess,
+				error: onFail
 			});
-		};
-		self.onSuccess = function () {};
-		self.onFail = function () {};
-	};
-	var ProfileModal = function ($modal) {
-		BaseModal.call(this, $modal);
-		var self = this;
-		self.avatar = ko.observable().syncWith('User.avatar', true);
-		self.originalImage = ko.pureComputed(function () {
-			var avatar = self.avatar();
-			// add `original-` prefix to the file name to get the original image url
-			var lastForwardSlash = avatar.lastIndexOf('/') + 1;
-			return avatar.slice(0, lastForwardSlash) + 'original-' + avatar.slice(lastForwardSlash);
-		});
-
-		self.editProfile = function (target) {
-			var data = ko.dataFor(target).user;
-			self.set('title', 'Profile');
-			self.set('modalCSS', 'modal-dialog');
-			self.set('bodyTemplate', 'template-editProfile');
-			self.set('btnSubmit', 'Save Profile');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-			self.set('btnCancel', 'Cancel');
-			self.set('btnCancelCSS', 'btn btn-danger');
-
-			self.set('formUsername', ko.unwrap(data.username));
-			self.set('formEmail', ko.unwrap(data.email));
-			self.set('formFirstName', ko.unwrap(data.firstName));
-			self.set('formLastName', ko.unwrap(data.lastName));
-			self.onSuccess = function () {};
-		};
-
-		self.editAvatar = function (target) {
-			self.setupCropper();
-			self.set('title', 'Change Avatar');
-			self.set('modalCSS', 'modal-dialog modal-lg');
-			self.set('bodyTemplate', 'template-editAvatar');
-			self.set('btnSubmit', 'Save Avatar');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-			self.set('btnCancel', 'Cancel');
-			self.set('btnCancelCSS', 'btn btn-danger');
-			self.onSuccess = function (data) {
-				self.avatar(data.result.user.avatar + '?timestamp=' + new Date().getTime());
-			};
-		};
-
-		self.setupCropper = function () {
-			var $modal = self.$modal;
-			$modal.one('show.bs.modal', function (e) {
-				// hide the images to prevent any flickering while the cropper initializes
-				$modal.find('img').css('opacity', 0);
-			});
-			// initialize the cropper when its container is visible
-			$modal.one('shown.bs.modal', function (e) {
-				var $image    = $modal.find('.avatar-wrapper > img'),
-					$cropData = $modal.find('#cropData');
-				// check if cropper is initialized
-				if ( ! $image.data('cropper') ) {
-					$image.cropper({
-						aspectRatio: 1,
-						preview: '.avatar-preview',
-						strict: true,
-						crop: function (data) {
-							$cropData.val([
-								'{"x":', data.x,
-								',"y":', data.y,
-								',"height":', data.height,
-								',"width":', data.width, '}'
-							].join(''));
-						}
-					});
-				}
-				// update canvas image when a file is added
-				$modal.find('input[type="file"]').off('change').on('change', function () {
-					var $this = $(this);
-					var files = $this.prop('files');
-					if (files.length > 0) {
-						var file = files[0];
-						var url = URL.createObjectURL(file);
-						$image.cropper('replace', url);
-					}
-					// update submit button text
-					self.btnSubmit('Upload Avatar');
-				});
-			});
-		}
-
-	};
-
-	var ArticleModal = function ($modal) {
-		BaseModal.call(this, $modal);
-		var self = this;
-		self.modalCSS = 'modal-dialog';
-		self._navbarLinks = ko.observable().subscribeTo('Navbar.updatedLinks', true);
-		self.selectedCategoryId = ko.observable();
-		self.categories = ko.computed(function () {
-			return _.findWhere(self._navbarLinks(), {name: 'Categories'}).url;
-		});
-		self.selectedCategory = ko.computed(function () {
-			var id = self.selectedCategoryId();
-			return _.isNumber(id) ? _.findWhere(self.categories.peek(), {id: id}).name : '';
-		});
-
-		self.addArticle = function (target) {
-			self.set('title', 'Add Tutorial');
-			self.set('bodyTemplate', 'template-addArticle');
-			self.set('btnSubmit', 'Publish Tutorial');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-			self.set('btnCancel', 'Cancel');
-			self.set('btnCancelCSS', 'btn btn-danger');
-		};
-
-		self.editArticle = function (target) {
-			var data = ko.dataFor(target);
-			self.set('title', 'Edit Tutorial');
-			self.set('bodyTemplate', 'template-editArticle');
-			self.set('btnSubmit', 'Save Changes');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-			self.set('btnCancel', 'Cancel');
-			self.set('btnCancelCSS', 'btn btn-danger');
-
-			self.set('formId', ko.unwrap(data.id));
-			self.set('formTitle', ko.unwrap(data.title));
-			self.set('formBody', ko.unwrap(data.body));
-			self.selectedCategoryId(ko.unwrap(data.category.id))
-		};
-
-		self.deleteArticle = function (target) {
-			var data = ko.dataFor(target);
-			self.set('title', 'Delete Tutorial');
-			self.set('bodyTemplate', 'template-deleteArticle');
-			self.set('btnSubmit', 'Delete Tutorial');
-			self.set('btnSubmitCSS', 'btn btn-danger');
-			self.set('btnCancel', 'Cancel');
-			self.set('btnCancelCSS', 'btn btn-default');
-
-			self.set('articleTitle', ko.unwrap(data.title));
-			self.set('formId', ko.unwrap(data.id));
-		};
-
-	};
-
-	var CategoriesModal = function ($modal) {
-		BaseModal.call(this, $modal);
-		var self = this;
-		self.title = 'Manage Categories';
-		self.bodyTemplate = 'template-manageCategories';
-		self._navbarLinks = ko.observable().subscribeTo('Navbar.updatedLinks', true);
-		self.selectedCategoryId = ko.observable();
-		self.categories = ko.computed(function () {
-			return _.findWhere(self._navbarLinks(), {name: 'Categories'}).url;
-		});
-
-		self.selectedCategory = ko.computed(function () {
-			var id = self.selectedCategoryId();
-			return _.isNumber(id) ? _.findWhere(self.categories.peek(), {id: id}).name : '';
-		});
-
-		self.modalCSS = 'modal-dialog';
-		self.addCategory = function () {
-			self.set('btnSubmit', 'Add Category');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-			self.set('btnCancel', 'Close');
-			self.set('btnCancelCSS', 'btn btn-default');
-		};
-		self.editCategory = function () {
-			self.set('btnSubmit', 'Save Category');
-			self.set('btnSubmitCSS', 'btn btn-primary');
-		};
-		self.deleteCategory = function () {
-			self.set('btnSubmit', 'Delete Category');
-			self.set('btnSubmitCSS', 'btn btn-danger');
-		};
-
-		self.onSuccess = function (data, $form) {
-			Utils.remove.allMessages(function () {
-				data = data.result;
-				var options = {
-					action: 'before'
-				};
-				Utils.show.messages($form, data['flashed_messages'], options);
-			});
-
-			return false; // prevent modal from hiding
-		};
-
-		self.onFail = function (data, $form) {
-			var options = {
-				action: 'before'
-			};
-			Utils.remove.allMessages(function () {
-				if ( ! data.responseJSON ) {
-					return Utils.show.messages($form, textStatus, options)
-				}
-				data = data.responseJSON.result;
-				Utils.show.messages($form, data['flashed_messages'], options );
-			});
-
-			return false; // prevent default
 		};
 	};
 
-	var modals = {};
-	modals['CategoriesModal'] = CategoriesModal;
-	modals['ProfileModal'] = ProfileModal;
-	modals['ArticleModal'] = ArticleModal;
+	/**
+	 * Creates an article table.
+	 * Uses `/api/articles/author/<int:id>` and overrides `modal.onSuccess()` to automatically update the table content.
+	 *
+	 * @param {observableArray} [articles] - articles to display on this table
+	 * @param {ArticleModal} [modal] - the modal used to perform CRUD operations in the article.
+	 * @param {number} [userID] - user id to use when fetching user articles
+	 * @constructor
+	 * @augments {BaseTable}
+	 */
+	var ArticleTable = function (articles, modal, userID) {
+		BaseTable.call(this);
+		var self = this;
+		self.articles = articles || ko.observableArray();
+		self.modal = modal || new ArticleModal();
+		// override the modals onSuccess to update this table
+		self.modal.onSuccess = function () { self.fetch(); };
 
+
+		// set keys to filter when mapping server response
+		self.allowedKeys = ['articles'];
+		self.fetchURL = '/api/articles/author/' + userID;
+		self.emptyTableText = ko.observable('No published tutorials');
+
+		/**
+		 * Updates the `fetchURL` to use the given `userID`
+		 * @param {number} userID
+		 */
+		self.updateFetchURL = function (userID) {
+			self.fetchURL = '/api/articles/author/' + userID;
+		};
+
+		// Update `emptyTableText` prior to calling `BaseTable.fetch()`
+		self.fetch = _.wrap(self.fetch, function (fetch, data) {
+			self.emptyTableText('Fetching user articles...');
+			fetch.apply(self, Array.prototype.slice.call(arguments, 1));
+		});
+
+		// Update `emptyTableText` prior to calling `BaseTable.onSuccess()`
+		self.onSuccess = _.wrap(self.onSuccess, function (onSuccess) {
+			self.emptyTableText('No published articles');
+			onSuccess.apply(self, Array.prototype.slice.call(arguments, 1))
+		});
+
+		/**
+		 * Called by `fetch()` upon fail.
+		 * Handle on fail response by emptying this table and updating `emptyTableText`
+		 * @overrides
+		 */
+		self.onFail = function (data) {
+			self.articles([]);
+			self.emptyTableText('Failed to fetch user articles.');
+		};
+	};
+
+	/**
+	 * Creates a user table.
+	 * Uses `/api/users/all` and overrides `modal.onSuccess()` to automatically update the table content.
+	 *
+	 * @param {observableArray} [users] - users to display on this table
+	 * @param {UserModal} [modal] - the modal used to edit and delete user
+	 * @constructor
+	 * @augments {BaseTable}
+	 */
+	var UserTable = function (users, modal) {
+		BaseTable.call(this);
+		var self = this;
+		self.users = users || ko.observableArray();
+		self.modal = modal || new UserModal();
+		// override the modals onSuccess to update this table
+		self.modal.onSuccess = function () { self.fetch(); };
+
+		// set keys to filter when mapping server response
+		self.allowedKeys = ['users'];
+		self.fetchURL = '/api/users/all';
+		self.emptyTableText = ko.observable('No registered users found other than yourself ;)');
+
+
+		// Update `emptyTableText` prior to calling `BaseTable.fetch()`
+		self.fetch = _.wrap(self.fetch, function (fetch) {
+			self.emptyTableText('Fetching registered users...');
+			fetch.apply(self, Array.prototype.slice.call(arguments, 1));
+		});
+
+		// Update `emptyTableText` prior to calling `BaseTable.fetch()`
+		self.onSuccess = _.wrap(self.onSuccess, function (onSuccess) {
+			self.emptyTableText('No registered users found other than yourself ;)');
+			onSuccess.apply(self, Array.prototype.slice.call(arguments, 1))
+		});
+
+		/**
+		 * Called by `fetch()` upon fail.
+		 * Handle on fail response by emptying this table and updating empty table text.
+		 * @overrides
+		 */
+		self.onFail = _.wrap(self.onFail, function (onFail) {
+			self.emptyTableText('Failed to fetch registered users.');
+			self.users([]); // empty out the table
+			onFail.apply(self, Array.prototype.slice.call(arguments, 1))
+		});
+
+	};
+
+	/**
+	 * Create a profile table
+	 * Uses `/users/<int:id>` and overrides `modal.onSuccess()` to automatically update the table content.
+	 *
+	 * @param {observable} user - user to display on this table
+	 * @param {ProfileModal} [modal] - modal used to edit user
+	 * @constructor
+	 */
+	var ProfileTable = function (user, modal) {
+		var self = this;
+		BaseTable.call(this);
+		self.user = user;
+		// set keys to filter when mapping server response
+		self.allowedKeys = ['user'];
+		self.fetchURL = '/api/users/' + ko.unwrap(user.id);
+
+		self.modal = modal || new ProfileModal();
+		// override the modals onSuccess to update this table
+		self.modal.onSuccess = function () { self.fetch(); };
+	};
+
+	/**
+	 * Creates an admin view.
+	 *
+	 * @constructor
+	 */
+	var AdminViewModel = function () {
+		var self = this;
+		// create user and article table for the admin section
+		self.userTable = new UserTable();
+		self.articleTable = new ArticleTable();
+
+		// hide both tables by default
+		self.userTable.isVisible(false);
+		self.articleTable.isVisible(false);
+
+		// Create category modal
+		self.categoryModal = new CategoryModal();
+
+		// Configure the admin options buttons
+		self.btnCategoryText = ko.observable('Manage Categories');
+		self.btnUserTableText = ko.pureComputed(function () {
+			return self.userTable.isVisible() ? 'Hide Users' : 'Show Users';
+		});
+
+		self.articleTableTitle = ko.observable();
+		// This method should be called by a knockout event providing the
+		// `event.target` to get the user id to fetch the articles
+		// and username to update table title
+		self.showArticlesByUserID = function (view, event) {
+			var data = ko.dataFor(event.target);
+			// update the table url to fetch the user articles
+			self.articleTable.updateFetchURL(data.id());
+			// update the table title to contain this user's username
+			self.articleTableTitle('Articles by ' + data.username());
+			// hide the user table prior to showing the article table
+			self.userTable.hide();
+			self.articleTable.show();
+		};
+
+		self.hideUserTable = function () { self.userTable.hide(); };
+
+		/**
+		 * Show the user table while ensuring the article table is hidden.
+		 *
+		 * @param {boolean} [useCache=false] - if set to true the table will not call `fetch()` after it is shown.
+		 */
+		self.showUserTable = function (useCache) {
+			// make sure the article table is hidden
+			// before displaying the user table
+			if (self.articleTable.isVisible()) {
+				self.articleTable.hide();
+			}
+			self.userTable.show(useCache === true)
+		};
+
+		/**
+		 * Toggles the user table while ensuring the article table is hidden.
+		 *
+		 * @param {boolean} [useCache=false] - if set to true the table will not call `fetch()` after it is shown.
+		 */
+		self.toggleUserTable = function (useCache) {
+			if (self.userTable.isVisible())
+				self.hideUserTable();
+			else self.showUserTable(useCache === true);
+		};
+
+	};
+
+	/**
+	 * Creates the main view.
+	 *
+	 * @param {Object} data - object used to initialize main view.
+	 * @constructor
+	 * @augments {BaseViewModel}
+	 */
 	var MainViewModel = function (data) {
 		var self = this;
+		// set filtered keys used in `loadData()`
 		self.allowedKeys = ['user', 'articles'];
+		// set mapping used in `loadData()`
 		self.mapping = {
 			user: {
 				create: function (options) {
@@ -281,58 +311,48 @@ requirejs([
 				}
 			}
 		};
-		// Articles to display in tutorials table
-		self.articles = ko.observableArray();
+
 		self.loadData(data);
 
-		self.modal = ko.observable();
-		self.initialized = ko.observable(false);
+		// set the global modal observable
+		self.modal = BaseModal.modal;
 
-		self.showModal = function (view, event) {
-			self.initialized(false);
-			var $target = $(event.target);
-			var className = $target.data('classname');
-			var modal = (self[className]) ? self[className] : self[className] = new modals[className]($('#main-modal'));
-			var method = $target.data('method');
+		// Add avatarModal to main view to edit users avatar
+		self.avatarModal = new AvatarModal();
+		// we will create an instance of `ArticleModal` in the main view to "add" new articles
+		// and share it with the Article table to perform "edit" and "delete" actions.
+		self.articleModal = new ArticleModal();
+		self.articleTable = new ArticleTable(self.articles, self.articleModal, self.user.id());
 
-			// Check if modal requires any preparation before displaying
-			if (method)
-				modal[method](event.target);
+		self.profileTable = new ProfileTable(self.user);
 
-			self.modal(self[className]);
-			self.initialized(true);
-			modal.show();
-		};
+		// setup admin view
+		if (self.user.isAdmin()) {
+			self.admin = new AdminViewModel();
+		} else {
+			self.admin = {};
+		}
 
 		self.onSuccess = ko.observable().subscribeTo('Modal.onSuccess');
+		// Listen in to all modal's `onSuccess` response. if we get a response that contains
+		// an updated `navbar` we will notify the navbar component to update itself
 		self.onSuccess.subscribe(function (response) {
 			if (_.isFunction(response))
 				response = response();
 			var result = response.data.result;
-			self.loadData(result);
-			if (result.navbar) {
-				console.log('CALLING LOAD DATA');
+			if (result.navbar) { // Update the navbar component
 				ko.postbox.publish('Navbar.loadData', result.navbar);
 			}
 
-			if (result.articles && result.articles.length) {
-				Utils.updateTime();
-			}
 		});
-
 	};
-
 	MainViewModel.prototype = Object.create(BaseViewModel.prototype);
 	MainViewModel.prototype.constructor = MainViewModel;
 
 	var mainViewModel = new MainViewModel(Model.getData());
 	ko.applyBindings(mainViewModel);
-	window.mainViewModel = mainViewModel;
-	Utils.updateTime();
 
-	// Even though our submit buttons aren't inside the form
-	// the user can still submit by pressing enter.
-	// So use a global event listener to stop any default form submissions
+	// Prevent the users from submitting the form when pressing the enter key on an input field.
 	$(document).on('submit', 'form', function (e) {
 		e.preventDefault();
 	});
