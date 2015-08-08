@@ -22,79 +22,64 @@
                 <div class="more-info">
                     <div class="username"></div>
                     <div class="settings">
-                        <a data-bind="click: showModal" href="#" data-classname="ProfileModal" data-method="editAvatar">Edit Avatar</a>
+                        <a data-bind="click: avatarModal.editAvatar" href="#">Edit Avatar</a>
                     </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 general-info-container">
-                <table id="profile-table" class="table table-hover profile-table">
-                    <thead><tr>
+                <table data-bind="with: profileTable" id="profile-table" class="table table-hover profile-table">
+                    <thead>
+                        <tr>
                             <th class="title">General Info</th>
                             <th class="text-right">
-                                <a data-bind="click: showModal" data-className="ProfileModal" data-method="editProfile" class="btn-profile-edit">Edit</a>
+                                <a data-bind="click: modal.editProfile" class="btn-profile-edit">Edit</a>
                             </th>
-                    </tr></thead>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><th>Username</th>
-                            <td data-bind="text: user.username"></td></tr>
-                        <tr><th>Email</th>
-                        <td data-bind="text: user.email"></td></tr>
-                        <tr><th>First Name</th>
-                            <td data-bind="text: user.firstName"></td></tr>
-                        <tr><th>Last Name</th>
-                            <td data-bind="text: user.lastName"></td></tr>
-                        <tr><th>Date Joined</th>
-                            <td data-bind="attr: { 'data-time': user.dateJoined }"></td>
+                        <tr>
+                            <th>Username</th>
+                            <td data-bind="text: user.username"></td>
+                        </tr>
+                        <tr>
+                            <th>Email</th>
+                            <td data-bind="text: user.email"></td>
+                        </tr>
+                        <tr>
+                            <th>First Name</th>
+                            <td data-bind="text: user.firstName"></td>
+                        </tr>
+                        <tr>
+                            <th>Last Name</th>
+                            <td data-bind="text: user.lastName"></td>
+                        </tr>
+                        <tr>
+                            <th>Date Joined</th>
+                            <td data-bind="timeFromNow: user.dateJoined"></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 </section>
 
 <section class="published-articles">
     <div class="container">
-        <!-- ko template: { name: 'template-adminOptions', if: user.isAdmin } -->
-        <!-- /ko -->
+        <!-- ko template: { name: 'template-adminOptions', if: user.isAdmin, data: admin } --><!-- /ko -->
         <div class="row row-table-sm">
             <div class="col-xs-12 col-sm-8">
                 <h1 class="main-title">Published Tutorials</h1>
             </div>
             <div class="col-xs-12 col-sm-4 add-btn-container">
-                <a data-bind="click: showModal" data-classname="ArticleModal" data-method="addArticle" class="btn btn-primary"> Add Tutorial <span class="glyphicon glyphicon-plus-sign"></span></a>
+                <a data-bind="click: articleModal.addArticle" class="btn btn-primary"> Add Tutorial <span class="glyphicon glyphicon-plus-sign"></span></a>
             </div>
         </div>
         <div class="row">
-            <div class="col-xs-12 table-container">
-                <table id="article-table" class="table table-hover published-articles-table">
-                    <thead><tr><th>Title</th><th>Category</th><th>Date Created</th><th>Action</th></tr></thead>
-                    <tbody data-bind="template: { name: 'template-tutorialTableRow' }">
-                    </tbody>
-                </table>
-            </div>
+            <div class="col-xs-12 table-container" data-bind="template: { name: 'template-articleTable', data: articleTable }"></div>
         </div>
     </div>
 </section>
-
-<div id="main-modal" class="modal fade" data-bind="with: modal">
-    <!-- ko if: $parent.initialized -->
-    <div data-bind="attr: { class: modalCSS }">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title" data-bind="text: title"></h4>
-            </div>
-            <div class="modal-body" data-bind="template: { name: bodyTemplate }"></div>
-            <div class="modal-footer">
-                <button type="button" data-bind="text: btnCancel, attr: { class: btnCancelCSS }" class="btn btn-default" data-dismiss="modal"></button>
-                <button type="button" data-bind="click: submit, text: btnSubmit, attr: { class: btnSubmitCSS }" class="btn btn-primary"></button>
-            </div>
-        </div>
-    </div>
-    <!-- /ko -->
-</div>
 {# add page templates #}
 {% include 'user/profile-templates.html' %}
 {% endblock %}

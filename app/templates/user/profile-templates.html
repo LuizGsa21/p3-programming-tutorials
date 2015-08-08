@@ -1,115 +1,174 @@
 {% from 'macros/form-components.html' import render_form, render_form %}
-<script id="template-tutorialTableRow" type="text/html">
-    <!-- ko foreach: articles -->
-    <tr>
-        <td class="title"><a href="" data-bind="text: title, attr: { href: url }"></a></td>
-        <td class="category" data-bind="text: category.name"></td>
-        <td class="date" data-bind="attr: { 'data-time': dateCreated }"></td>
-        <td class="action">
-            <a data-bind="click: $parent.showModal" class="btn-tutorial-edit btn btn-sm btn-warning" data-classname="ArticleModal" data-method="editArticle">Edit</a>
-            <a data-bind="click: $parent.showModal" class="btn-tutorial-delete btn btn-sm btn-danger" data-classname="ArticleModal" data-method="deleteArticle">Delete</a>
-        </td>
-    </tr>
-    <!-- /ko -->
-    <!-- ko if: articles().length == 0 -->
-        <tr class="empty-table"><td colspan="4" class="text-center">No published tutorials</td></tr>
-    <!-- /ko -->
-</script>
 
-<script id="template-adminOptions" type="text/html">
-<div class="row row-table-sm">
-    <div class="col-xs-12 text-center">
-        <h1>Admin Options</h1>
-        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Categories </a>
-{#        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Users </a>#}
-{#        <a data-bind="click: showModal" data-classname="CategoriesModal" data-method="addCategory" class="btn btn-primary"> Manage Articles </a>#}
-    </div>
-</div>
-</script>
-
+{# START: Add/Edit/Delete Article forms #}
 {% set defaultCategorySelect = {'data-bind': "options: categories, optionsText: 'name', optionsValue: 'id', value: selectedCategoryId"} %}
 <script id="template-addArticle" type="template">
-    {{ render_form(get_form('AddArticle'), {
-        '_action': url_for('user.add_article'),
-        'category': defaultCategorySelect,
-        'body': {'rows': 6, 'cols':30}
-    }, default_databind=false) }}
+    {{ render_form(get_form('AddArticle'), { '_action': url_for('user.add_article'), 'category': defaultCategorySelect, 'body': {'rows': 6, 'cols':30} }, default_databind=false) }}
 </script>
-
 <script id="template-editArticle" type="template">
-    {{ render_form(get_form('EditArticle'), {
-         '_action': url_for('user.edit_article'),
-         'category': defaultCategorySelect,
-         'body': {'rows': 6, 'cols':30}
-     }) }}
+    {{ render_form(get_form('EditArticle'), { '_action': url_for('user.edit_article'), 'category': defaultCategorySelect, 'body': {'rows': 6, 'cols':30} }) }}
 </script>
-
-<script id="template-editProfile" type="template">
-    {{ render_form(get_form('EditProfile'), {
-        '_action': url_for('user.edit_profile'),
-    }) }}
-</script>
-
 <script id="template-deleteArticle" type="template">
     <p>Are you sure you want to delete <strong class="text-danger-inverse" data-bind="text: articleTitle"></strong> permanently?</p>
-    {% set deleteArticleOptions = {
-        '_action': url_for('user.delete_article')
-    } %}
-    {{ render_form(get_form('DeleteArticle'), deleteArticleOptions) }}
+    {{ render_form(get_form('DeleteArticle'), { '_action': url_for('user.delete_article') }) }}
 </script>
+{# END: Add/Edit/Delete Article forms #}
 
-<script id="template-editAvatar" type="text/html">
-<div id="form-avatar" class="container-fluid">
-    <div class="row">
-        <div class="col-xs-12">
-            {{ render_form(get_form('UploadAvatar'), {
-              '_action': url_for('user.upload'),
-              '_enctype': 'multipart/form-data'
-          }, default_databind=false) }}
-        </div>
-        <div class="col-md-8">
-            <h3 class="text-center">Canvas</h3>
-            <div class="avatar-wrapper"><img data-bind="attr: { src: originalImage }" src="" alt="avatar"/></div>
-        </div>
-        <div class="col-md-4">
-            <h3 class="text-center">Preview</h3>
-            <div class="avatar-preview preview-lg"></div>
-            <div class="avatar-preview preview-md"></div>
+
+{# START: Article table #}
+<script id="template-articleTable" type="text/html">
+    <table class="table-articles">
+        <thead data-bind="sortTable: { list: articles }">
+            <tr>
+                <th data-sort-by="title">Title</th>
+                <th data-sort-by="category">Category</th>
+                <th data-sort-by="dateCreated">Date Created</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: articles">
+            <tr>
+                <td class="title">
+                    <a href="" data-bind="text: title, attr: { href: url }"></a>
+                </td>
+                <td class="category" data-bind="text: category.name"></td>
+                <td class="date" data-bind="timeFromNow: dateCreated"></td>
+                <td class="action">
+                    <a data-bind="click: $parent.modal.editArticle" class="btn btn-sm btn-warning">Edit</a>
+                    <a data-bind="click: $parent.modal.deleteArticle" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot data-bind="if: articles().length == 0">
+            <tr>
+                <td colspan="4" class="text-center" data-bind="text: emptyTableText"></td>
+            </tr>
+        </tfoot>
+    </table>
+</script>
+{# END: Article table #}
+
+{# START: Admin options menu #}
+<script id="template-adminOptions" type="text/html">
+    <div class="row row-table-sm">
+        <div class="col-xs-12 text-center">
+            <h1>Admin Options</h1>
+            <a data-bind="click: toggleUserTable, text: btnUserTableText" class="btn btn-primary"></a>
+            <a data-bind="click: categoryModal.addCategory, text: btnCategoryText" class="btn btn-primary"></a>
         </div>
     </div>
-</div>
+    <!-- ko if: userTable.isVisible -->
+    <div class="row row-table-sm">
+        <div class="col-xs-12">
+            <h1 class="main-title">Registered Users</h1>
+        </div>
+    </div>
+    <table data-bind="with: userTable" class="table-articles">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Username</th>
+                <th>Articles</th>
+                <th>Date Joined</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: users">
+            <tr>
+                <td data-bind="text: id"></td>
+                <td data-bind="text: username"></td>
+                <td><a data-bind="click: $root.admin.showArticlesByUserID" href="#">view articles</a></td>
+                <td data-bind="timeFromNow: dateJoined"></td>
+                <td class="action">
+                    <a data-bind="click: $parent.modal.editUser" class="btn btn-sm btn-warning">Edit</a>
+                    <a data-bind="click: $parent.modal.deleteUser" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot data-bind="if: users().length == 0">
+            <tr>
+                <td colspan="5" class="text-center" data-bind="text: emptyTableText"></td>
+            </tr>
+        </tfoot>
+    </table>
+    <!-- /ko-->
+    <!-- ko if: articleTable.isVisible -->
+    <div class="row row-table-sm">
+        <div class="col-xs-12 col-sm-8">
+            <h1 class="main-title" data-bind="text: articleTableTitle"></h1>
+        </div>
+        <div class="col-xs-12 col-sm-4 add-btn-container">
+            {# `showUserTable.bind($data, true)` is required to use table cache #}
+            <a data-bind="click: showUserTable.bind($data, true)" class="btn btn-primary"><span class="glyphicon glyphicon-arrow-left"></span> Go Back</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 table-container" data-bind="template: { name: 'template-articleTable', data: articleTable }"></div>
+    </div>
+    <!-- /ko-->
 </script>
+{# END: Admin options menu #}
 
+{# START: Category - Modal Body #}
 <script id="template-manageCategories" type="text/html">
-<div id="manage-categories" class="container-fluid">
-    <div class="row">
-        <div class="col-xs-12">
-          <ul class="nav nav-tabs nav-justified no-collapse" role="tablist">
-            <li role="presentation" class="active"><a data-bind="click: addCategory" href="#addCategory" aria-controls="addCategory" role="tab" data-toggle="tab">Add</a></li>
-            <li role="presentation"><a data-bind="click: editCategory" href="#editCategory" aria-controls="editCategory" role="tab" data-toggle="tab">Edit</a></li>
-            <li role="presentation"><a data-bind="click: deleteCategory" href="#deleteCategory" aria-controls="deleteCategory" role="tab" data-toggle="tab">Delete</a></li>
-          </ul>
-          <div class="tab-content">
-            <div role="tabpanel" class="tab-pane active" id="addCategory">
-                    {{ render_form(get_form('AddCategory'), { '_action': url_for('user.add_category') }, default_databind=false) }}
+    <div id="manage-categories" class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12">
+                <ul class="nav nav-tabs nav-justified no-collapse" role="tablist">
+                    <li role="presentation" class="active"><a data-bind="click: addCategory" href="#addCategory" aria-controls="addCategory" role="tab" data-toggle="tab">Add</a></li>
+                    <li role="presentation"><a data-bind="click: editCategory" href="#editCategory" aria-controls="editCategory" role="tab" data-toggle="tab">Edit</a></li>
+                    <li role="presentation"><a data-bind="click: deleteCategory" href="#deleteCategory" aria-controls="deleteCategory" role="tab" data-toggle="tab">Delete</a></li>
+                </ul>
+                {# START: Add/Edit/Delete Category forms #}
+                <div class="tab-content">
+                    {# Add category #}
+                    <div role="tabpanel" class="tab-pane active" id="addCategory">
+                        {{ render_form(get_form('AddCategory'), { '_action': url_for('user.add_category') }, default_databind=false) }}
+                    </div>
+                    {# Edit category #}
+                    <div role="tabpanel" class="tab-pane" id="editCategory">
+                        {{ render_form(get_form('EditCategory'), { '_action': url_for('user.edit_category'), 'id': {'data-bind': "value: selectedCategoryId"}, 'category': defaultCategorySelect, 'name': {'data-bind': "value: selectedCategory() ? selectedCategory() : '' "} }, default_databind=false) }}
+                    </div>
+                    {# Delete category #}
+                    <div role="tabpanel" class="tab-pane" id="deleteCategory">
+                        {{ render_form(get_form('DeleteCategory'), { '_action': url_for('user.delete_category'), 'id': {'data-bind': 'value: selectedCategoryId'}, 'category': defaultCategorySelect }, default_databind=false) }}
+                    </div>
+                </div>
+                {# END: Add/Edit/Delete Category forms #}
             </div>
-            <div role="tabpanel" class="tab-pane" id="editCategory">
-                {{ render_form(get_form('EditCategory'), {
-                      '_action': url_for('user.edit_category'),
-                      'id': {'data-bind': "value: selectedCategoryId"},
-                      'category': defaultCategorySelect,
-                      'name': {'data-bind': "value: selectedCategory() ? selectedCategory() : '' "}
-                  }, default_databind=false) }}
-            </div>
-            <div role="tabpanel" class="tab-pane" id="deleteCategory">
-                {{ render_form(get_form('DeleteCategory'), {
-                      '_action': url_for('user.delete_category'),
-                      'id': {'data-bind': 'value: selectedCategoryId'},
-                      'category': defaultCategorySelect
-                  }, default_databind=false) }}
-            </div>
-          </div>
         </div>
     </div>
-</div>
+</script>
+{# END: Category Modal - Modal Body #}
+
+{# START: Edit Avatar - Modal Body #}
+<script id="template-editAvatar" type="text/html">
+    <div id="form-avatar" class="container-fluid">
+        <div class="row">
+            <div class="col-xs-12">
+                {{ render_form(get_form('UploadAvatar'), { '_action': url_for('user.upload'), '_enctype': 'multipart/form-data' }, default_databind=false) }}
+            </div>
+            <div class="col-md-8">
+                <h3 class="text-center">Canvas</h3>
+                <div class="avatar-wrapper"><img data-bind="attr: { src: originalImage }" src="" alt="avatar" /></div>
+            </div>
+            <div class="col-md-4">
+                <h3 class="text-center">Preview</h3>
+                <div class="avatar-preview preview-lg"></div>
+                <div class="avatar-preview preview-md"></div>
+            </div>
+        </div>
+    </div>
+</script>
+{# END: Edit Avatar - Modal Body #}
+
+{# Edit Profile form #}
+<script id="template-editProfile" type="template">
+    {{ render_form(get_form('EditProfile'), { '_action': url_for('user.edit_profile'), }) }}
+</script>
+
+{# Delete User form #}
+<script id="template-deleteUser" type="template">
+    <p>Are you sure you want to delete user <strong class="text-danger-inverse" data-bind="text: username"></strong> permanently?</p>
+    {{ render_form(get_form('DeleteUser'), { '_action': url_for('user.delete_user') }) }}
 </script>
