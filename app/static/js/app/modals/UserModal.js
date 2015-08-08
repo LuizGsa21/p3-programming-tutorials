@@ -54,6 +54,7 @@ define([
 			// update UI
 			self.set('title', 'Delete User');
 			self.set('btnSubmit', 'Delete User');
+			self.set('modalCSS', 'modal-dialog');
 			self.set('btnSubmitCSS', 'btn btn-danger');
 			self.set('btnCancel', 'Cancel');
 			self.set('btnCancelCSS', 'btn btn-default');
