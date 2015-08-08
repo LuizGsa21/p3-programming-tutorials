@@ -16,7 +16,7 @@ define([
 	var ArticleModal = function ArticleModal() {
 		BaseModal.call(this);
 		var self = this;
-		self.modalCSS = 'modal-dialog';
+		self.modalCSS = ko.observable('modal-dialog');
 		// Use the categories on the navbar as the selection options
 		self._navbarLinks = ko.observable().subscribeTo('Navbar.updatedLinks', true);
 		self.selectedCategoryId = ko.observable();

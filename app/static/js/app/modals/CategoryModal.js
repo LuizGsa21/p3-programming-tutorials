@@ -31,8 +31,8 @@ define([
 
 		// setup non-observable UI variables
 		self.title = 'Manage Categories';
-		self.bodyTemplate = 'template-manageCategories';
-		self.modalCSS = 'modal-dialog';
+		self.bodyTemplate = ko.observable('template-manageCategories');
+		self.modalCSS = ko.observable('modal-dialog');
 
 		/**
 		 * Updates the modal's UI for adding a category then displays the modal.
