@@ -20,7 +20,7 @@
         {{ alert_messages(get_flashed_messages(with_categories=true)) -}}
     </div>
         {#  center the owl on the page if the user is logged in #}
-        <div id="main-logo-container" class="{{ 'col-xs-12' if isLoggedIn else 'col-sm-6 hidden-xs' }}">
+        <div id="main-logo-container" class="{{ 'col-xs-12' if current_user.is_authenticated() else 'col-sm-6 hidden-xs' }}">
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="How-To-Tutorials logo"/>
         </div>
         <div id="login-form" class="col-sm-6" data-bind="component: 'login-form'"></div>
