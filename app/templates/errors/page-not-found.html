@@ -1,1 +1,14 @@
-page_not_found
+{% extends 'layout.html' %}
+
+{% set json_response = result|tojson %}
+
+{% block header %} <script> requirejs(['error-page']); </script> {% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div style="margin-top: 10%" class="col-xs-12 text-center">
+            <h1 style="font-size: 8em">404</h1>
+            <h2 style="font-size: 4em">NOT FOUND.</h2>
+        </div>
+    </div>
+{% endblock %}

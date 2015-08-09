@@ -1,8 +1,6 @@
-import os
-import pprint
-
 from flask import Flask, render_template, g, flash
 from flask_login import current_user, AnonymousUserMixin
+from .schemas import frontend_index_view_serializer
 from .utils import xhr_or_template
 
 from extensions import db, csrf, login_manager
@@ -11,9 +9,7 @@ from views import api_bp, frontend_bp, user_bp, oauth_bp
 from models import Category
 
 
-# TODO: fix avatar upload, sometimes it overwrites original image
 # TODO: fix username registration
-# TODO: fix popover. change `This` to field name
 
 DEFAULT_BLUEPRINTS = (api_bp, frontend_bp, user_bp, oauth_bp)
 
@@ -42,16 +38,14 @@ def create_app(app_name=None, blueprints=None, config=None):
 
 
 def configure_hook(app):
+    """ Configure app hooks. """
     @app.before_request
     def before_request():
         g.user = current_user
 
-    @app.context_processor
-    def jinja_globals():
-        return dict(categories=Category.query.order_by(Category.name).all(), isLoggedIn=current_user.is_authenticated())
-
 
 def configure_extensions(app):
+    """ Configure app extension. """
     # flask SQLAlchemy
     db.init_app(app)
     db.create_all(app=app)
@@ -63,7 +57,7 @@ def configure_extensions(app):
     @xhr_or_template('errors/forbidden-page.html')
     def csrf_error(message):
         flash(message, 'danger')
-        return {'status': 400}
+        return {'status': 403}
 
 
     # mail.init_app(app)
@@ -80,8 +74,8 @@ def configure_extensions(app):
         username = 'Guest'
         email = None
         dateJoined = None
-        avatar = 'avatar.jpg'
-        # TODO: find a better avatar img for guest users
+        avatar = 'avatar.jpg' # TODO: find a better avatar img for guest users
+
         @staticmethod
         def is_admin():
             return False
@@ -90,45 +84,30 @@ def configure_extensions(app):
 
 
 def configure_blueprints(app, blueprints):
+    """ Registers blueprints to the applications """
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
 
 
 def configure_error_handlers(app):
-    @app.errorhandler(403)
-    def forbidden_page(error):
-        return render_template('errors/forbidden-page.html'), 403
+    """ Set error handlers to the application.
+        Note: error handlers from extensions are set in `configure_extensions` method. """
 
     @app.errorhandler(404)
     def page_not_found(error):
-        return render_template('errors/page-not-found.html'), 404
+        # use index page schema
+        result = frontend_index_view_serializer.dump({
+            'user': current_user,
+            'navbar': {
+                'categories': Category.query.order_by(Category.name).all()
+            }
+        }).data
+        return render_template('errors/page-not-found.html', result=result), 404
 
-    @app.errorhandler(500)
-    def server_error_page(error):
-        return render_template('errors/server-error.html'), 500
 
 
 def configure_jinja_filters(app):
-
-    import schemas
-    import forms
-
-    @app.template_filter('custom_json')
-    def custom_json(obj, serializer, **kwargs):
-        if isinstance(serializer, basestring):
-            serializer = getattr(schemas, serializer + '_serializer')
-            if serializer is None:
-                raise ValueError('Invalid serializer')
-        return serializer.dumps(obj, **kwargs).data
-
-    @app.template_filter('os_environ')
-    def os_environ(key):
-        return os.environ.get(key, None)
-
-    @app.template_filter('chunks')
-    def chunks(l, n):
-        n = max(1, n)
-        return [l[i:i + n] for i in range(0, len(l), n)]
+    """ Set global jinja filters and methods """
 
     @app.template_filter('capitalize')
     def to_camelcase(word):
@@ -141,12 +120,19 @@ def configure_jinja_filters(app):
         c = camelcase()
         return "".join(c.next()(x) if x else '_' for x in word.split("_"))
 
+    # Import forms so we has dynamically access any wtform
+    import forms
+
     def get_form(name, **kwargs):
+        """ Returns a wtform using the given `name`
+            example:
+                `get_form('DeleteCategory')`  returns a DeleteCategoryForm instance
+        """
+
         form = getattr(forms, name + 'Form')
         if form is None:
             raise ValueError('Invalid form name.')
         return form(**kwargs)
 
+    # add `get_form` to jinja's global context
     app.jinja_env.globals['get_form'] = get_form
-    # app.jinja_env.trim_blocks = True
-    # app.jinja_env.lstrip_blocks = True

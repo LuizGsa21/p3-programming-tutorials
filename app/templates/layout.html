@@ -41,6 +41,7 @@
                     'frontend-index': page + '/frontend-index',
                     'frontend-article': page + '/frontend-article',
                     'frontend-category-articles': page + '/frontend-category-articles',
+                    'error-page': page + '/error-page',
                     'user-profile': page + '/user-profile',
                     // third party dependencies
                     'jquery': 'https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min',
@@ -84,15 +85,19 @@
 
             {% set json_response = json_response|default('{}') %}
 
-            console.log({{ json_response|safe }});
-            // Initialize the model data
-            Model.initData({{ json_response|safe }}.result);
+            var data = {{ json_response|safe }};
+            {# If `data` contains a `result` attribute, use it as the initial data #}
+            Model.initData(data.result || data);
+
+            {# If this page uses a login manager pass it the csrfToken. This is only required
+               for GitHub's OAuth login. Google and facebook login will use the csrfToken provided by `ajaxPrefilter` #}
             if (Model.hasKey('loginManager')) {
                 Model.getData('loginManager').csrfToken = "{{ csrf_token() }}";
             }
 
-
-            // Make sure we provide the CSRF token when `options.csrfHeader` is set to true
+            /**
+             * Insert `X-CSRFToken` to ajax header when `csrfHeader` option is set to true.
+             */
             $.ajaxPrefilter(function (options) {
                 if (options.csrfHeader === true) {
                     // Note: jquery.form plugin will add a beforeSend option when uploading files
@@ -109,9 +114,11 @@
 
                 }
             });
-            window.Model = Model;
-            window.LoginManager = LoginManager;
+            // Debug
+            window.model = Model;
+            window.loginManager = LoginManager;
             window.ko = ko;
+            window.utils = Utils;
             return {
                 jquery: $,
                 ko: ko,
