@@ -1,4 +1,4 @@
-from flask import Flask, render_template, g, flash
+from flask import Flask, render_template, g, flash, url_for, redirect, request
 from flask_login import current_user, AnonymousUserMixin
 from .schemas import frontend_index_view_serializer
 from .utils import xhr_or_template
@@ -42,6 +42,20 @@ def configure_hook(app):
     @app.before_request
     def before_request():
         g.user = current_user
+
+        # When a user registers using oauth they will have a temporary username.
+        # If the user skips the registration process by closing the window or leaving the page,
+        # we have to redirect them to the `oauth.register_username` endpoint.
+        #
+        # NOTE: when applying the redirect, we need to ignore `oauth.register_username` and `static` endpoints
+        #  to prevent an infinite loop and to allow css/js files to still be requested
+        if request.endpoint is None:
+            # This check covers requests like "GET /favicon.ico HTTP/1.1"
+            return  # do nothing
+        if '@' in current_user.username and request.endpoint not in ('oauth.register_username', 'static', 'frontend.logout'):
+            if not request.is_xhr:
+                flash('You must register a username or logout to continue.', 'danger')
+            return redirect(url_for('oauth.register_username'))
 
 
 def configure_extensions(app):

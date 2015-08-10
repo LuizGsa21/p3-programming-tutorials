@@ -3,14 +3,15 @@ from os.path import join as joinpath
 
 import requests
 from flask import Blueprint, request, redirect, url_for, flash, session, g, render_template
-from flask_login import login_user, current_user
+from flask_login import login_user, current_user, login_required
 
 from oauth2client.client import FlowExchangeError, flow_from_clientsecrets
 
 from app.extensions import db, oauth
-from app.models import User
-from app.utils import xhr_required, format_flashed_messages
-from app.schemas import user_info_serializer
+from app.models import User, Category
+from app.utils import xhr_required, format_flashed_messages, xhr_or_template, get_login_manager_data
+from app.schemas import user_info_serializer, navbar_serializer, login_manager_serializer
+from app.forms import RegisterUsernameForm
 
 
 oauth_bp = Blueprint('oauth', __name__, url_prefix='/oauth')
@@ -67,11 +68,13 @@ def google_authorized():
         flash('Failed to retrieve user info.', 'danger')
         return {'status': result.status_code}
     userinfo = result.json()
-    user = User.query.filter_by(oauthId=gplus_id, oauthProvider='google-plus').first()
 
-    msg = ''
+    # check if user exists
+    user = User.query.filter_by(oauthId=gplus_id, oauthProvider='google-plus').first()
     if not user:
-        user = User(username=userinfo['email'],
+        # use a temporary username. As long as the username contains a `@`
+        # the user will be redirected to `register_username` endpoint
+        user = User(username=gplus_id + '@google',
                     email=userinfo['email'],
                     firstName=userinfo.get('given_name', None),
                     lastName=userinfo.get('family_name', None),
@@ -80,11 +83,9 @@ def google_authorized():
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-        msg = 'You have successfully registered! <br>'
 
     login_user(user)
     session['google_oauth_token'] = (access_token, '')
-    flash(msg + 'You are logged in as %s' % user.username, 'success')
     result = {
         'user': user_info_serializer.dump(user).data,
     }
@@ -123,11 +124,12 @@ def facebook_authorized():
         return {'success': 0, 'status': 401}
 
     data = result.json()
+    # check if user exists
     user = User.query.filter_by(oauthId=data['id'], oauthProvider='facebook').first()
-
-    msg = ''
     if not user:
-        user = User(username=data['email'],
+        # use a temporary username. As long as the username contains a `@`
+        # the user will be redirected to `register_username` endpoint
+        user = User(username=data['id'] + '@facebook',
                     email=data['email'],
                     firstName=data.get('first_name', None),
                     lastName=data.get('last_name', None),
@@ -136,14 +138,12 @@ def facebook_authorized():
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-        msg = 'You have successfully registered! <br>'
     login_user(user)
 
     session['facebook_oauth_token'] = accessToken
-    flash(msg + 'You are logged in as %s' % user.username, 'success')
     result = {
         'user': user_info_serializer.dump(user).data,
-        }
+    }
     return {'status': 200, 'result': result}
 
 
@@ -183,20 +183,18 @@ def github_authorized(resp):
     userinfo = requests.get('https://api.github.com/user',
                             params=dict(access_token=resp['access_token'])).json()
 
-    # getting an email from github isn't guaranteed
-    # so we use id provided by github
+    # check if user exists
     user = User.query.filter_by(oauthId=str(userinfo['id']), oauthProvider='github').first()
-    msg = ''
     if not user:
+        # get first and last name if possible.
         fullname = userinfo['name'].split(' ', 1)
         if len(fullname) != 2:
             fullname = (fullname[0], None)
         firstname, lastname = fullname
 
-        # check if github's username is available
-        taken = User.query.filter_by(username=userinfo['login']).first()
-
-        user = User(username=userinfo['login'] if not taken else userinfo['id'] + '-github',
+        # use a temporary username. As long as the username contains a `@`
+        # the user will be redirected to `register_username` endpoint
+        user = User(username=str(userinfo['id']) + '@github',
                     email=userinfo['email'],
                     firstName=firstname,
                     lastName=lastname,
@@ -205,10 +203,8 @@ def github_authorized(resp):
                     pwdhash='')
         db.session.add(user)
         db.session.commit()
-        msg = 'You have successfully registered! <br>'
     session['github_oauth_token'] = (resp['access_token'], '')
     login_user(user)
-    flash(msg + 'You are logged in as %s' % user.username, 'success')
     result = {
         'flashed_messages': format_flashed_messages(),
         'user': user_info_serializer.dump(user).data,
@@ -219,3 +215,50 @@ def github_authorized(resp):
 @github.tokengetter
 def get_github_oauth_token():
     return session.get('github_oauth_token')
+
+@oauth_bp.route('/register-username', methods=['POST', 'GET'])
+@login_required
+@xhr_or_template('oauth/register-username.html')
+def register_username():
+    print request.form
+    result = {
+        'navbar': navbar_serializer.dump({
+            'categories': Category.query.order_by(Category.name).all()
+        }).data,
+        'loginManager': login_manager_serializer.dump(get_login_manager_data()).data
+    }
+
+    # only register a new username if it contains a "@"
+    if '@' not in current_user.username:
+        flash('You already have a username.', 'danger')
+        if not request.is_xhr:
+            # redirect back to the home page
+            return redirect(url_for('frontend.index'))
+        return {'status': 400}
+
+    # validate the form on post requests
+    if request.method == 'POST':
+        form = RegisterUsernameForm(request.form, prefix='cr')
+        if form.validate_on_submit():
+            # Update username
+            user = User.query.get(current_user.id)
+            user.populate_from_form(form)
+            db.session.commit()
+
+            flash('Welcome ' + user.username + ' :)', 'success')
+            # create response
+            result['user'] = user_info_serializer.dump(current_user).data
+            response = {'status': 200, 'result': result}
+            # Check if we should delay the flash message
+            print request.form['delay-flash-messages']
+            if request.form['delay-flash-messages']:
+                response['_delayFlashMessages'] = True
+            return response
+        else:
+            # return form errors
+            flash(form.errors, 'form-error')
+            return {'status': 400}
+    else:
+        # create response and render the template
+        result['user'] = user_info_serializer.dump(current_user).data
+        return {'status': 200, 'result': result}

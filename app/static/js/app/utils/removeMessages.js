@@ -57,7 +57,9 @@ define(['jquery', 'lib/bootstrap-custom-popover'], function ($) {
 	 */
 	function all($container, callback) {
 		console.log('Removing messages', arguments);
-		if (arguments.length == 1) {
+		if (arguments.length == 0) {
+			$container = $('body');
+		} else if (arguments.length == 1) {
 			callback = $container;
 			$container = $('body');
 		}

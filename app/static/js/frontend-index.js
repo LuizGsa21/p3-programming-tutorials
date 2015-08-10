@@ -33,17 +33,17 @@ requirejs([
 
 		this.loadData(data);
 
-		// We only want to make the login form visible for anonymous users.
-		// The login form component uses knockout's fadeVisible binding when fading in/out.
-		// However we want it to stay in sync with the main logo animation and
-		// trying to keep 2 animations in sync using knockout has become a tedious task.
-		// So we will fallback to using jquery when dealing with more than one element.
-
 		// set its initial value to true (visible)
-		this.showLoginForm = ko.observable(true).publishOn('LoginForm.visible');
+		ko.postbox.publish('LoginForm.visible', true);
+		this.registerUsernameMode = ko.observable().subscribeTo('LoginForm.registerUsernameMode', true);
+
+		// Only hide the form when the user is logged in AND doesnt need to register a username.
+		this.hideLoginForm = ko.pureComputed(function () {
+			return this.user.isLoggedIn() && ! this.registerUsernameMode();
+		}, this);
 
 		// show/hide the form using jquery when the user's login state changes
-		this.user.isLoggedIn.subscribe(function (isLoggedIn) {
+		this.hideLoginForm.subscribe(function (isLoggedIn) {
 			if (isLoggedIn) {
 				// hide the login/registration form using the parent container
 				$('#login-form-container').parent().fadeOut(500, function () {

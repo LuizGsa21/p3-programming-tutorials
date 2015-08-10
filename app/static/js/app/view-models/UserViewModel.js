@@ -10,21 +10,26 @@ define([
 
 	function UserViewModel(user) {
 
+		var self = this;
 		// map the user data to this view model
-		this.loadData = function (user) {
+		self.loadData = function (user) {
 			// extract the user if we passed in a data containing the user key
 			if (user.hasOwnProperty('user'))
 				user = user.user;
-			koMapping.fromJS(user, mapping, this);
+			koMapping.fromJS(user, mapping, self);
 
 			// Publish observables
-			for (var key in this.__ko_mapping__.mappedProperties) if (this.hasOwnProperty(key)) {
-				// TODO: only publish required keys
-				this[key].syncWith('User.' + key);
+			for (var key in self.__ko_mapping__.mappedProperties) if (self.hasOwnProperty(key)) {
+				self[key].syncWith('User.' + key);
 			}
-		}.bind(this);
+		};
 
-		this.loadData(user);
+		self.loadData(user);
+
+		ko.postbox.subscribe('User.loadData', function (data) {
+			if ( ! data) return;
+			self.loadData(data)
+		});
 	}
 
 	return UserViewModel;

@@ -97,7 +97,13 @@ define([
 		// notify other views that the navbar has been updated
 		self.links.publishOn('Navbar.updatedLinks');
 		// Allow other views to log user out by publishing to topic `Navbar.logout`
-		ko.postbox.subscribe('Navbar.logout', function () { self.logout(); });
+		ko.postbox.subscribe('Navbar.logout', function () {
+			if (self.useLoginManager()) {
+				self.logout();
+			} else {
+				window.location.href = '/logout/';
+			}
+		});
 	};
 
 	NavbarViewModel.prototype.logout = function () {

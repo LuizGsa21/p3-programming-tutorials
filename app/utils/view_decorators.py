@@ -21,11 +21,14 @@ def xhr_or_template(template=None):
             if 'result' not in ctx:
                 ctx['result'] = {}
             # add flash messages
-            ctx['result']['flashed_messages'] = format_flashed_messages()
+            if not ctx.pop('_delayFlashMessages', None):
+
+                ctx['result']['flashed_messages'] = format_flashed_messages()
             if request.is_xhr or not template:
                 return jsonify(ctx),  ctx['status']
             else:
-                return render_template(template, result=ctx)
+                # pprint.pprint(ctx)
+                return render_template(template, result=ctx), ctx['status']
 
         return decorated_fn
 

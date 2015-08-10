@@ -45,7 +45,6 @@ def category_articles(category):
     category = Category.query.filter_by(name=category).first()
     if category is None:
         abort(404)
-    # TODO: order articles by most popular
     result = category_articles_serializer.dump({
         'user': current_user,
         'category': category.name,
@@ -193,7 +192,8 @@ def login():
         else:
             login_user(user)
             flash('You have successfully logged in.', 'success')
-            return {'status': 200, 'user': user_info_serializer.dump(user).data}
+            result = {'user': user_info_serializer.dump(user).data}
+            return {'status': 200, 'result': result}
 
     flash(form.errors, 'form-error')
     return {'status': 400}

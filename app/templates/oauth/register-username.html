@@ -1,0 +1,32 @@
+{% extends 'layout.html' -%}
+
+{% from 'macros/alert-messages.html' import alert_messages %}
+{% from 'macros/login-form.html' import render_login_form with context %}
+
+{% set json_response = result|tojson %}
+{% block header %}
+    <script> requirejs(['oauth-register-username']); </script>
+{% endblock %}
+
+{% block metaTags %}{% endblock -%}
+
+{%- block bodyID %}page-index{% endblock -%}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <div id="general-alert">
+                {{ alert_messages(get_flashed_messages(with_categories=true)) -}}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <login-form style="margin: 100px auto 0; max-width: 300px; display: block;"></login-form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

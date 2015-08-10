@@ -28,21 +28,24 @@ define([
 		// Get notified if the form is visible after animation
 		this.formVisibleAA = ko.observable().subscribeTo('LoginForm.visibleAA', true);
 
+		this.registerUsernameMode = ko.observable().subscribeTo('LoginForm.registerUsernameMode', true);
+
 		// set a condition for when to show or hide the profile
 		this.profile = {
 			isVisible: ko.computed(function () {
-				return this.user.isLoggedIn() && !this.formVisibleAA();
+				return this.user.isLoggedIn() && !this.formVisibleAA() && ! this.registerUsernameMode();
 				// add a sub-observable to be updated after animation is complete
 			}, this).extend({ afterAnimation: 'fadeVisible' })
 		};
 
 		// set a condition of when to show or hide the login form
 		this.formVisible = ko.computed(function () {
-			// make sure the profile is hidden and that the user
-			// is logged out before displaying the form
-			return !this.user.isLoggedIn() &&  !this.profile.isVisible.afterAnimation();
+				// always show the form when its in registerUsernameMode
+			return this.registerUsernameMode() ||
+				// make sure the profile is hidden and that the user is logged out
+				(!this.profile.isVisible.afterAnimation() && !this.user.isLoggedIn());
 		}, this);
-		// notify the LoginFormView when to show/hide itself
+		// notify the LoginForm when to show/hide itself
 		this.formVisible.publishOn('LoginForm.visible');
 	};
 
