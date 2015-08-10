@@ -12,4 +12,4 @@ app/static/uploads/avatar
 !app/static/uploads/avatar/original-avatar.jpg
 
 # oauth keys
-app/oauth/*.json
+*.json
