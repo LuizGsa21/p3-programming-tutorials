@@ -22,7 +22,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SECRET_KEY = 'how-to-articles-development'
+    SECRET_KEY = 'how-to-tutorials-development'
     SQLALCHEMY_DATABASE_URI = 'postgresql://vagrant:vagrant@localhost:5432/test'
 
     GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
@@ -44,10 +44,3 @@ class DevelopmentConfig(Config):
     # MAIL_USERNAME = os.environ['MAIL_USERNAME']
     # MAIL_PASSWORD = os.environ['MAIL_PASSWORD']
     # MAIL_DEFAULT_SENDER = os.environ['MAIL_SENDER']
-
-
-class TestingConfig(Config):
-    SECRET_KEY = 'how-to-articles-development'
-    TESTING = True
-    # WTF_CSRF_ENABLED = False
-    # SQLALCHEMY_ECHO = True
