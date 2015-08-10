@@ -17,7 +17,7 @@
                 <!-- ko ifnot: isComment -->
                     <a class="reply-to" data-bind="text: '@' + recipientUsername" href="#"></a>
                 <!-- /ko -->
-                <span data-bind="attr: { 'data-time': dateCreated }" class="comment-date"></span>
+                <span data-bind="timeFromNow: dateCreated" class="comment-date"></span>
             </div>
             <div class="content" data-bind="text: message, storeElement: fadeVisible !isEditing()"></div>
             <div data-bind="storeElement: fadeVisible isFormVisible, template: { name: 'template-' + formName, if: renderForm() }"></div>

@@ -136,7 +136,6 @@ requirejs([
 
 	var mainViewModel = new MainViewModel(Model.getData());
 	ko.applyBindings(mainViewModel);
-	Utils.updateTime();
 });
 
 

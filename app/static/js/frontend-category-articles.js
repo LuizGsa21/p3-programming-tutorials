@@ -56,7 +56,6 @@ requirejs([
 					console.log(data);
 					self.loadData(data);
 					self.updateTemplate();
-					Utils.updateTime();
 					Utils.show.messages('#general-alert', data['flashed_messages']);
 				},
 				error: function (data) {
@@ -85,7 +84,6 @@ requirejs([
 
 	var mainViewModel = new MainViewModel(Model.getData());
 	ko.applyBindings(mainViewModel);
-	Utils.updateTime();
 
 });
 

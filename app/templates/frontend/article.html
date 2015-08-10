@@ -17,7 +17,7 @@
             <div class="article-body" data-bind="text: body"></div>
             <footer class="article-footer">
                 By <a href="#" class="author" data-bind="text: author.username"></a><br/>
-                <span class="date-created">Published <span data-bind="attr: { 'data-time': dateCreated }"></span></span><br/>
+                <span class="date-created">Published <span data-bind="timeFromNow: dateCreated"></span></span><br/>
             </footer>
         </section>
         <div class="comment-container">
