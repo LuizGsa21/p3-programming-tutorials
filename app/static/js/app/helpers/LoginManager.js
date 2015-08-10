@@ -1,4 +1,4 @@
-define(['jquery'], function () {
+define(['jquery', 'jquery.form'], function () {
 
 	function LoginManager(data) {
 		if (LoginManager.prototype._singletonInstance) // return singleton instance
@@ -6,12 +6,6 @@ define(['jquery'], function () {
 
 		if (!data)
 			throw new Error("LoginManager: data parameter is required.");
-
-		if (window.googleAsyncInit)
-			throw new Error("LoginManager: googleAsyncInit is already initialized.");
-
-		if (window.fbAsyncInit)
-			throw new Error("LoginManager: fbAsyncInit is already initialized.");
 
 		// set and verify that all required data was given
 		this._setData(data);
@@ -27,6 +21,13 @@ define(['jquery'], function () {
 
 	}
 
+	/**
+	 * Verifies that all required properties were provided by `data`.
+	 * Throws an Error if a key is missing from the `requiredKeys`.
+	 *
+	 * @param {Object} data - the object containing the oauth data
+	 * @private
+	 */
 	LoginManager.prototype._setData = function _setData(data) {
 		var requiredKeys = [
 			'googleClientId', 'googleLoginUrl', 'facebookClientId',
@@ -41,23 +42,36 @@ define(['jquery'], function () {
 		}
 	};
 
+	/**
+	 * Logs in user with the given `provider`.
+	 *
+	 * @param {string} provider - options "google", "facebook", "github"
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @param {Object} thisArg - the context to use when invoking `callbacks`
+	 */
 	LoginManager.prototype.login = function login(provider, callbacks, thisArg) {
 
+		// Set the `thisArg` context and empty placeholders
+		// if not all 3 callbacks were provided (`beforeSubmit`, `onSuccess`, `onFail`)
 		this._configureCallbacks(callbacks, thisArg);
 
 		// find out the oauth provider
 		if (provider.indexOf('google') > -1)
 			provider = this._googleLogin(callbacks);
-
 		else if (provider.indexOf('facebook') > -1)
 			provider = this._facebookLogin(callbacks);
-
 		else if (provider.indexOf('github') > -1)
 			provider = this._githubLogin(callbacks);
 
 		else throw new Error('Unknown login provider');
 	};
 
+	/**
+	 * Logs out user
+	 *
+	 * @param {Object} callbacks - an object to be invoked `onSuccess`, `onFail`
+	 * @param {Object} thisArg - the context to use when invoking `callbacks`
+	 */
 	LoginManager.prototype.logout = function logout(callbacks, thisArg) {
 		this._configureCallbacks(callbacks, thisArg);
 		$.ajax({
@@ -69,7 +83,15 @@ define(['jquery'], function () {
 		});
 	};
 
+	/**
+	 * Initializes google oauth login.
+	 * Sets `window.googleAsyncInit` callback function and dynamically loads google api client.
+	 * @private
+	 */
 	LoginManager.prototype._googleInit = function _googleInit() {
+
+		if (window.googleAsyncInit)
+			throw new Error("LoginManager: googleAsyncInit is already initialized.");
 
 		window.googleAsyncInit = function () {
 
@@ -90,6 +112,11 @@ define(['jquery'], function () {
 		this._loadScriptAsync('https://apis.google.com/js/api:client.js?onload=googleAsyncInit', 'google-script');
 	};
 
+	/**
+	 * Logs in user using googles api
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @private
+	 */
 	LoginManager.prototype._googleLogin = function _googleLogin(callbacks) {
 		this.auth2.grantOfflineAccess({'redirect_uri': 'postmessage'})
 			.then(function (result) {
@@ -101,7 +128,15 @@ define(['jquery'], function () {
 			}.bind(this), callbacks.onFail);
 	};
 
+	/**
+	 * Initializes facebook oauth login.
+	 * Sets `window.fbAsyncInit` callback function and dynamically loads facebook SDK
+	 * @private
+	 */
 	LoginManager.prototype._facebookInit = function _facebookInit() {
+		if (window.fbAsyncInit)
+			throw new Error("LoginManager: fbAsyncInit is already initialized.");
+
 		window.fbAsyncInit = function () {
 			this.FB = FB;
 			FB.init({
@@ -113,6 +148,11 @@ define(['jquery'], function () {
 		this._loadScriptAsync('https://connect.facebook.net/en_US/sdk.js', 'facebook-jssdk');
 	};
 
+	/**
+	 * Logs in user using facebook SDK
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @private
+	 */
 	LoginManager.prototype._facebookLogin = function _facebookLogin(callbacks) {
 		this.FB.login(function (response) {
 
@@ -127,18 +167,28 @@ define(['jquery'], function () {
 		}.bind(this), {scope: 'public_profile,email'});
 
 	};
-	// we will use full server-side flow when logging in with github accounts
-	//LoginManager.prototype._githubInit = function _githubInit() {};
 
+	// LoginManager.prototype._githubInit = function _githubInit() {};
+	// NOTE:
+	// 	Github doesn't have a init method like facebook and google. This is because github
+	// 	doesn't have a javascript SDK so we will implement a full server-side flow when logging
+	// 	in with github accounts.
+
+	/**
+	 * Dynamically creates a form and inserts in a popup to be submitted to the server
+	 * which will redirect the user to github's website to authorize access.
+	 *
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @private
+	 */
 	LoginManager.prototype._githubLogin = function _githubLogin(callbacks) {
-		// github doesn't have a javascript api like google and facebook,
-		// so we will make our own popup
 		var popupWindow = window.open('', 'githubLogin', 'location=0,status=0,width=800,height=400');
 		// dynamically create a form and insert it in the popup
 		var $form = $('<form></form>', { method: 'post', action: this._githubLoginUrl });
 		// don't forget csrf token
 		$form.append($('<input></input>', {type: 'hidden', name: 'csrf_token', value: this._csrfToken}));
 		$('body', popupWindow.document).append($form);
+		// submit the form
 		$($form, popupWindow.document).submit();
 
 		// keeping checking if the popup is open every .5 seconds
@@ -159,18 +209,26 @@ define(['jquery'], function () {
 
 				} else {
 					// code reaches here when the user manually closes the popup window
-					callbacks.error();
+					callbacks.onFail();
 				}
 			}
 		}, 500);
 		callbacks.beforeSubmit();
 	};
+	/**
+	 * Ensures a csrf token is set to true when making making request and the proper contentType is set.
+	 *
+	 * @param {string} url - url used to login user
+	 * @param {string} accessToken - access token to send to the server
+	 * @param {Object} callbacks - an object to be invoked `onSuccess`, `onFail`
+	 * @private
+	 */
 	LoginManager.prototype._oAuthAjax = function _oAuthAjax(url, accessToken, callbacks) {
 		var options = {
 			url: url,
 			type: 'POST',
 			processData: false,
-			csrfHeader: true,
+			csrfHeader: true, // provide csrf token
 			contentType: 'application/octet-stream; charset=utf-8',
 			data: accessToken,
 			success: callbacks.onSuccess,
@@ -180,6 +238,13 @@ define(['jquery'], function () {
 		$.ajax(options);
 	};
 
+	/**
+	 * Dynamically loads a script using the given URL and ID
+	 *
+	 * @param {string} url - URL to use on the script tag
+	 * @param {string} id - ID to add to the script tag
+	 * @private
+	 */
 	LoginManager.prototype._loadScriptAsync = function _loadScriptAsync(url, id) {
 		if (document.getElementById(id)) return;
 		var js, script = document.getElementsByTagName('script')[0];
@@ -189,6 +254,13 @@ define(['jquery'], function () {
 		script.parentNode.insertBefore(js, script);
 	};
 
+	/**
+	 * Upgrades the HTML Login and register forms to use AJAX and use the provided callbacks.
+	 *
+	 * @param {HTMLElement|string} LoginRegisterFormContainer - form container. Either a html element or a string selector
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @param {Object} thisArg - the context to use when invoking `callbacks`
+	 */
 	LoginManager.prototype.setLoginRegisterForm = function setLoginRegisterForm(LoginRegisterFormContainer, callbacks, thisArg) {
 		var $container = $(LoginRegisterFormContainer);
 		if ($container.length == 0)
@@ -200,7 +272,7 @@ define(['jquery'], function () {
 		this.$forms.each(function () {
 			var $form = $(this);
 			$form.ajaxForm({
-				csrfHeader: true,
+				csrfHeader: true, // Use csrf token
 				beforeSubmit: callbacks.beforeSubmit,
 				success: callbacks.onSuccess,
 				error: callbacks.onFail
@@ -209,6 +281,14 @@ define(['jquery'], function () {
 
 	};
 
+	/**
+	 * Binds the `thisArgs` to the callbacks and ensures the callbacks have all 3 properties
+	 * (`beforeSubmit`, `onSuccess`, `onFail`) by adding a placeholder (empty function) when not being provided.
+	 *
+	 * @param {Object} callbacks - an object to be invoked `beforeSubmit`, `onSuccess`, `onFail`
+	 * @param {Object} thisArg - the context to use when invoking `callbacks`
+	 * @private
+	 */
 	LoginManager.prototype._configureCallbacks = function _configureCallbacks(callbacks, thisArg) {
 		var keys = ['onSuccess', 'onFail', 'beforeSubmit'],
 			key, fn;
@@ -234,22 +314,27 @@ define(['jquery'], function () {
 		}
 	};
 
-	LoginManager.getInstance = function () {
-
+	/**
+	 * If the LoginManager hasn't yet been initialized the data argument is required.
+	 *
+	 * @param {Object} [data] - the object containing the oauth data
+	 * @returns {LoginManager} -  a LoginManager singleton instance
+	 */
+	LoginManager.getInstance = function (data) {
 		if (LoginManager.prototype._singletonInstance)
 			return LoginManager.prototype._singletonInstance;
 
 		if (arguments.length == 0)
 			throw Error('LoginManager: data argument is required to instantiate.');
 
-		return new LoginManager(arguments[0]);
+		return new LoginManager(data);
 	};
 
 	/**
 	 * This method is equivalent to calling `new LoginManager(data)`,
 	 * except it doesn't return a LoginManager instance.
 	 *
-	 * @param data
+	 * @param {Object} data - the object containing the oauth data
 	 */
 	LoginManager.loadOAuth = function (data) {
 		if (LoginManager.prototype._singletonInstance) return; // do nothing

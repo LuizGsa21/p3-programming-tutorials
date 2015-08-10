@@ -4,7 +4,7 @@ from ..general import (
 )
 
 
-class CategoryArticlesView(Schema):
+class CategoryArticlesViewSchema(Schema):
     category = fields.String()
     user = fields.Nested(UserInfoSchema)
     loginManager = fields.Nested(LoginManagerSchema)

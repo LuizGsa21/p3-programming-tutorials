@@ -154,47 +154,30 @@ define([
 	};
 
 	CommentViewModel.prototype._beforeSubmit = function (data, form, options) {
-		// When postbox serializes a DOM element it will throw an error saying:
-		//   Uncaught SecurityError: Blocked a frame with origin "http://localhost:8000" from accessing
-		//   a frame with origin "http://static.ak.facebook.com".....
-		// to avoid this problem we will wrap the response in a function.
-		var response = function () {
-			return {
-				view: this,
-				data: data,
-				form: form,
-				options: options,
-				preventDefault: false
-			}
-		}.bind(this);
-		ko.postbox.publish('Comment.beforeSubmit', response);
+		var additionalData = {
+			form: form,
+			options: options
+		};
+		var response = Utils.shareResponse(data, 'Comment.beforeSubmit', this, additionalData);
 
 		if (response.preventDefault)
 			return false; // prevent form submission
 	};
 
 	CommentViewModel.prototype._onSuccess = function (data) {
-		var response = function () {
-			return {
-				view: this,
-				data: data
-			}
-		}.bind(this);
-		// hide the form and pass the response to the main view model
-		// to update the page
+		// hide the form and pass the response to the main view model to update the page
 		this.hideForm(function () {
-			ko.postbox.publish('Comment.onSuccess', response);
+			Utils.shareResponse(data, 'Comment.onSuccess', this);
 		});
-
 	};
 
 	CommentViewModel.prototype._onFail = function (data) {
-		//console.log(data);
 		if (data.responseJSON) {
 			data = data.responseJSON.result;
+			var self = this;
 			Utils.remove.allMessages(function () {
-				Utils.show.messages(this.$form, data['flashed_messages'], { action: 'before' });
-			}.bind(this));
+				Utils.show.messages(self.$form, data['flashed_messages'], { action: 'before' });
+			});
 		}
 	};
 

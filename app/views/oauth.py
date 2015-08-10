@@ -259,6 +259,11 @@ def register_username():
             flash(form.errors, 'form-error')
             return {'status': 400}
     else:
-        # create response and render the template
+        # create response
         result['user'] = user_info_serializer.dump(current_user).data
-        return {'status': 200, 'result': result}
+        flash('You must register a username or logout to continue.', 'danger')
+        if request.is_xhr:
+            # xhr request should not be using GET with this endpoint
+            return {'status': 400}
+        else:
+            return {'status': 200, 'result': result}

@@ -28,6 +28,7 @@ frontend_bp = Blueprint('frontend', __name__)
 @frontend_bp.route('/')
 @xhr_or_template('frontend/index.html')
 def index():
+    # Create response using `IndexViewSchema`
     result = index_view_serializer.dump({
         'user': current_user,
         'loginManager': get_login_manager_data(),
@@ -43,8 +44,10 @@ def index():
 @xhr_or_template('frontend/articles.html')
 def category_articles(category):
     category = Category.query.filter_by(name=category).first()
+    # Check if exists
     if category is None:
         abort(404)
+    # Create response using `CategoryArticlesViewSchema`
     result = category_articles_serializer.dump({
         'user': current_user,
         'category': category.name,
@@ -62,6 +65,7 @@ def category_articles(category):
 @xhr_or_template('frontend/article.html')
 def article(category, articleId, title):
     article = Article.query.get(articleId)
+    # Check if article exists
     if not article:
         abort(404)
     # redirect if the category or title doesn't match the article
@@ -69,6 +73,7 @@ def article(category, articleId, title):
         return redirect(url_for('.article', category=article.category.name, articleId=article.id, title=article.title))
 
     comments = get_comments(articleId)
+    # Create response using `ArticleViewSchema`
     result = article_view_serializer.dump({
         'user': current_user,
         'article': article,
@@ -86,7 +91,6 @@ def article(category, articleId, title):
 @login_required
 @xhr_required
 def add_comment():
-    # find out the form type
     form = AddCommentForm(request.form)
     # validate the form
     if form.validate_on_submit():

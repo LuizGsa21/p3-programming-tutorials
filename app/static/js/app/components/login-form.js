@@ -189,7 +189,6 @@ define([
 		if ($form) {
 			this.$container.find('form').find(':input').val('');
 		}
-
 		data = data.result;
 
 		Utils.remove.allMessages(function () {

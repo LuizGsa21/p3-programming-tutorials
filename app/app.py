@@ -9,8 +9,6 @@ from views import api_bp, frontend_bp, user_bp, oauth_bp
 from models import Category
 
 
-# TODO: fix username registration
-
 DEFAULT_BLUEPRINTS = (api_bp, frontend_bp, user_bp, oauth_bp)
 
 
@@ -42,7 +40,6 @@ def configure_hook(app):
     @app.before_request
     def before_request():
         g.user = current_user
-
         # When a user registers using oauth they will have a temporary username.
         # If the user skips the registration process by closing the window or leaving the page,
         # we have to redirect them to the `oauth.register_username` endpoint.
@@ -53,8 +50,6 @@ def configure_hook(app):
             # This check covers requests like "GET /favicon.ico HTTP/1.1"
             return  # do nothing
         if '@' in current_user.username and request.endpoint not in ('oauth.register_username', 'static', 'frontend.logout'):
-            if not request.is_xhr:
-                flash('You must register a username or logout to continue.', 'danger')
             return redirect(url_for('oauth.register_username'))
 
 

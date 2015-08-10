@@ -1,3 +1,3 @@
 from article_view import ArticleViewSchema
-from category_articles_view import CategoryArticlesView
+from category_articles_view import CategoryArticlesViewSchema
 from index_view import IndexViewSchema

@@ -25,6 +25,7 @@ user_bp = Blueprint('user', __name__, url_prefix='/user')
 @login_required
 @xhr_or_template('user/profile.html')
 def profile():
+    # Create response using `ProfileViewSchema`
     result = profile_view_serializer.dump({
         'user': current_user,
         'articles': Article.query.filter_by(authorId=current_user.id).order_by(func.lower(Article.title)).all(),

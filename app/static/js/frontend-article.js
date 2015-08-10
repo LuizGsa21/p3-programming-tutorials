@@ -71,16 +71,14 @@ requirejs([
 
 		this.addComment = addComment;
 
-		// fetch page data when user login state changes
-		this.user.isLoggedIn.subscribe(function () {
+		// Refresh the page using ajax
+		this.updatePage = function () {
 			var self = this;
 			$.ajax({
 				url: window.location.href,
 				success: function (data) {
-					console.log(data);
 					data = data.result;
 					self.loadData(data);
-					Utils.updateTime();
 					Utils.show.messages('#general-alert', data['flashed_messages']);
 				},
 				error: function (data) {
@@ -90,17 +88,35 @@ requirejs([
 					}
 				}
 			});
+		}.bind(this);
+
+		// Update page when the user is logged in AND doesnt need to register a username.
+		this.registerUsernameMode = ko.observable().subscribeTo('LoginForm.registerUsernameMode', true);
+		this.isRegistered = ko.pureComputed(function () {
+			return this.user.isLoggedIn() && ! this.registerUsernameMode();
+		}, this);
+		this.isRegistered.subscribe(function (isRegister) {
+			// update the page
+			if (isRegister)
+				this.updatePage();
 		}, this);
 
+		// Update the page when the user logs out
+		this.user.isLoggedIn.subscribe(function (isLoggedIn) {
+			if (isLoggedIn == false) { // update the page
+				this.updatePage();
+			}
+		}, this);
+
+		// update comments after the user submits a comment or reply
 		this.onSuccess = ko.observable().subscribeTo('Comment.onSuccess');
-		// update data after the user submit a comment or reply
 		this.onSuccess.subscribe(function (response) {
 			if (_.isFunction(response)) // unwrap the response
 				response = response();
+			var self = this;
 			Utils.remove.allMessages(function () {
-				this.loadData(response.data.result);
-				Utils.updateTime();
-			}.bind(this));
+				self.loadData(response.data.result);
+			});
 		}, this);
 
 		var self = this;

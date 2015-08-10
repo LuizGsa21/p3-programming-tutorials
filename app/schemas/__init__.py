@@ -2,7 +2,7 @@ from .model import (
     UserSchema, CommentSchema, CategorySchema, ArticleSchema
 )
 from .frontend import (
-    ArticleViewSchema, IndexViewSchema, CategoryArticlesView
+    ArticleViewSchema, IndexViewSchema, CategoryArticlesViewSchema
 )
 from .user import ProfileViewSchema
 from .general import (
@@ -32,5 +32,5 @@ comment_with_user_serializer = CommentWithUserSchema()
 # View based schemas
 frontend_index_view_serializer = IndexViewSchema()
 frontend_article_view_serializer = ArticleViewSchema()
-frontend_category_articles_serializer = CategoryArticlesView()
+frontend_category_articles_serializer = CategoryArticlesViewSchema()
 user_profile_view_serializer = ProfileViewSchema()
