@@ -8,6 +8,8 @@ openid-store/
 
 ### Other
 app/static/uploads/avatar
+!app/static/uploads/avatar/avatar.jpg
+!app/static/uploads/avatar/original-avatar.jpg
 
 # oauth keys
 app/oauth/*.json
