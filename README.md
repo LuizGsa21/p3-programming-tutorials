@@ -26,6 +26,8 @@ After adding your client IDs:
 $ vagrant up
 # Wait for installation to complete, then SSH into virtual machine
 $ vagrant ssh
+$ cd /vagrant/
+$ python runserver.py
 # done :)
 ```
 
