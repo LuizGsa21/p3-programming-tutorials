@@ -26,7 +26,13 @@ define([
 		});
 		self.selectedCategory = ko.computed(function () {
 			var id = self.selectedCategoryId();
-			return _.isNumber(id) ? _.findWhere(self.categories.peek(), {id: id}).name : '';
+			if ( ! _.isNumber(id)) return '';
+
+			var category = _.findWhere(self.categories.peek(), {id: id});
+			if (category)
+				return category.name;
+			else return '';
+
 		});
 
 		// setup non-observable UI variables
