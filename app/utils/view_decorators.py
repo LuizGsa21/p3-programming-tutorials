@@ -6,10 +6,24 @@ from .helpers import format_flashed_messages
 
 
 def xhr_or_template(template=None):
-    """"Return a dict from your view and this will either
-        pass it to a template or render json.
-        Example: @template_or_json('template.html')"""
+    """" If a response object is returned, it will simply return the response.
+    Otherwise, return a dict from your view and this will either pass it to a template or render json.
 
+    Example dict:
+        {'status': 200, 'result': { 'someKey': 'someValue` } }
+
+    `status` - the status value to return
+    `result` - a dict containing additional data
+
+    Flashed messages will be fetched and saved to `result`:
+        ctx = { 'status': 200, 'result': { 'someKey': 'someValue` } }
+        ctx['result']['flashed_messages'] = format_flashed_messages()
+
+    Example Usage:
+        @template_or_json('template.html')
+        def you_view():
+            pass
+    """
     def decorated(f):
         @wraps(f)
         def decorated_fn(*args, **kwargs):
@@ -36,6 +50,24 @@ def xhr_or_template(template=None):
 
 
 def xhr_or_redirect(route_path):
+    """" If the request is NOT a XHR, it redirects to `route_path` using `url_for`.
+    Otherwise, return a dict from your view to render a json response.
+
+    Example dict:
+        {'status': 200, 'result': { 'someKey': 'someValue` } }
+
+    `status` - the status value to return
+    `result` - a dict containing additional data
+
+    Flashed messages will be fetched and saved to `result`:
+        ctx = { 'status': 200, 'result': { 'someKey': 'someValue` } }
+        ctx['result']['flashed_messages'] = format_flashed_messages()
+
+    Example Usage:
+        @xhr_or_redirect('frontend.index')
+        def you_view():
+            pass
+    """
     def decorated(f):
         @wraps(f)
         def decorated_fn(*args, **kwargs):
@@ -53,6 +85,24 @@ def xhr_or_redirect(route_path):
 
 
 def xhr_required(f):
+    """" If the request is NOT a XHR, an abort 404 error will be thrown.
+        Otherwise, return a dict from your view to render a json response.
+
+        Example dict:
+            {'status': 200, 'result': { 'someKey': 'someValue` } }
+
+        `status` - the status value to return
+        `result` - a dict containing additional data
+
+        Flashed messages will be fetched and saved to `result`:
+            ctx = { 'status': 200, 'result': { 'someKey': 'someValue` } }
+            ctx['result']['flashed_messages'] = format_flashed_messages()
+
+        Example Usage:
+            @xhr_required
+            def you_view():
+                pass
+    """
     @wraps(f)
     def decorator(*args, **kwargs):
         if not request.is_xhr:
