@@ -6,7 +6,7 @@ from .utils import xhr_or_template
 from extensions import db, csrf, login_manager
 from config import DevelopmentConfig
 from views import api_bp, frontend_bp, user_bp, oauth_bp
-from models import Category
+from models import Category, User
 
 
 DEFAULT_BLUEPRINTS = (api_bp, frontend_bp, user_bp, oauth_bp)
@@ -31,6 +31,16 @@ def create_app(app_name=None, blueprints=None, config=None):
     configure_blueprints(app, blueprints)
     configure_error_handlers(app)
     configure_jinja_filters(app)
+
+    with app.app_context():
+        user = User.query.filter_by(username_insensitive='admin').first()
+        if not user:
+            user = User(username='admin',
+                        email='admin@how-to-tutorials.com',
+                        pwdhash='password',
+                        isAdmin=True)
+            db.session.add(user)
+            db.session.commit()
 
     return app
 
