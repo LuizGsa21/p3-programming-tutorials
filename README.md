@@ -1,5 +1,5 @@
 # p3-programming-tutorials
-Project 3 programming tutorials
+Project 3 programming tutorials. To view a live demo click [here](https://ptutorials.mypassion.io/)
 
 
 ## Prerequisites:
