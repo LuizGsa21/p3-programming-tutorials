@@ -1,5 +1,5 @@
 # p3-programming-tutorials
-Project 3 programming tutorials. To view a live demo click [here](https://ptutorials.mypassion.io/)
+Project 3 programming tutorials. To view a live demo click [here](https://ptutorials.mypassion.io/).
 
 
 ## Prerequisites:
@@ -68,6 +68,7 @@ Try logging in as admin ;)
 ##### How do I login as admin?
 - username: `admin`
 - password: `password`
+- NOTE: This will not work on the live demo for security reasons.
 
 ##### Why don't I see anything when I click on the tutorials dropdown?
 Try adding a category.
